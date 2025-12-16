@@ -1,0 +1,16 @@
+{
+  "color": {
+    "a": {
+      "$value": "{color.b}",
+      "$description": "References b"
+    },
+    "b": {
+      "$value": "{color.c}",
+      "$description": "References c"
+    },
+    "c": {
+      "$value": "{color.a}",
+      "$description": "References a - creates circular dependency"
+    }
+  }
+}

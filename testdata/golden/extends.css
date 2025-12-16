@@ -1,0 +1,18 @@
+@import "tailwindcss";
+
+@theme {
+  --color-brand-primary: #3b82f6;
+}
+
+
+@layer base {
+  [data-theme="dark"] {
+    --color-brand-primary: #1e40af;
+  }
+  :root, [data-theme="light"] {
+    --color-brand-primary: #60a5fa;
+  }
+}
+
+@layer components {
+}

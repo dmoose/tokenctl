@@ -1,0 +1,14 @@
+{
+  "spacing": {
+    "$type": "dimension",
+    "lg": {
+      "$value": "1.5rem"
+    },
+    "md": {
+      "$value": "1rem"
+    },
+    "sm": {
+      "$value": "0.5rem"
+    }
+  }
+}
