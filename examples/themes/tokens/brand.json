@@ -1,0 +1,10 @@
+{
+  "color": {
+    "brand": {
+      "$type": "color",
+      "primary": {
+        "$value": "#3b82f6"
+      }
+    }
+  }
+}

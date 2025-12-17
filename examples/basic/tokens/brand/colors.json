@@ -1,0 +1,14 @@
+{
+  "color": {
+    "brand": {
+      "$description": "Core brand identity colors",
+      "$type": "color",
+      "primary": {
+        "$value": "#3b82f6"
+      },
+      "secondary": {
+        "$value": "#8b5cf6"
+      }
+    }
+  }
+}
