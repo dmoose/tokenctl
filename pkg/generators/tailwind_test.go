@@ -8,10 +8,10 @@ import (
 
 func TestTailwindGenerator(t *testing.T) {
 	tests := []struct {
-		name       string
-		tokens     map[string]interface{}
-		components map[string]tokens.ComponentDefinition
-		expected   []string
+		name        string
+		tokens      map[string]interface{}
+		components  map[string]tokens.ComponentDefinition
+		expected    []string
 		notExpected []string
 	}{
 		{
@@ -85,6 +85,146 @@ func TestTailwindGenerator(t *testing.T) {
 			for _, notExp := range tt.notExpected {
 				if containsString(output, notExp) {
 					t.Errorf("Expected output NOT to contain %q, but it did.\nOutput:\n%s", notExp, output)
+				}
+			}
+		})
+	}
+}
+
+func TestTailwindGenerator_ArraySerialization(t *testing.T) {
+	tests := []struct {
+		name       string
+		components map[string]tokens.ComponentDefinition
+		expected   []string
+	}{
+		{
+			name: "Margin with space-separated array",
+			components: map[string]tokens.ComponentDefinition{
+				"card": {
+					Class: "card",
+					Base: map[string]interface{}{
+						"margin": []interface{}{"10px", "20px", "10px", "20px"},
+					},
+				},
+			},
+			expected: []string{
+				".card {",
+				"margin: 10px 20px 10px 20px;",
+			},
+		},
+		{
+			name: "Padding with space-separated array",
+			components: map[string]tokens.ComponentDefinition{
+				"button": {
+					Class: "btn",
+					Base: map[string]interface{}{
+						"padding": []interface{}{"0.5rem", "1rem"},
+					},
+				},
+			},
+			expected: []string{
+				".btn {",
+				"padding: 0.5rem 1rem;",
+			},
+		},
+		{
+			name: "Box-shadow with comma-separated array",
+			components: map[string]tokens.ComponentDefinition{
+				"card": {
+					Class: "card",
+					Base: map[string]interface{}{
+						"box-shadow": []interface{}{
+							"0 1px 2px rgba(0,0,0,0.1)",
+							"0 2px 4px rgba(0,0,0,0.2)",
+						},
+					},
+				},
+			},
+			expected: []string{
+				".card {",
+				"box-shadow: 0 1px 2px rgba(0,0,0,0.1), 0 2px 4px rgba(0,0,0,0.2);",
+			},
+		},
+		{
+			name: "Font-family with comma-separated array",
+			components: map[string]tokens.ComponentDefinition{
+				"text": {
+					Class: "text",
+					Base: map[string]interface{}{
+						"font-family": []interface{}{"Inter", "Arial", "sans-serif"},
+					},
+				},
+			},
+			expected: []string{
+				".text {",
+				"font-family: Inter, Arial, sans-serif;",
+			},
+		},
+		{
+			name: "Border-radius with space-separated array",
+			components: map[string]tokens.ComponentDefinition{
+				"box": {
+					Class: "box",
+					Base: map[string]interface{}{
+						"border-radius": []interface{}{"4px", "4px", "0", "0"},
+					},
+				},
+			},
+			expected: []string{
+				".box {",
+				"border-radius: 4px 4px 0 0;",
+			},
+		},
+		{
+			name: "Transform with comma-separated array",
+			components: map[string]tokens.ComponentDefinition{
+				"animated": {
+					Class: "animated",
+					Base: map[string]interface{}{
+						"transform": []interface{}{"rotate(45deg)", "scale(1.5)"},
+					},
+				},
+			},
+			expected: []string{
+				".animated {",
+				"transform: rotate(45deg), scale(1.5);",
+			},
+		},
+		{
+			name: "Mixed space and comma separated properties",
+			components: map[string]tokens.ComponentDefinition{
+				"complex": {
+					Class: "complex",
+					Base: map[string]interface{}{
+						"margin":      []interface{}{"1rem", "2rem"},
+						"padding":     []interface{}{"0.5rem", "1rem"},
+						"box-shadow":  []interface{}{"0 1px 2px black", "0 2px 4px red"},
+						"font-family": []interface{}{"Arial", "sans-serif"},
+					},
+				},
+			},
+			expected: []string{
+				".complex {",
+				"margin: 1rem 2rem;",
+				"padding: 0.5rem 1rem;",
+				"box-shadow: 0 1px 2px black, 0 2px 4px red;",
+				"font-family: Arial, sans-serif;",
+			},
+		},
+	}
+
+	gen := NewTailwindGenerator()
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			output, err := gen.GenerateComponents(tt.components)
+			if err != nil {
+				t.Fatalf("GenerateComponents failed: %v", err)
+			}
+
+			for _, exp := range tt.expected {
+				if !containsString(output, exp) {
+					t.Errorf("Expected output to contain %q, but it didn't.\nOutput:\n%s", exp, output)
 				}
 			}
 		})

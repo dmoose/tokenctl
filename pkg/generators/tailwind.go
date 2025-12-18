@@ -3,8 +3,9 @@ package generators
 import (
 	"fmt"
 	"sort"
-	"github.com/dmoose/tokctl/pkg/tokens"
 	"strings"
+
+	"github.com/dmoose/tokctl/pkg/tokens"
 )
 
 // TailwindGenerator generates Tailwind 4 CSS
@@ -113,16 +114,16 @@ func writeProps(sb *strings.Builder, props map[string]interface{}, indent int) {
 			continue
 		}
 
-		// Serialize complex types (arrays, etc)
-		valStr := SerializeValue(v)
-		
+		// Serialize complex types (arrays, etc) with context-aware handling
+		valStr := SerializeValueForProperty(k, v)
+
 		// Resolve simple tokens to var(--token) if they look like {token}
 		val := valStr
 		if strings.HasPrefix(valStr, "{") && strings.HasSuffix(valStr, "}") {
 			tokenName := valStr[1 : len(valStr)-1]
 			val = fmt.Sprintf("var(--%s)", strings.ReplaceAll(tokenName, ".", "-"))
 		}
-		
+
 		sb.WriteString(fmt.Sprintf("%s%s: %s;\n", padding, k, val))
 	}
 }
