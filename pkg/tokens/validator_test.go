@@ -408,3 +408,64 @@ func TestValidationError_Error(t *testing.T) {
 		t.Errorf("Expected '%s', got '%s'", expected, verr.Error())
 	}
 }
+
+func TestValidationError_WithSourceFile(t *testing.T) {
+	verr := ValidationError{
+		Path:       "color.primary",
+		Message:    "test error message",
+		SourceFile: "tokens/colors.json",
+	}
+
+	expected := "color.primary [tokens/colors.json]: test error message"
+	if verr.Error() != expected {
+		t.Errorf("Expected '%s', got '%s'", expected, verr.Error())
+	}
+}
+
+func TestValidator_SourceFileTracking(t *testing.T) {
+	// Create a dictionary with source file annotations
+	dict := &Dictionary{
+		Root: map[string]interface{}{
+			"color": map[string]interface{}{
+				"primary": map[string]interface{}{
+					"$value": "{color.nonexistent}",
+				},
+				"secondary": map[string]interface{}{
+					"$value": "#fff",
+				},
+			},
+		},
+		SourceFiles: map[string]string{
+			"color.primary":   "tokens/brand/colors.json",
+			"color.secondary": "tokens/brand/colors.json",
+		},
+	}
+
+	validator := NewValidator()
+	errors, err := validator.Validate(dict)
+	if err != nil {
+		t.Fatalf("Validation failed to run: %v", err)
+	}
+
+	if len(errors) == 0 {
+		t.Fatal("Expected validation errors, got none")
+	}
+
+	// Find the error for color.primary
+	found := false
+	for _, verr := range errors {
+		if verr.Path == "color.primary" {
+			found = true
+			if verr.SourceFile != "tokens/brand/colors.json" {
+				t.Errorf("Expected source file 'tokens/brand/colors.json', got '%s'", verr.SourceFile)
+			}
+			if !strings.Contains(verr.Error(), "[tokens/brand/colors.json]") {
+				t.Errorf("Expected error message to contain source file, got: %s", verr.Error())
+			}
+		}
+	}
+
+	if !found {
+		t.Error("Expected to find error for color.primary")
+	}
+}

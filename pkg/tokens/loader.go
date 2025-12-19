@@ -17,7 +17,10 @@ func ParseJSON(r io.Reader) (*Dictionary, error) {
 	if err := dec.Decode(&root); err != nil {
 		return nil, err
 	}
-	return &Dictionary{Root: root}, nil
+	return &Dictionary{
+		Root:        root,
+		SourceFiles: make(map[string]string),
+	}, nil
 }
 
 // WriteJSON writes the dictionary to an io.Writer
@@ -62,7 +65,7 @@ func (l *Loader) LoadBase(path string) (*Dictionary, error) {
 			if err != nil {
 				return fmt.Errorf("failed to load %s: %w", filePath, err)
 			}
-			if err := master.MergeWithPath(dict, l.WarnConflicts); err != nil {
+			if err := master.MergeWithPath(dict, l.WarnConflicts, filePath); err != nil {
 				return fmt.Errorf("failed to merge %s: %w", filePath, err)
 			}
 		}
@@ -103,6 +106,9 @@ func (l *Loader) LoadThemes(rootPath string) (map[string]*Dictionary, error) {
 			return fmt.Errorf("failed to load theme %s: %w", filePath, err)
 		}
 
+		// Track source file for all tokens in this theme
+		l.annotateSourceFile(dict, "", filePath)
+
 		// Unwrap root key if it matches theme name
 		// Example: dark.json contains { "dark": { ... } }
 		if root, ok := dict.Root[themeName]; ok {
@@ -134,17 +140,70 @@ func (l *Loader) loadFile(path string) (*Dictionary, error) {
 		return nil, err
 	}
 	defer f.Close()
-	return ParseJSON(f)
+	dict, err := ParseJSON(f)
+	if err != nil {
+		return nil, err
+	}
+
+	// Annotate all tokens with source file
+	l.annotateSourceFile(dict, "", path)
+	return dict, nil
+}
+
+// annotateSourceFile recursively marks all tokens in the dictionary with their source file
+func (l *Loader) annotateSourceFile(dict *Dictionary, currentPath, sourceFile string) {
+	annotateSourceFileRecursive(dict, dict.Root, currentPath, sourceFile)
+}
+
+func annotateSourceFileRecursive(dict *Dictionary, node map[string]interface{}, currentPath, sourceFile string) {
+	if IsToken(node) {
+		if currentPath != "" {
+			dict.SourceFiles[currentPath] = sourceFile
+		}
+		return
+	}
+
+	for key, val := range node {
+		if strings.HasPrefix(key, "$") {
+			continue
+		}
+
+		childMap, ok := val.(map[string]interface{})
+		if !ok {
+			continue
+		}
+
+		childPath := key
+		if currentPath != "" {
+			childPath = currentPath + "." + key
+		}
+
+		annotateSourceFileRecursive(dict, childMap, childPath, sourceFile)
+	}
 }
 
 // Merge merges another dictionary into this one (deep merge)
 func (d *Dictionary) Merge(other *Dictionary) error {
-	return deepMerge(d.Root, other.Root, "")
+	if err := deepMerge(d.Root, other.Root, ""); err != nil {
+		return err
+	}
+	// Merge source file mappings
+	for path, file := range other.SourceFiles {
+		d.SourceFiles[path] = file
+	}
+	return nil
 }
 
 // MergeWithPath is like Merge but tracks the current path for better error messages
-func (d *Dictionary) MergeWithPath(other *Dictionary, warnConflicts bool) error {
-	return deepMergeWithWarnings(d.Root, other.Root, "", warnConflicts)
+func (d *Dictionary) MergeWithPath(other *Dictionary, warnConflicts bool, sourceFile string) error {
+	if err := deepMergeWithWarnings(d.Root, other.Root, "", warnConflicts); err != nil {
+		return err
+	}
+	// Merge source file mappings, preferring the new source file for conflicts
+	for path, file := range other.SourceFiles {
+		d.SourceFiles[path] = file
+	}
+	return nil
 }
 
 func deepMerge(dst, src map[string]interface{}, currentPath string) error {
