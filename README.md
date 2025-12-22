@@ -8,6 +8,8 @@
 - **Semantic First**: Encourages a layered design system (Brand -> Semantic -> Component).
 - **Tailwind 4 Ready**: Generates modern Tailwind CSS `@theme` configurations.
 - **Reference Resolution**: Supports deep referencing (`{brand.primary}`) and cycle detection.
+- **Theme Inheritance**: Use `$extends` to create theme variations that inherit from parent themes.
+- **Detailed Error Messages**: Validation errors show source file names for easy debugging.
 
 ## Installation
 
@@ -30,7 +32,7 @@ my-design-system/
 │   ├── brand/
 │   ├── semantic/
 │   ├── spacing/
-│   └── ...
+│   └── themes/  # Optional: theme variations
 ```
 
 ### 2. Define Tokens
@@ -47,26 +49,45 @@ Edit `tokens/brand/colors.json`:
 }
 ```
 
-### 3. Define Components
+### 3. Create Theme Variations (Optional)
+
+Edit `tokens/themes/dark.json`:
+```json
+{
+  "$extends": "light",
+  "$description": "Dark theme extends light theme",
+  "color": {
+    "brand": {
+      "primary": { "$value": "#1e40af" }
+    }
+  }
+}
+```
+
+The `$extends` keyword allows themes to inherit from other themes, creating variations efficiently.
+
+### 4. Define Components
 
 Edit `tokens/components/button.json`:
 ```json
 {
-  "button": {
-    "$type": "component",
-    "$class": "btn",
-    "variants": {
-      "primary": {
-        "$class": "btn-primary",
-        "background-color": "{color.brand.primary}",
-        "color": "#ffffff"
+  "components": {
+    "button": {
+      "$type": "component",
+      "$class": "btn",
+      "variants": {
+        "primary": {
+          "$class": "btn-primary",
+          "background-color": "{color.brand.primary}",
+          "color": "#ffffff"
+        }
       }
     }
   }
 }
 ```
 
-### 4. Build Artifacts
+### 5. Build Artifacts
 
 Generate CSS variables for Tailwind 4:
 
@@ -113,20 +134,65 @@ tokctl build my-design-system --format=tailwind --output=./dist
 
 ### JSON Catalog
 
-A machine-readable dump of the resolved system for tools like `templscan`.
+A machine-readable dump of the resolved system for tool integration:
+
+```bash
+tokctl build my-design-system --format=catalog --output=./dist
+```
 
 ## Commands
 
-- `tokctl init [dir]`: Scaffold a new token system.
+- `tokctl init [dir]`: Scaffold a new token system with standard directory structure.
 - `tokctl build [dir]`: Build artifacts (CSS, Catalog).
-- `tokctl validate [dir]`: Check for broken references and schema compliance. Use `--strict` to fail on warnings.
+  - `--format=tailwind`: Generate Tailwind CSS (default)
+  - `--format=catalog`: Generate JSON catalog
+  - `--output=<dir>`: Output directory (default: `dist`)
+- `tokctl validate [dir]`: Check for broken references, circular dependencies, and schema compliance.
+  - Shows source file names in error messages for easy debugging
+- `make help`: View all available make targets for development
+
+## Examples
+
+Working examples demonstrating tokctl features are in the `examples/` directory:
+
+- **basic/**: Simple token system with brand colors, spacing, and semantic tokens
+- **themes/**: Theme inheritance using `$extends` (light/dark theme variations)
+- **components/**: Component definitions with variants and states
+
+Build any example:
+```bash
+tokctl build examples/themes --output=dist/themes
+```
+
+See [examples/README.md](examples/README.md) for detailed documentation.
 
 ## Architecture
 
 `tokctl` is the **Source of Truth** for your design system. It manages the W3C token graph, resolves references, and handles theme inheritance.
 
 **Core Components**:
-- **Loader**: Recursive JSON loading with separate Theme/Base handling.
+- **Loader**: Recursive JSON loading with source file tracking for error reporting.
 - **Resolver**: Deep reference resolution (`{brand.primary}`) with cycle detection.
-- **Validator**: Logic checks for broken refs and schema issues.
-- **Generators**: Output engines for Tailwind 4, Catalog, etc.
+- **Validator**: Validates references, schema compliance, and reports errors with file context.
+- **Generators**: Unified generation API producing Tailwind CSS, JSON catalogs, etc.
+- **Theme Inheritance**: Resolves `$extends` chains with circular dependency protection.
+
+## Development
+
+Build and test:
+```bash
+make build          # Build binary
+make test           # Run all tests
+make coverage       # Generate coverage report
+make demo           # Run full workflow demo
+make examples       # Build all examples
+```
+
+See `make help` for all available targets.
+
+## Documentation
+
+- [README.md](README.md) - Quick start and overview (this file)
+- [TOKENS.md](TOKENS.md) - Comprehensive developer guide
+- [examples/](examples/) - Working examples with documentation
+- [testdata/](testdata/) - Test fixtures and expected outputs
