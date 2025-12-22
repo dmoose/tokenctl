@@ -2,6 +2,7 @@ package generators
 
 import (
 	"fmt"
+	"regexp"
 	"sort"
 	"strings"
 
@@ -246,12 +247,8 @@ func (g *TailwindGenerator) writeProperties(sb *strings.Builder, props map[strin
 		// Serialize complex types (arrays, etc) with context-aware handling
 		valStr := SerializeValueForProperty(k, v)
 
-		// Resolve simple tokens to var(--token) if they look like {token}
-		val := valStr
-		if strings.HasPrefix(valStr, "{") && strings.HasSuffix(valStr, "}") {
-			tokenName := valStr[1 : len(valStr)-1]
-			val = fmt.Sprintf("var(--%s)", strings.ReplaceAll(tokenName, ".", "-"))
-		}
+		// Resolve all token references to var(--token)
+		val := resolveTokenReferences(valStr)
 
 		sb.WriteString(fmt.Sprintf("%s%s: %s;\n", padding, k, val))
 	}
@@ -269,4 +266,22 @@ func (g *TailwindGenerator) GenerateFromResolved(tokens map[string]interface{}) 
 // Kept for backwards compatibility with existing tests
 func (g *TailwindGenerator) GenerateComponents(components map[string]tokens.ComponentDefinition) (string, error) {
 	return g.generateComponents(components)
+}
+
+// resolveTokenReferences converts all {token.path} references to var(--token-path)
+// Handles multiple references in a single string: "{spacing.sm} {spacing.md}" -> "var(--spacing-sm) var(--spacing-md)"
+func resolveTokenReferences(value string) string {
+	// Pattern matches {token.path.here}
+	refPattern := regexp.MustCompile(`\{([^}]+)\}`)
+
+	// Replace all matches
+	result := refPattern.ReplaceAllStringFunc(value, func(match string) string {
+		// Extract token path (remove { and })
+		tokenPath := match[1 : len(match)-1]
+		// Convert to CSS variable format
+		cssVar := strings.ReplaceAll(tokenPath, ".", "-")
+		return fmt.Sprintf("var(--%s)", cssVar)
+	})
+
+	return result
 }
