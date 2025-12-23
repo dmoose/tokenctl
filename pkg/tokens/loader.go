@@ -71,7 +71,16 @@ func (l *Loader) LoadBase(path string) (*Dictionary, error) {
 		}
 		return nil
 	})
-	return master, err
+	if err != nil {
+		return nil, err
+	}
+
+	// Expand any $scale definitions into individual tokens
+	if err := ExpandScales(master); err != nil {
+		return nil, fmt.Errorf("failed to expand scales: %w", err)
+	}
+
+	return master, nil
 }
 
 // LoadThemes scans the themes directory and returns a map of ThemeName -> Dictionary
@@ -121,8 +130,18 @@ func (l *Loader) LoadThemes(rootPath string) (map[string]*Dictionary, error) {
 		themes[themeName] = dict
 		return nil
 	})
+	if err != nil {
+		return nil, err
+	}
 
-	return themes, err
+	// Expand scales in each theme
+	for name, dict := range themes {
+		if err := ExpandScales(dict); err != nil {
+			return nil, fmt.Errorf("failed to expand scales in theme %s: %w", name, err)
+		}
+	}
+
+	return themes, nil
 }
 
 func (l *Loader) isTokenFile(path string) bool {

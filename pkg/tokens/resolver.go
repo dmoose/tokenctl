@@ -11,6 +11,7 @@ type Resolver struct {
 	flatTokens map[string]interface{}
 	cache      map[string]interface{}
 	stack      []string // Cycle detection stack
+	exprEval   *ExpressionEvaluator
 }
 
 // refRegex matches {path.to.token}
@@ -22,11 +23,14 @@ func NewResolver(d *Dictionary) (*Resolver, error) {
 	if err := flatten(d.Root, "", flat); err != nil {
 		return nil, err
 	}
-	return &Resolver{
+	r := &Resolver{
 		flatTokens: flat,
 		cache:      make(map[string]interface{}),
 		stack:      []string{},
-	}, nil
+	}
+	// Create expression evaluator with reference to this resolver
+	r.exprEval = NewExpressionEvaluator(r)
+	return r, nil
 }
 
 // ResolveAll resolves all tokens in the dictionary
@@ -43,13 +47,18 @@ func (r *Resolver) ResolveAll() (map[string]interface{}, error) {
 	return resolved, nil
 }
 
-// ResolveValue resolves a value that might contain references
+// ResolveValue resolves a value that might contain references or expressions
 func (r *Resolver) ResolveValue(path string, value interface{}) (interface{}, error) {
 	// If it's not a string, it can't contain a reference (in this spec version)
 	// Unless it's a composite value which we don't fully support resolving *inside* yet
 	valStr, ok := value.(string)
 	if !ok {
 		return value, nil
+	}
+
+	// Check for expressions first (calc, contrast, etc.)
+	if IsExpression(valStr) {
+		return r.resolveExpression(path, valStr)
 	}
 
 	// Check for references
@@ -99,6 +108,29 @@ func (r *Resolver) ResolveValue(path string, value interface{}) (interface{}, er
 	}
 
 	return resolvedStr, nil
+}
+
+// resolveExpression evaluates an expression value
+func (r *Resolver) resolveExpression(path string, expr string) (interface{}, error) {
+	// Cycle detection
+	for _, p := range r.stack {
+		if p == path {
+			return nil, fmt.Errorf("circular dependency detected: %s -> %s", strings.Join(r.stack, " -> "), path)
+		}
+	}
+	r.stack = append(r.stack, path)
+	defer func() {
+		if len(r.stack) > 0 {
+			r.stack = r.stack[:len(r.stack)-1]
+		}
+	}()
+
+	result, err := r.exprEval.Evaluate(expr)
+	if err != nil {
+		return nil, fmt.Errorf("expression evaluation failed: %w", err)
+	}
+
+	return result, nil
 }
 
 func (r *Resolver) resolveReference(path string) (interface{}, error) {
