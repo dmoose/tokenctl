@@ -347,6 +347,58 @@ func TestResolveTokenReferences(t *testing.T) {
 	}
 }
 
+func TestTailwindGenerator_EffectTokens(t *testing.T) {
+	tests := []struct {
+		name     string
+		tokens   map[string]interface{}
+		expected []string
+	}{
+		{
+			name: "Effect tokens with value 0 and 1",
+			tokens: map[string]interface{}{
+				"effect.depth": 1,
+				"effect.noise": 0,
+			},
+			expected: []string{
+				"--effect-depth: 1;",
+				"--effect-noise: 0;",
+			},
+		},
+		{
+			name: "Effect tokens mixed with other tokens",
+			tokens: map[string]interface{}{
+				"color.primary": "#3b82f6",
+				"effect.depth":  1,
+				"size.field":    "2.5rem",
+				"effect.noise":  0,
+			},
+			expected: []string{
+				"--color-primary: #3b82f6;",
+				"--effect-depth: 1;",
+				"--effect-noise: 0;",
+				"--size-field: 2.5rem;",
+			},
+		},
+	}
+
+	gen := NewTailwindGenerator()
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			output, err := gen.GenerateFromResolved(tt.tokens)
+			if err != nil {
+				t.Fatalf("GenerateFromResolved failed: %v", err)
+			}
+
+			for _, exp := range tt.expected {
+				if !containsString(output, exp) {
+					t.Errorf("Expected output to contain %q, but it didn't.\nOutput:\n%s", exp, output)
+				}
+			}
+		})
+	}
+}
+
 func containsString(s, substr string) bool {
 	return len(s) >= len(substr) && len(s)-len(substr) >= 0 && (s == substr || (len(s) > len(substr) && (s[0:len(substr)] == substr || s[len(s)-len(substr):] == substr || func() bool {
 		for i := 0; i <= len(s)-len(substr); i++ {

@@ -8,7 +8,9 @@ This directory contains working examples demonstrating various tokctl features. 
 examples/
 ├── basic/          # Simple token system (brand, spacing, semantic colors)
 ├── themes/         # Theme inheritance with $extends
-└── components/     # Component definitions with variants and sizes
+├── components/     # Component definitions with variants and sizes
+├── computed/       # Computed values (calc, contrast, darken, lighten, scale)
+└── validation/     # Constraint validation and effect tokens
 ```
 
 ## Running Examples
@@ -91,6 +93,55 @@ tokctl build examples/components --output=dist/components
         "small": { ... },
         "large": { ... }
       }
+    }
+  }
+}
+```
+
+### Computed Example
+
+The `computed/` example demonstrates expression evaluation and computed values:
+
+```bash
+# Build computed values
+tokctl build examples/computed --output=dist/computed
+```
+
+**Key features:**
+- `calc()` expressions for arithmetic
+- `contrast()` for auto-generating content colors
+- `darken()` and `lighten()` for color manipulation
+- `scale()` for dimension scaling
+- `$scale` shorthand for size variants
+
+### Validation Example
+
+The `validation/` example demonstrates enhanced validation features:
+
+```bash
+# Validate with constraint checking
+tokctl validate examples/validation
+
+# Build tokens
+tokctl build examples/validation --output=dist/validation
+```
+
+**Key features:**
+- `$min` and `$max` constraints on dimension tokens
+- Numeric range constraints
+- Effect tokens (0 or 1) for DaisyUI-style toggles
+- Type-specific validation (color, dimension, number, fontFamily, effect)
+- `$type` inheritance from parent groups
+
+**Example constraint:**
+```json
+{
+  "size": {
+    "$type": "dimension",
+    "field": {
+      "$value": "2.5rem",
+      "$min": "1rem",
+      "$max": "5rem"
     }
   }
 }

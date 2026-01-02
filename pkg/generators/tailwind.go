@@ -9,6 +9,38 @@ import (
 	"github.com/dmoose/tokctl/pkg/tokens"
 )
 
+// serializeValueForCSS converts any value to a proper CSS string
+// Handles arrays by joining with appropriate separator based on value type
+func serializeValueForCSS(val interface{}) string {
+	switch v := val.(type) {
+	case []interface{}:
+		// Arrays are comma-separated for CSS custom properties
+		parts := make([]string, len(v))
+		for i, item := range v {
+			parts[i] = fmt.Sprintf("%v", item)
+		}
+		return strings.Join(parts, ", ")
+	case []string:
+		// Handle string slices as well
+		return strings.Join(v, ", ")
+	default:
+		// Check for other slice types via reflection-like approach
+		str := fmt.Sprintf("%v", val)
+		// If the default formatting produced brackets, it's likely a slice we didn't handle
+		// This is a fallback - ideally all slice types should be handled above
+		if len(str) > 2 && str[0] == '[' && str[len(str)-1] == ']' {
+			// Remove brackets and replace spaces with ", " for comma separation
+			inner := str[1 : len(str)-1]
+			// This is a simple heuristic - space-separated values inside brackets
+			parts := strings.Fields(inner)
+			if len(parts) > 1 {
+				return strings.Join(parts, ", ")
+			}
+		}
+		return str
+	}
+}
+
 // GenerationContext provides all necessary data for generation
 type GenerationContext struct {
 	BaseDict       *tokens.Dictionary                    // Original base dictionary (unresolved)
@@ -85,7 +117,8 @@ func (g *TailwindGenerator) generateBaseTheme(resolvedTokens map[string]interfac
 		}
 
 		cssVar := strings.ReplaceAll(path, ".", "-")
-		sb.WriteString(fmt.Sprintf("  --%s: %v;\n", cssVar, value))
+		cssValue := serializeValueForCSS(value)
+		sb.WriteString(fmt.Sprintf("  --%s: %s;\n", cssVar, cssValue))
 	}
 
 	sb.WriteString("}\n\n")
@@ -125,7 +158,8 @@ func (g *TailwindGenerator) generateThemeVariations(themes map[string]ThemeConte
 		for _, key := range tokenKeys {
 			val := themeCtx.DiffTokens[key]
 			cssVar := strings.ReplaceAll(key, ".", "-")
-			sb.WriteString(fmt.Sprintf("    --%s: %v;\n", cssVar, val))
+			cssValue := serializeValueForCSS(val)
+			sb.WriteString(fmt.Sprintf("    --%s: %s;\n", cssVar, cssValue))
 		}
 
 		sb.WriteString("  }\n")
