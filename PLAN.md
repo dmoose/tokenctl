@@ -7,8 +7,8 @@ This plan addresses the priority gaps identified for making tokctl capable of ge
 **Priority Order:**
 1. ✅ Color utilities package (using go-colorful)
 2. ✅ Computed value support in token resolution
-3. Enhanced validation with range constraints
-4. Effect token handling
+3. ✅ Enhanced validation with range constraints
+4. ✅ Effect token handling
 
 ---
 
@@ -118,7 +118,7 @@ Automatically expands to:
 
 ---
 
-## Phase 3: Enhanced Validation (TODO)
+## Phase 3: Enhanced Validation ✅ COMPLETE
 
 **Goal:** Add range constraints and type-specific validation.
 
@@ -167,18 +167,21 @@ func (v *Validator) validateDimension(path string, value interface{}) []Validati
 | `number` | Numeric value, range constraints |
 | `fontFamily` | Non-empty string or array |
 
-### 3.4 Files to Create/Modify
+### 3.4 Files Created/Modified
 
-| File | Action | Description |
+| File | Status | Description |
 |------|--------|-------------|
-| `pkg/tokens/validator.go` | Modify | Add constraint validation |
-| `pkg/tokens/constraints.go` | Create | Constraint parsing and checking |
+| `pkg/tokens/validator.go` | ✅ | Added constraint and type-specific validation |
+| `pkg/tokens/constraints.go` | ✅ | Constraint parsing and checking |
+| `pkg/tokens/constraints_test.go` | ✅ | Constraint tests |
 
-**Note:** `pkg/tokens/dimension.go` already exists from Phase 2.
+**Additional features implemented:**
+- `$type` inheritance from parent groups (per W3C spec)
+- Array value serialization fix for fontFamily tokens
 
 ---
 
-## Phase 4: Effect Token Support (TODO)
+## Phase 4: Effect Token Support ✅ COMPLETE
 
 **Goal:** Handle DaisyUI's `--depth` and `--noise` effect tokens properly.
 
@@ -216,12 +219,13 @@ In `pkg/generators/tailwind.go`, handle effect tokens:
 // Component definitions handle the actual effect application
 ```
 
-### 4.3 Files to Modify
+### 4.3 Files Modified
 
-| File | Action | Description |
+| File | Status | Description |
 |------|--------|-------------|
-| `pkg/generators/tailwind.go` | Modify | Handle effect type output |
-| `pkg/tokens/validator.go` | Modify | Validate effect values (0 or 1) |
+| `pkg/generators/tailwind.go` | ✅ | Effect tokens output as CSS variables (0 or 1) |
+| `pkg/tokens/validator.go` | ✅ | Effect value validation (must be 0 or 1) |
+| `examples/validation/` | ✅ | Example demonstrating effect tokens and constraints |
 
 ---
 
@@ -230,10 +234,10 @@ In `pkg/generators/tailwind.go`, handle effect tokens:
 ```
 Phase 1: Color Utilities        ✅ COMPLETE
 Phase 2: Computed Values        ✅ COMPLETE
-Phase 3: Enhanced Validation    ⬚ TODO (~1-2 days)
-Phase 4: Effect Tokens          ⬚ TODO (~0.5 days)
+Phase 3: Enhanced Validation    ✅ COMPLETE
+Phase 4: Effect Tokens          ✅ COMPLETE
 
-Total Remaining: ~1.5-2.5 days
+All phases complete!
 ```
 
 ---
@@ -316,13 +320,17 @@ Build with: `tokctl build examples/computed --output dist/computed`
 - [x] Integration with resolver
 - [x] Unit tests with >80% coverage
 
-**Phase 3:** ⬚
-- [ ] `$min`/`$max` constraint validation
-- [ ] Color format validation
-- [ ] Dimension validation
-- [ ] Unit tests
+**Phase 3:** ✅
+- [x] `$min`/`$max` constraint validation
+- [x] Color format validation
+- [x] Dimension validation
+- [x] Number validation
+- [x] FontFamily validation
+- [x] `$type` inheritance from parent groups
+- [x] Unit tests
 
-**Phase 4:** ⬚
-- [ ] Effect token type handling
-- [ ] Generator output for effects
-- [ ] Unit tests
+**Phase 4:** ✅
+- [x] Effect token type handling (0 or 1)
+- [x] Generator output for effects
+- [x] Validation example with effect tokens
+- [x] Unit tests

@@ -113,7 +113,17 @@ example-components: build ## Build components example
 	./$(BUILD_DIR)/$(BINARY_NAME) build examples/components --output dist/components
 	@echo "Output: dist/components/tokens.css"
 
-examples: example-basic example-themes example-components ## Build all examples
+example-computed: build ## Build computed example
+	@echo "Building computed example..."
+	./$(BUILD_DIR)/$(BINARY_NAME) build examples/computed --output dist/computed
+	@echo "Output: dist/computed/tokens.css"
+
+example-validation: build ## Build validation example
+	@echo "Building validation example..."
+	./$(BUILD_DIR)/$(BINARY_NAME) build examples/validation --output dist/validation
+	@echo "Output: dist/validation/tokens.css"
+
+examples: example-basic example-themes example-components example-computed example-validation ## Build all examples
 
 ## CI/CD
 

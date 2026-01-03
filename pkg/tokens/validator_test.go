@@ -422,6 +422,365 @@ func TestValidationError_WithSourceFile(t *testing.T) {
 	}
 }
 
+func TestValidator_TypeValidation_Color(t *testing.T) {
+	tests := []struct {
+		name         string
+		value        interface{}
+		expectErrors bool
+	}{
+		{"valid hex", "#3b82f6", false},
+		{"valid hex short", "#fff", false},
+		{"valid rgb", "rgb(255, 128, 0)", false},
+		{"valid hsl", "hsl(180, 50%, 50%)", false},
+		{"valid oklch", "oklch(50% 0.2 180)", false},
+		{"valid named", "red", false},
+		{"invalid color", "not-a-color", true},
+		{"reference skipped", "{color.base}", false},
+		{"contrast expression skipped", "contrast({color.base})", false},
+		{"darken expression skipped", "darken({color.base}, 20%)", false},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			dict := &Dictionary{
+				Root: map[string]interface{}{
+					"color": map[string]interface{}{
+						"base": map[string]interface{}{
+							"$value": "#3b82f6",
+							"$type":  "color",
+						},
+						"test": map[string]interface{}{
+							"$value": tt.value,
+							"$type":  "color",
+						},
+					},
+				},
+			}
+
+			validator := NewValidator()
+			errors, err := validator.Validate(dict)
+			if err != nil {
+				t.Fatalf("Validation failed to run: %v", err)
+			}
+
+			hasErrors := len(errors) > 0
+			if tt.expectErrors && !hasErrors {
+				t.Error("Expected validation errors, got none")
+			}
+			if !tt.expectErrors && hasErrors {
+				t.Errorf("Expected no validation errors, got: %v", errors)
+			}
+		})
+	}
+}
+
+func TestValidator_TypeValidation_Dimension(t *testing.T) {
+	tests := []struct {
+		name         string
+		value        interface{}
+		expectErrors bool
+	}{
+		{"valid px", "10px", false},
+		{"valid rem", "1.5rem", false},
+		{"valid percent", "100%", false},
+		{"valid zero", "0", false},
+		{"valid numeric zero", 0, false},
+		{"invalid dimension", "invalid", true},
+		{"reference skipped", "{size.base}", false},
+		{"calc expression skipped", "calc({size.base} * 2)", false},
+		{"scale expression skipped", "scale({size.base}, 1.5)", false},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			dict := &Dictionary{
+				Root: map[string]interface{}{
+					"size": map[string]interface{}{
+						"base": map[string]interface{}{
+							"$value": "1rem",
+							"$type":  "dimension",
+						},
+						"test": map[string]interface{}{
+							"$value": tt.value,
+							"$type":  "dimension",
+						},
+					},
+				},
+			}
+
+			validator := NewValidator()
+			errors, err := validator.Validate(dict)
+			if err != nil {
+				t.Fatalf("Validation failed to run: %v", err)
+			}
+
+			hasErrors := len(errors) > 0
+			if tt.expectErrors && !hasErrors {
+				t.Error("Expected validation errors, got none")
+			}
+			if !tt.expectErrors && hasErrors {
+				t.Errorf("Expected no validation errors, got: %v", errors)
+			}
+		})
+	}
+}
+
+func TestValidator_TypeValidation_Number(t *testing.T) {
+	tests := []struct {
+		name         string
+		value        interface{}
+		expectErrors bool
+	}{
+		{"valid float", 0.5, false},
+		{"valid int", 10, false},
+		{"valid string number", "123", false},
+		{"invalid string", "not-a-number", true},
+		{"reference skipped", "{opacity.base}", false},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			dict := &Dictionary{
+				Root: map[string]interface{}{
+					"opacity": map[string]interface{}{
+						"base": map[string]interface{}{
+							"$value": 1.0,
+							"$type":  "number",
+						},
+						"test": map[string]interface{}{
+							"$value": tt.value,
+							"$type":  "number",
+						},
+					},
+				},
+			}
+
+			validator := NewValidator()
+			errors, err := validator.Validate(dict)
+			if err != nil {
+				t.Fatalf("Validation failed to run: %v", err)
+			}
+
+			hasErrors := len(errors) > 0
+			if tt.expectErrors && !hasErrors {
+				t.Error("Expected validation errors, got none")
+			}
+			if !tt.expectErrors && hasErrors {
+				t.Errorf("Expected no validation errors, got: %v", errors)
+			}
+		})
+	}
+}
+
+func TestValidator_TypeValidation_FontFamily(t *testing.T) {
+	tests := []struct {
+		name         string
+		value        interface{}
+		expectErrors bool
+	}{
+		{"valid string", "Arial, sans-serif", false},
+		{"valid array", []interface{}{"Arial", "Helvetica", "sans-serif"}, false},
+		{"empty string", "", true},
+		{"empty array", []interface{}{}, true},
+		{"array with empty string", []interface{}{"Arial", ""}, true},
+		{"array with non-string", []interface{}{"Arial", 123}, true},
+		{"invalid type", 123, true},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			dict := &Dictionary{
+				Root: map[string]interface{}{
+					"font": map[string]interface{}{
+						"test": map[string]interface{}{
+							"$value": tt.value,
+							"$type":  "fontFamily",
+						},
+					},
+				},
+			}
+
+			validator := NewValidator()
+			errors, err := validator.Validate(dict)
+			if err != nil {
+				t.Fatalf("Validation failed to run: %v", err)
+			}
+
+			hasErrors := len(errors) > 0
+			if tt.expectErrors && !hasErrors {
+				t.Error("Expected validation errors, got none")
+			}
+			if !tt.expectErrors && hasErrors {
+				t.Errorf("Expected no validation errors, got: %v", errors)
+			}
+		})
+	}
+}
+
+func TestValidator_TypeValidation_Effect(t *testing.T) {
+	tests := []struct {
+		name         string
+		value        interface{}
+		expectErrors bool
+	}{
+		{"valid 0", 0, false},
+		{"valid 1", 1, false},
+		{"valid float 0", 0.0, false},
+		{"valid float 1", 1.0, false},
+		{"valid string 0", "0", false},
+		{"valid string 1", "1", false},
+		{"invalid number", 2, true},
+		{"invalid float", 0.5, true},
+		{"invalid string", "yes", true},
+		{"reference skipped", "{effect.base}", false},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			dict := &Dictionary{
+				Root: map[string]interface{}{
+					"effect": map[string]interface{}{
+						"base": map[string]interface{}{
+							"$value": 1,
+							"$type":  "effect",
+						},
+						"test": map[string]interface{}{
+							"$value": tt.value,
+							"$type":  "effect",
+						},
+					},
+				},
+			}
+
+			validator := NewValidator()
+			errors, err := validator.Validate(dict)
+			if err != nil {
+				t.Fatalf("Validation failed to run: %v", err)
+			}
+
+			hasErrors := len(errors) > 0
+			if tt.expectErrors && !hasErrors {
+				t.Error("Expected validation errors, got none")
+			}
+			if !tt.expectErrors && hasErrors {
+				t.Errorf("Expected no validation errors, got: %v", errors)
+			}
+		})
+	}
+}
+
+func TestValidator_ConstraintValidation(t *testing.T) {
+	tests := []struct {
+		name         string
+		token        map[string]interface{}
+		expectErrors bool
+		errContains  string
+	}{
+		{
+			name: "dimension in range",
+			token: map[string]interface{}{
+				"$value": "2.5rem",
+				"$type":  "dimension",
+				"$min":   "1rem",
+				"$max":   "5rem",
+			},
+			expectErrors: false,
+		},
+		{
+			name: "dimension below min",
+			token: map[string]interface{}{
+				"$value": "0.5rem",
+				"$type":  "dimension",
+				"$min":   "1rem",
+				"$max":   "5rem",
+			},
+			expectErrors: true,
+			errContains:  "less than minimum",
+		},
+		{
+			name: "dimension above max",
+			token: map[string]interface{}{
+				"$value": "10rem",
+				"$type":  "dimension",
+				"$min":   "1rem",
+				"$max":   "5rem",
+			},
+			expectErrors: true,
+			errContains:  "greater than maximum",
+		},
+		{
+			name: "number in range",
+			token: map[string]interface{}{
+				"$value": 0.5,
+				"$type":  "number",
+				"$min":   0.0,
+				"$max":   1.0,
+			},
+			expectErrors: false,
+		},
+		{
+			name: "number below min",
+			token: map[string]interface{}{
+				"$value": -0.5,
+				"$type":  "number",
+				"$min":   0.0,
+				"$max":   1.0,
+			},
+			expectErrors: true,
+			errContains:  "less than minimum",
+		},
+		{
+			name: "invalid constraint definition",
+			token: map[string]interface{}{
+				"$value": "10px",
+				"$min":   "20px",
+				"$max":   "10px",
+			},
+			expectErrors: true,
+			errContains:  "cannot be greater than",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			dict := &Dictionary{
+				Root: map[string]interface{}{
+					"test": map[string]interface{}{
+						"token": tt.token,
+					},
+				},
+			}
+
+			validator := NewValidator()
+			errors, err := validator.Validate(dict)
+			if err != nil {
+				t.Fatalf("Validation failed to run: %v", err)
+			}
+
+			hasErrors := len(errors) > 0
+			if tt.expectErrors && !hasErrors {
+				t.Error("Expected validation errors, got none")
+			}
+			if !tt.expectErrors && hasErrors {
+				t.Errorf("Expected no validation errors, got: %v", errors)
+			}
+
+			if tt.errContains != "" && hasErrors {
+				found := false
+				for _, verr := range errors {
+					if strings.Contains(verr.Message, tt.errContains) {
+						found = true
+						break
+					}
+				}
+				if !found {
+					t.Errorf("Expected error containing '%s', got: %v", tt.errContains, errors)
+				}
+			}
+		})
+	}
+}
+
 func TestValidator_SourceFileTracking(t *testing.T) {
 	// Create a dictionary with source file annotations
 	dict := &Dictionary{
