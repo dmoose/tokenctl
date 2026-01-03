@@ -1,0 +1,26 @@
+# Binaries
+bin/
+dist/
+out/
+build/
+*.exe
+*.test
+
+# Development
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store
+
+# Test Artifacts
+coverage.out
+test-system/
+generated/
+
+# Dependency Directories
+vendor/
+
+# OS Specific
+.DS_Store
+Thumbs.db
