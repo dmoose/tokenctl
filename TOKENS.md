@@ -1001,37 +1001,43 @@ tokctl validate --naming-rules=semantic
 
 ### Debugging Tips
 
-#### 1. Use the development server
-```bash
-tokctl serve --port=3000
-```
-This provides a visual preview of all your tokens and their relationships.
-
-#### 2. Validate frequently
+#### 1. Validate frequently
 ```bash
 tokctl validate
 ```
-Run validation after making changes to catch issues early.
+Run validation after making changes to catch issues early. Errors now include source file names:
+```
+[Error] color.primary [tokens/brand/colors.json]: reference not found: color.nonexistent
+```
 
-#### 3. Check generated output
+#### 2. Check generated output
 ```bash
-tokctl build --format=css --output=./debug.css
+tokctl build --format=tailwind --output=./debug
+cat ./debug/tokens.css
 ```
 Examine the generated CSS to understand how tokens are being processed.
 
-#### 4. Use verbose logging
+#### 3. Use the examples
 ```bash
-tokctl build --verbose --format=tailwind
+# Build and examine working examples
+tokctl build examples/themes --output=./dist
+tokctl build examples/components --output=./dist
 ```
-Get detailed information about the build process.
+The `examples/` directory contains working token systems demonstrating all features.
+
+#### 4. Run the demo workflow
+```bash
+make demo
+```
+Runs a complete init → validate → build workflow to verify everything works.
 
 ### Getting Help
 
 1. **Check the documentation**: Most issues are covered in this guide
 2. **Validate your tokens**: Run `tokctl validate` to catch common problems
-3. **Use the development server**: Visual debugging often reveals issues
-4. **Check examples**: Look at the `examples/` directory for working patterns
-5. **Community support**: Join the Tokctl community for help and best practices
+3. **Check examples**: Look at the `examples/` directory for working patterns
+4. **Run the demo**: Use `make demo` to see a complete workflow in action
+5. **Examine test fixtures**: The `testdata/` directory contains valid and invalid examples
 
 ---
 
