@@ -2,17 +2,118 @@
 
 tokctl generates CSS custom properties from your design tokens. For advanced patterns like accessibility preferences, typography systems, and interaction states, you compose additional CSS layers on top of tokctl's output.
 
-This document covers patterns that **don't require changes to tokctl** — they use standard CSS composition.
+This document covers:
+1. **Built-in features** — `$property` for CSS @property declarations
+2. **Composition patterns** — CSS layers on top of tokctl output
 
 ---
 
 ## Table of Contents
 
-1. [The Composition Pattern](#the-composition-pattern)
-2. [Accessibility Media Queries](#accessibility-media-queries)
-3. [Typography Systems](#typography-systems)
-4. [Interaction States](#interaction-states)
-5. [CSS @property Declarations](#css-property-declarations)
+1. [CSS @property Declarations](#css-property-declarations) — Built-in feature
+2. [The Composition Pattern](#the-composition-pattern)
+3. [Accessibility Media Queries](#accessibility-media-queries)
+4. [Typography Systems](#typography-systems)
+5. [Interaction States](#interaction-states)
+
+---
+
+## CSS @property Declarations
+
+tokctl can generate CSS `@property` declarations for type-safe custom properties with animation support. This is an opt-in feature using the `$property` field.
+
+### Why @property?
+
+1. **Animations** — Custom properties can't animate by default. With @property, they can.
+2. **Type checking** — Browser validates values match the syntax
+3. **Initial values** — Fallback if variable is undefined
+
+### Basic Usage
+
+Add `$property: true` to any token:
+
+```json
+{
+  "color": {
+    "$type": "color",
+    "primary": {
+      "$value": "oklch(50% 0.2 250)",
+      "$property": true
+    }
+  }
+}
+```
+
+**Generated output:**
+
+```css
+@property --color-primary {
+  syntax: '<color>';
+  inherits: true;
+  initial-value: oklch(50% 0.2 250);
+}
+
+@theme {
+  --color-primary: oklch(50% 0.2 250);
+}
+```
+
+### Custom Inheritance
+
+By default, `@property` declarations use `inherits: true`. To disable inheritance:
+
+```json
+{
+  "timing": {
+    "fast": {
+      "$value": "150ms",
+      "$type": "duration",
+      "$property": { "inherits": false }
+    }
+  }
+}
+```
+
+**Generated output:**
+
+```css
+@property --timing-fast {
+  syntax: '<time>';
+  inherits: false;
+  initial-value: 150ms;
+}
+```
+
+### Supported Types
+
+| Token `$type` | CSS `syntax` |
+|---------------|--------------|
+| `color` | `<color>` |
+| `dimension` | `<length>` |
+| `number` | `<number>` |
+| `duration` | `<time>` |
+| `effect` | `<integer>` |
+
+Types without a CSS syntax mapping (like `fontFamily`) are skipped.
+
+### Animated Theme Transitions
+
+With `@property`, theme switches can animate smoothly:
+
+```css
+/* Theme transition - colors animate instead of snapping */
+:root {
+  transition: 
+    --color-primary 300ms ease,
+    --color-secondary 300ms ease;
+}
+
+[data-theme="dark"] {
+  --color-primary: oklch(70% 0.2 250);
+}
+```
+
+Without `@property`, custom properties change instantly. With `@property`, they transition.
 
 ---
 
@@ -442,83 +543,6 @@ Define base tokens, compose state variants in CSS.
 
 ---
 
-## CSS @property Declarations
-
-For type-safe custom properties with animation support, add `@property` declarations.
-
-### Why @property?
-
-1. **Type checking** — Browser validates values
-2. **Animations** — Custom properties can transition/animate
-3. **Initial values** — Fallback if variable is undefined
-
-### Property Declarations Layer
-
-**layers/properties.css:**
-```css
-/* Color tokens - enables smooth color transitions */
-@property --color-primary {
-  syntax: '<color>';
-  inherits: true;
-  initial-value: oklch(50% 0.2 250);
-}
-
-@property --color-secondary {
-  syntax: '<color>';
-  inherits: true;
-  initial-value: oklch(60% 0.15 300);
-}
-
-@property --color-base-100 {
-  syntax: '<color>';
-  inherits: true;
-  initial-value: oklch(98% 0.02 250);
-}
-
-/* Size tokens */
-@property --size-field {
-  syntax: '<length>';
-  inherits: true;
-  initial-value: 2.5rem;
-}
-
-/* Timing tokens */
-@property --timing-fast {
-  syntax: '<time>';
-  inherits: true;
-  initial-value: 150ms;
-}
-
-/* Number tokens */
-@property --motion-scale {
-  syntax: '<number>';
-  inherits: true;
-  initial-value: 1;
-}
-```
-
-### Animated Theme Transitions
-
-With `@property`, theme switches can animate:
-
-```css
-/* Smooth theme transition */
-:root {
-  transition: 
-    --color-primary 300ms ease,
-    --color-secondary 300ms ease,
-    --color-base-100 300ms ease;
-}
-
-/* Theme switch now animates colors */
-[data-theme="dark"] {
-  --color-primary: oklch(70% 0.2 250);
-  --color-base-100: oklch(15% 0.02 250);
-}
-```
-
-Without `@property`, this transition would be instant (custom properties don't animate by default).
-
 ---
 
 ## Complete Example Structure
@@ -546,13 +570,7 @@ my-design-system/
 
 **app.css:**
 ```css
-/* Optional: @property declarations first for type safety */
-@import "./layers/properties.css";
-
-/* Tailwind */
-@import "tailwindcss";
-
-/* Generated tokens */
+/* Tailwind and tokctl output (includes @property if tokens use $property) */
 @import "./dist/tokens.css";
 
 /* Custom layers */
@@ -568,9 +586,9 @@ my-design-system/
 | Pattern | Where to Define | Why |
 |---------|-----------------|-----|
 | Token values | `tokens/*.json` | Data, portable, tool-agnostic |
+| @property | `tokens/*.json` with `$property: true` | Auto-generated from token data |
 | Media queries | `layers/accessibility.css` | CSS behavior, full control |
 | Text styles | `layers/typography.css` | Composed from token vars |
 | State variants | `layers/states.css` | CSS-native relative colors |
-| @property | `layers/properties.css` | Progressive enhancement |
 
-**tokctl handles tokens. CSS handles behavior.** This separation keeps your design system maintainable and your tokens portable.
+**tokctl handles tokens and @property declarations. CSS handles behavior.** This separation keeps your design system maintainable and your tokens portable.
