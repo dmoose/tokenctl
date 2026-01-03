@@ -65,6 +65,59 @@ func TestTailwindGenerator(t *testing.T) {
 				"color: var(--color-primary);",
 			},
 		},
+		{
+			name: "Multiple Token References in Single Property",
+			components: map[string]tokens.ComponentDefinition{
+				"button": {
+					Class: "btn",
+					Base: map[string]interface{}{
+						"padding": "{spacing.sm} {spacing.md}",
+						"margin":  "{spacing.xs} {spacing.sm} {spacing.md}",
+					},
+				},
+			},
+			expected: []string{
+				"padding: var(--spacing-sm) var(--spacing-md);",
+				"margin: var(--spacing-xs) var(--spacing-sm) var(--spacing-md);",
+			},
+			notExpected: []string{
+				"{spacing",
+				"} {spacing",
+			},
+		},
+		{
+			name: "Token References with Strings",
+			components: map[string]tokens.ComponentDefinition{
+				"button": {
+					Class: "btn",
+					Base: map[string]interface{}{
+						"border": "1px solid {color.border}",
+					},
+				},
+			},
+			expected: []string{
+				"border: 1px solid var(--color-border);",
+			},
+			notExpected: []string{
+				"{color",
+			},
+		},
+		{
+			name: "No Token References",
+			components: map[string]tokens.ComponentDefinition{
+				"button": {
+					Class: "btn",
+					Base: map[string]interface{}{
+						"display": "flex",
+						"padding": "0.5rem 1rem",
+					},
+				},
+			},
+			expected: []string{
+				"display: flex;",
+				"padding: 0.5rem 1rem;",
+			},
+		},
 	}
 
 	gen := NewTailwindGenerator()
@@ -226,6 +279,69 @@ func TestTailwindGenerator_ArraySerialization(t *testing.T) {
 				if !containsString(output, exp) {
 					t.Errorf("Expected output to contain %q, but it didn't.\nOutput:\n%s", exp, output)
 				}
+			}
+		})
+	}
+}
+
+func TestResolveTokenReferences(t *testing.T) {
+	tests := []struct {
+		name     string
+		input    string
+		expected string
+	}{
+		{
+			name:     "Single token reference",
+			input:    "{color.primary}",
+			expected: "var(--color-primary)",
+		},
+		{
+			name:     "Multiple token references",
+			input:    "{spacing.sm} {spacing.md}",
+			expected: "var(--spacing-sm) var(--spacing-md)",
+		},
+		{
+			name:     "Token reference with surrounding text",
+			input:    "1px solid {color.border}",
+			expected: "1px solid var(--color-border)",
+		},
+		{
+			name:     "Multiple token references with text",
+			input:    "{spacing.xs} {spacing.sm} {spacing.md} {spacing.lg}",
+			expected: "var(--spacing-xs) var(--spacing-sm) var(--spacing-md) var(--spacing-lg)",
+		},
+		{
+			name:     "No token references",
+			input:    "0.5rem 1rem",
+			expected: "0.5rem 1rem",
+		},
+		{
+			name:     "Nested path reference",
+			input:    "{color.semantic.success.background}",
+			expected: "var(--color-semantic-success-background)",
+		},
+		{
+			name:     "Complex CSS value",
+			input:    "0 1px 2px {color.shadow}",
+			expected: "0 1px 2px var(--color-shadow)",
+		},
+		{
+			name:     "Empty string",
+			input:    "",
+			expected: "",
+		},
+		{
+			name:     "Mixed tokens and values",
+			input:    "{spacing.md} auto {spacing.lg}",
+			expected: "var(--spacing-md) auto var(--spacing-lg)",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := resolveTokenReferences(tt.input)
+			if result != tt.expected {
+				t.Errorf("resolveTokenReferences(%q) = %q, want %q", tt.input, result, tt.expected)
 			}
 		})
 	}
