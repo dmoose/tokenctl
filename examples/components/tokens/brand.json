@@ -1,0 +1,60 @@
+{
+  "color": {
+    "brand": {
+      "$type": "color",
+      "$description": "Brand identity colors",
+      "primary": {
+        "$value": "#3b82f6",
+        "$description": "Primary brand color"
+      },
+      "primary-content": {
+        "$value": "#ffffff",
+        "$description": "Text color on primary background"
+      },
+      "secondary": {
+        "$value": "#8b5cf6",
+        "$description": "Secondary brand color"
+      },
+      "secondary-content": {
+        "$value": "#ffffff",
+        "$description": "Text color on secondary background"
+      }
+    },
+    "semantic": {
+      "$type": "color",
+      "$description": "Semantic state colors",
+      "success": {
+        "$value": "#10b981",
+        "$description": "Success state color"
+      },
+      "success-content": {
+        "$value": "#ffffff",
+        "$description": "Text color on success background"
+      },
+      "error": {
+        "$value": "#ef4444",
+        "$description": "Error state color"
+      },
+      "error-content": {
+        "$value": "#ffffff",
+        "$description": "Text color on error background"
+      }
+    }
+  },
+  "spacing": {
+    "$type": "dimension",
+    "$description": "Spacing scale",
+    "xs": {
+      "$value": "0.5rem"
+    },
+    "sm": {
+      "$value": "0.75rem"
+    },
+    "md": {
+      "$value": "1rem"
+    },
+    "lg": {
+      "$value": "1.25rem"
+    }
+  }
+}

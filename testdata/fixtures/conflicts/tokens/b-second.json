@@ -1,0 +1,8 @@
+{
+  "spacing": {
+    "base": {
+      "$value": "2rem",
+      "$description": "Conflicting redefinition"
+    }
+  }
+}

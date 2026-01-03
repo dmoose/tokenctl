@@ -1,0 +1,84 @@
+{
+  "components": {
+    "button": {
+      "$type": "component",
+      "$class": "btn",
+      "$description": "Button component with variants and sizes",
+      "variants": {
+        "primary": {
+          "$class": "btn-primary",
+          "$description": "Primary action button",
+          "background-color": "{color.brand.primary}",
+          "color": "{color.brand.primary-content}",
+          "border": "none",
+          "padding": "{spacing.sm} {spacing.md}",
+          "border-radius": "0.375rem",
+          "font-weight": "500",
+          "cursor": "pointer",
+          "&:hover": {
+            "background-color": "#2563eb"
+          },
+          "&:active": {
+            "background-color": "#1d4ed8"
+          }
+        },
+        "secondary": {
+          "$class": "btn-secondary",
+          "$description": "Secondary action button",
+          "background-color": "{color.brand.secondary}",
+          "color": "{color.brand.secondary-content}",
+          "border": "none",
+          "padding": "{spacing.sm} {spacing.md}",
+          "border-radius": "0.375rem",
+          "font-weight": "500",
+          "cursor": "pointer",
+          "&:hover": {
+            "background-color": "#7c3aed"
+          }
+        },
+        "success": {
+          "$class": "btn-success",
+          "$description": "Success state button",
+          "background-color": "{color.semantic.success}",
+          "color": "{color.semantic.success-content}",
+          "border": "none",
+          "padding": "{spacing.sm} {spacing.md}",
+          "border-radius": "0.375rem",
+          "font-weight": "500",
+          "cursor": "pointer",
+          "&:hover": {
+            "background-color": "#059669"
+          }
+        },
+        "error": {
+          "$class": "btn-error",
+          "$description": "Error state button",
+          "background-color": "{color.semantic.error}",
+          "color": "{color.semantic.error-content}",
+          "border": "none",
+          "padding": "{spacing.sm} {spacing.md}",
+          "border-radius": "0.375rem",
+          "font-weight": "500",
+          "cursor": "pointer",
+          "&:hover": {
+            "background-color": "#dc2626"
+          }
+        }
+      },
+      "sizes": {
+        "small": {
+          "$class": "btn-sm",
+          "$description": "Small button size",
+          "padding": "{spacing.xs} {spacing.sm}",
+          "font-size": "0.875rem"
+        },
+        "large": {
+          "$class": "btn-lg",
+          "$description": "Large button size",
+          "padding": "{spacing.md} {spacing.lg}",
+          "font-size": "1.125rem"
+        }
+      }
+    }
+  }
+}

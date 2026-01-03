@@ -1,0 +1,11 @@
+{
+  "$extends": "light",
+  "$description": "Dark theme extends light theme",
+  "color": {
+    "brand": {
+      "primary": {
+        "$value": "#1e40af"
+      }
+    }
+  }
+}

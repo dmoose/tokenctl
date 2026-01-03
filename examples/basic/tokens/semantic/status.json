@@ -1,0 +1,16 @@
+{
+  "color": {
+    "status": {
+      "$type": "color",
+      "error": {
+        "$value": "#ef4444"
+      },
+      "success": {
+        "$value": "#10b981"
+      },
+      "warning": {
+        "$value": "#f59e0b"
+      }
+    }
+  }
+}

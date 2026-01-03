@@ -32,7 +32,7 @@ func runValidate(cmd *cobra.Command, args []string) error {
 
 	// 1. Load Dictionary (Base + Themes)
 	loader := tokens.NewLoader()
-	
+
 	// Load Base
 	baseDict, err := loader.LoadBase(dir)
 	if err != nil {
@@ -64,16 +64,14 @@ func runValidate(cmd *cobra.Command, args []string) error {
 	}
 
 	// 3. Validate Themes (Inheritance + Resolution)
-	for name, themeDict := range themes {
+	// Resolve theme inheritance chains (handles $extends)
+	inheritedThemes, err := tokens.ResolveThemeInheritance(baseDict, themes)
+	if err != nil {
+		return fmt.Errorf("theme inheritance failed: %w", err)
+	}
+
+	for name, merged := range inheritedThemes {
 		fmt.Printf("Checking Theme '%s'...\n", name)
-		
-		// Inherit to check validity of the final result
-		merged, err := tokens.Inherit(baseDict, themeDict)
-		if err != nil {
-			fmt.Printf("  [Error] Inheritance failed: %v\n", err)
-			hasErrors = true
-			continue
-		}
 
 		errs, err := validator.Validate(merged)
 		if err != nil {

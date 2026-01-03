@@ -1,0 +1,8 @@
+{
+  "spacing": {
+    "base": {
+      "$value": "1rem",
+      "$description": "Original definition"
+    }
+  }
+}

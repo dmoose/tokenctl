@@ -37,7 +37,7 @@ func runBuild(cmd *cobra.Command, args []string) error {
 
 	// 1. Load Dictionary
 	loader := tokens.NewLoader()
-	
+
 	// Load Base
 	baseDict, err := loader.LoadBase(dir)
 	if err != nil {
@@ -74,17 +74,17 @@ func runBuild(cmd *cobra.Command, args []string) error {
 		}
 
 		// Generate Themes
+		// Resolve theme inheritance chains (handles $extends)
+		inheritedThemes, err := tokens.ResolveThemeInheritance(baseDict, themes)
+		if err != nil {
+			return fmt.Errorf("failed to resolve theme inheritance: %w", err)
+		}
+
 		// We need to resolve each theme merged with base
 		resolvedThemes := make(map[string]map[string]interface{})
-		for name, themeDict := range themes {
-			// Inherit
-			merged, err := tokens.Inherit(baseDict, themeDict)
-			if err != nil {
-				return fmt.Errorf("failed to inherit theme %s: %w", name, err)
-			}
-			
+		for name, mergedDict := range inheritedThemes {
 			// Resolve
-			themeResolver, err := tokens.NewResolver(merged)
+			themeResolver, err := tokens.NewResolver(mergedDict)
 			if err != nil {
 				return fmt.Errorf("failed to resolve theme %s: %w", name, err)
 			}
@@ -92,11 +92,11 @@ func runBuild(cmd *cobra.Command, args []string) error {
 			if err != nil {
 				return fmt.Errorf("resolution failed for theme %s: %w", name, err)
 			}
-			
+
 			// Calculate Diff: Theme vs Base
 			// We only want to output keys that are DIFFERENT or NEW in the theme.
 			themeDiff := tokens.Diff(resolvedTheme, resolvedBase)
-			
+
 			resolvedThemes[name] = themeDiff
 		}
 

@@ -5,6 +5,7 @@ out/
 build/
 *.exe
 *.test
+/tokctl
 
 # Development
 .idea/
@@ -15,8 +16,11 @@ build/
 
 # Test Artifacts
 coverage.out
-test-system/
 generated/
+.build/
+test-*-out/
+test-output/
+test-dist/
 
 # Dependency Directories
 vendor/

@@ -1,0 +1,8 @@
+{
+  "color": {
+    "primary": {
+      "$value": "{color.nonexistent}",
+      "$description": "This references a token that doesn't exist"
+    }
+  }
+}
