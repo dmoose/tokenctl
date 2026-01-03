@@ -8,11 +8,15 @@ import (
 
 // ValidationError represents a validation issue
 type ValidationError struct {
-	Path    string
-	Message string
+	Path       string
+	Message    string
+	SourceFile string // Optional: file where the token was defined
 }
 
 func (v ValidationError) Error() string {
+	if v.SourceFile != "" {
+		return fmt.Sprintf("%s [%s]: %s", v.Path, v.SourceFile, v.Message)
+	}
 	return fmt.Sprintf("%s: %s", v.Path, v.Message)
 }
 
@@ -50,22 +54,27 @@ func (v *Validator) Validate(d *Dictionary) ([]ValidationError, error) {
 		_, err := r.ResolveValue(path, val)
 		if err != nil {
 			// Is it a cycle or missing ref?
-			errors = append(errors, ValidationError{
+			verr := ValidationError{
 				Path:    path,
 				Message: err.Error(),
-			})
+			}
+			// Add source file if available
+			if sourceFile, ok := d.SourceFiles[path]; ok {
+				verr.SourceFile = sourceFile
+			}
+			errors = append(errors, verr)
 		}
 	}
 
 	// 2. Schema Validation (Basic)
 	// Walk the tree and check required fields
-	walkErrors := v.validateSchema(d.Root, "")
+	walkErrors := v.validateSchema(d, d.Root, "")
 	errors = append(errors, walkErrors...)
 
 	return errors, nil
 }
 
-func (v *Validator) validateSchema(node map[string]interface{}, currentPath string) []ValidationError {
+func (v *Validator) validateSchema(dict *Dictionary, node map[string]interface{}, currentPath string) []ValidationError {
 	var errors []ValidationError
 
 	if IsToken(node) {
@@ -86,10 +95,15 @@ func (v *Validator) validateSchema(node map[string]interface{}, currentPath stri
 			if currentPath != "" {
 				childPath = currentPath + "." + key
 			}
-			errors = append(errors, ValidationError{
+			verr := ValidationError{
 				Path:    childPath,
 				Message: fmt.Sprintf("expected object, got %T", val),
-			})
+			}
+			// Add source file if available
+			if sourceFile, ok := dict.SourceFiles[childPath]; ok {
+				verr.SourceFile = sourceFile
+			}
+			errors = append(errors, verr)
 			continue
 		}
 
@@ -98,7 +112,7 @@ func (v *Validator) validateSchema(node map[string]interface{}, currentPath stri
 			childPath = currentPath + "." + key
 		}
 
-		childErrors := v.validateSchema(childMap, childPath)
+		childErrors := v.validateSchema(dict, childMap, childPath)
 		errors = append(errors, childErrors...)
 	}
 

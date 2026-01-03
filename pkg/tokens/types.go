@@ -18,13 +18,15 @@ type Token struct {
 // We use map[string]interface{} to represent the raw structure
 // and helper methods to traverse it.
 type Dictionary struct {
-	Root map[string]interface{}
+	Root        map[string]interface{}
+	SourceFiles map[string]string // Maps token path to source file
 }
 
 // NewDictionary creates an empty dictionary
 func NewDictionary() *Dictionary {
 	return &Dictionary{
-		Root: make(map[string]interface{}),
+		Root:        make(map[string]interface{}),
+		SourceFiles: make(map[string]string),
 	}
 }
 
@@ -36,8 +38,13 @@ func IsToken(node map[string]interface{}) bool {
 
 // DeepCopy creates a deep copy of a Dictionary
 func (d *Dictionary) DeepCopy() *Dictionary {
+	copiedSourceFiles := make(map[string]string, len(d.SourceFiles))
+	for k, v := range d.SourceFiles {
+		copiedSourceFiles[k] = v
+	}
 	return &Dictionary{
-		Root: deepCopyMap(d.Root),
+		Root:        deepCopyMap(d.Root),
+		SourceFiles: copiedSourceFiles,
 	}
 }
 

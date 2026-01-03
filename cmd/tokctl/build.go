@@ -60,30 +60,22 @@ func runBuild(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("resolution failed for base: %w", err)
 	}
 
-	// 3. Generate
+	// 3. Prepare Generation Context
 	var content string
 	switch format {
 	case "tailwind":
 		gen := generators.NewTailwindGenerator()
-		themeGen := generators.NewThemeGenerator()
 
-		// Generate Root Variables
-		content, err = gen.Generate(resolvedBase)
-		if err != nil {
-			return fmt.Errorf("tailwind generation failed: %w", err)
-		}
-
-		// Generate Themes
 		// Resolve theme inheritance chains (handles $extends)
 		inheritedThemes, err := tokens.ResolveThemeInheritance(baseDict, themes)
 		if err != nil {
 			return fmt.Errorf("failed to resolve theme inheritance: %w", err)
 		}
 
-		// We need to resolve each theme merged with base
-		resolvedThemes := make(map[string]map[string]interface{})
+		// Build theme contexts
+		themeContexts := make(map[string]generators.ThemeContext)
 		for name, mergedDict := range inheritedThemes {
-			// Resolve
+			// Resolve theme tokens
 			themeResolver, err := tokens.NewResolver(mergedDict)
 			if err != nil {
 				return fmt.Errorf("failed to resolve theme %s: %w", name, err)
@@ -93,33 +85,35 @@ func runBuild(cmd *cobra.Command, args []string) error {
 				return fmt.Errorf("resolution failed for theme %s: %w", name, err)
 			}
 
-			// Calculate Diff: Theme vs Base
-			// We only want to output keys that are DIFFERENT or NEW in the theme.
+			// Calculate diff from base (only output differences)
 			themeDiff := tokens.Diff(resolvedTheme, resolvedBase)
 
-			resolvedThemes[name] = themeDiff
+			themeContexts[name] = generators.ThemeContext{
+				Dict:           mergedDict,
+				ResolvedTokens: resolvedTheme,
+				DiffTokens:     themeDiff,
+			}
 		}
 
-		themeContent, err := themeGen.GenerateThemes(resolvedThemes)
-		if err != nil {
-			return fmt.Errorf("theme generation failed: %w", err)
-		}
-		content += "\n" + themeContent
-
-		// Extract Components from Base (Components are shared across themes usually)
-		// If components change per theme, that's a more complex scenario.
-		// For now, assume components are defined in base.
+		// Extract components from base dictionary
 		components, err := baseDict.ExtractComponents()
 		if err != nil {
 			return fmt.Errorf("failed to extract components: %w", err)
 		}
 
-		// Append components
-		compContent, err := gen.GenerateComponents(components)
-		if err != nil {
-			return fmt.Errorf("component generation failed: %w", err)
+		// Build generation context
+		ctx := &generators.GenerationContext{
+			BaseDict:       baseDict,
+			ResolvedTokens: resolvedBase,
+			Components:     components,
+			Themes:         themeContexts,
 		}
-		content += "\n" + compContent
+
+		// Generate complete CSS
+		content, err = gen.Generate(ctx)
+		if err != nil {
+			return fmt.Errorf("tailwind generation failed: %w", err)
+		}
 
 	case "catalog":
 		gen := generators.NewCatalogGenerator()
@@ -134,10 +128,6 @@ func runBuild(cmd *cobra.Command, args []string) error {
 
 	default:
 		return fmt.Errorf("unknown format: %s", format)
-	}
-
-	if err != nil {
-		return fmt.Errorf("generation failed: %w", err)
 	}
 
 	// 4. Write

@@ -183,7 +183,7 @@ func TestLoader_MergeConflictWarnings(t *testing.T) {
 	}
 
 	// Merge with warnings enabled
-	if err := dict1.MergeWithPath(dict2, true); err != nil {
+	if err := dict1.MergeWithPath(dict2, true, "test-file-2.json"); err != nil {
 		t.Fatalf("Merge failed: %v", err)
 	}
 
@@ -228,7 +228,7 @@ func TestLoader_MergeNoWarnings(t *testing.T) {
 	}
 
 	// Merge with warnings disabled
-	if err := dict1.MergeWithPath(dict2, false); err != nil {
+	if err := dict1.MergeWithPath(dict2, false, "test-file-2.json"); err != nil {
 		t.Fatalf("Merge failed: %v", err)
 	}
 
@@ -262,7 +262,7 @@ func TestLoader_TypeMismatchWarning(t *testing.T) {
 	}
 
 	// Merge with warnings enabled
-	if err := dict1.MergeWithPath(dict2, true); err != nil {
+	if err := dict1.MergeWithPath(dict2, true, "test-file-2.json"); err != nil {
 		t.Fatalf("Merge failed: %v", err)
 	}
 
