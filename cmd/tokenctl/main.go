@@ -8,8 +8,8 @@ import (
 )
 
 var rootCmd = &cobra.Command{
-	Use:   "tokctl",
-	Short: "tokctl: Semantic Design Tokens Manager",
+	Use:   "tokenctl",
+	Short: "tokenctl: Semantic Design Tokens Manager",
 	Long: `A W3C Design Tokens 2025.10 compliant tool for creating, maintaining,
 and generating semantic design systems in Go applications.`,
 }

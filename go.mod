@@ -1,4 +1,4 @@
-module github.com/dmoose/tokctl
+module github.com/dmoose/tokenctl
 
 go 1.25.5
 

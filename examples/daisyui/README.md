@@ -1,7 +1,7 @@
-<!-- tokctl/examples/daisyui/README.md -->
+<!-- tokenctl/examples/daisyui/README.md -->
 # DaisyUI 5 Theme Generator Example
 
-This example demonstrates how to use tokctl as a **theme generator for DaisyUI 5**. It defines all 26 DaisyUI token variables, allowing you to create custom themes that integrate seamlessly with DaisyUI's component library.
+This example demonstrates how to use tokenctl as a **theme generator for DaisyUI 5**. It defines all 26 DaisyUI token variables, allowing you to create custom themes that integrate seamlessly with DaisyUI's component library.
 
 ## What This Example Provides
 
@@ -95,7 +95,7 @@ Color tokens include `$property: true` for smooth animated theme transitions:
 ### 1. Build the Theme
 
 ```bash
-tokctl build examples/daisyui --output dist/daisyui
+tokenctl build examples/daisyui --output dist/daisyui
 ```
 
 ### 2. Generated Output
@@ -136,7 +136,7 @@ The build produces `dist/daisyui/tokens.css`:
 In your Tailwind CSS file:
 
 ```css
-/* Import tokctl-generated tokens BEFORE DaisyUI */
+/* Import tokenctl-generated tokens BEFORE DaisyUI */
 @import "./dist/daisyui/tokens.css";
 
 /* DaisyUI components will use your custom tokens */
@@ -149,7 +149,7 @@ Or in `tailwind.config.js`:
 export default {
   plugins: [require("daisyui")],
   daisyui: {
-    themes: false, // Disable built-in themes, use tokctl's
+    themes: false, // Disable built-in themes, use tokenctl's
   },
 }
 ```
@@ -271,7 +271,7 @@ Turn on depth shadows in `effects.json` or per-theme:
 Validate your theme before building:
 
 ```bash
-tokctl validate examples/daisyui
+tokenctl validate examples/daisyui
 ```
 
 This checks:
@@ -282,7 +282,7 @@ This checks:
 
 ## Notes
 
-- **tokctl generates tokens only** - Component CSS (`.btn`, `.card`, etc.) comes from DaisyUI
+- **tokenctl generates tokens only** - Component CSS (`.btn`, `.card`, etc.) comes from DaisyUI
 - **OKLCH format recommended** - Better perceptual uniformity for color manipulation
 - **Content colors are WCAG AA compliant** - The `contrast()` function ensures readable text
 - **Animated themes** - `$property` declarations enable smooth color transitions
@@ -290,5 +290,5 @@ This checks:
 ## See Also
 
 - [DaisyUI Documentation](https://daisyui.com/docs)
-- [tokctl ADVANCED_USAGE.md](../../ADVANCED_USAGE.md) - CSS composition patterns
+- [tokenctl ADVANCED_USAGE.md](../../ADVANCED_USAGE.md) - CSS composition patterns
 - [Tailwind CSS 4 Theming](https://tailwindcss.com/docs/theme)

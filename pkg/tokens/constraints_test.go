@@ -1,4 +1,4 @@
-// tokctl/pkg/tokens/constraints_test.go
+// tokenctl/pkg/tokens/constraints_test.go
 
 package tokens
 

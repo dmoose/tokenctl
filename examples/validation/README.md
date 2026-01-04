@@ -1,7 +1,7 @@
-<!-- tokctl/examples/validation/README.md -->
+<!-- tokenctl/examples/validation/README.md -->
 # Validation Example
 
-This example demonstrates enhanced tokctl features:
+This example demonstrates enhanced tokenctl features:
 
 1. **Constraint Validation** - `$min` and `$max` constraints on dimension and number tokens
 2. **Type-Specific Validation** - Validation for color, dimension, number, fontFamily, and effect types
@@ -118,13 +118,13 @@ This enables smooth CSS transitions on theme changes.
 ### Validate
 
 ```bash
-tokctl validate examples/validation
+tokenctl validate examples/validation
 ```
 
 ### Build
 
 ```bash
-tokctl build examples/validation --output dist/validation
+tokenctl build examples/validation --output dist/validation
 ```
 
 ### Expected Output
@@ -165,7 +165,7 @@ To see validation errors, try modifying `tokens.json`:
 3. **Invalid color**: Change `color.primary.$value` to `"not-a-color"`
 4. **Empty fontFamily**: Change `font.family.sans.$value` to `[]`
 
-Run `tokctl validate examples/validation` to see the error messages.
+Run `tokenctl validate examples/validation` to see the error messages.
 
 ## See Also
 

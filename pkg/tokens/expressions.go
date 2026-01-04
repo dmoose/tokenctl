@@ -1,4 +1,4 @@
-// tokctl/pkg/tokens/expressions.go
+// tokenctl/pkg/tokens/expressions.go
 
 package tokens
 
@@ -9,7 +9,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/dmoose/tokctl/pkg/colors"
+	"github.com/dmoose/tokenctl/pkg/colors"
 )
 
 // ExpressionEvaluator evaluates expressions in token values

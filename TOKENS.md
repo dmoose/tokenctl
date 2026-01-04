@@ -1,7 +1,7 @@
-<!-- tokctl/TOKENS.md -->
-# Token-Based Design Systems with tokctl
+<!-- tokenctl/TOKENS.md -->
+# Token-Based Design Systems with tokenctl
 
-This guide covers token-based design system concepts and how tokctl implements them. It serves as both a learning resource for the token approach and a reference for tokctl's specific features.
+This guide covers token-based design system concepts and how tokenctl implements them. It serves as both a learning resource for the token approach and a reference for tokenctl's specific features.
 
 ## Table of Contents
 
@@ -68,7 +68,7 @@ my-design-system/
 
 ## Token Structure
 
-tokctl uses the W3C Design Tokens format. Each token is defined with a `$value` and optional metadata.
+tokenctl uses the W3C Design Tokens format. Each token is defined with a `$value` and optional metadata.
 
 ### Basic Token
 
@@ -136,7 +136,7 @@ Generated CSS variables: `--color-brand-primary`, `--color-brand-secondary`, `--
 
 ## Token Types
 
-tokctl validates values based on their `$type`. Supported types:
+tokenctl validates values based on their `$type`. Supported types:
 
 ### color
 
@@ -318,7 +318,7 @@ References work across files. A token in `semantic/status.json` can reference a 
 
 ## Expressions & Computed Values
 
-tokctl supports expressions for computed token values.
+tokenctl supports expressions for computed token values.
 
 ### calc()
 
@@ -882,21 +882,21 @@ Not:
 
 1. **Validate frequently:**
    ```bash
-   tokctl validate
+   tokenctl validate
    ```
    Errors include source file paths for easy location.
 
 2. **Check generated output:**
    ```bash
-   tokctl build --output=./debug
+   tokenctl build --output=./debug
    cat ./debug/tokens.css
    ```
 
 3. **Use the examples:**
    ```bash
-   tokctl build examples/computed --output=dist/computed
-   tokctl build examples/themes --output=dist/themes
-   tokctl build examples/validation --output=dist/validation
+   tokenctl build examples/computed --output=dist/computed
+   tokenctl build examples/themes --output=dist/themes
+   tokenctl build examples/validation --output=dist/validation
    ```
 
 4. **Run the demo workflow:**
@@ -911,9 +911,9 @@ Not:
 ### CLI Commands
 
 ```bash
-tokctl init [dir]           # Initialize token system
-tokctl validate [dir]       # Validate tokens
-tokctl build [dir]          # Build artifacts
+tokenctl init [dir]           # Initialize token system
+tokenctl validate [dir]       # Validate tokens
+tokenctl build [dir]          # Build artifacts
   --format=tailwind         # CSS output (default)
   --format=catalog          # JSON catalog
   --output=<dir>            # Output directory (default: dist)
