@@ -1,0 +1,105 @@
+{
+  "$description": "DaisyUI 5 Color Tokens - 18 semantic colors with auto-generated content colors",
+
+  "color": {
+    "$type": "color",
+
+    "primary": {
+      "$value": "oklch(49.12% 0.309 275.75)",
+      "$description": "Primary brand color",
+      "$property": true
+    },
+    "primary-content": {
+      "$value": "contrast({color.primary})",
+      "$description": "Foreground content color for primary"
+    },
+
+    "secondary": {
+      "$value": "oklch(69.71% 0.329 342.55)",
+      "$description": "Secondary brand color",
+      "$property": true
+    },
+    "secondary-content": {
+      "$value": "contrast({color.secondary})",
+      "$description": "Foreground content color for secondary"
+    },
+
+    "accent": {
+      "$value": "oklch(76.76% 0.184 183.61)",
+      "$description": "Accent brand color",
+      "$property": true
+    },
+    "accent-content": {
+      "$value": "contrast({color.accent})",
+      "$description": "Foreground content color for accent"
+    },
+
+    "neutral": {
+      "$value": "oklch(20% 0.024 255.701)",
+      "$description": "Neutral dark color for non-saturated UI parts",
+      "$property": true
+    },
+    "neutral-content": {
+      "$value": "contrast({color.neutral})",
+      "$description": "Foreground content color for neutral"
+    },
+
+    "base-100": {
+      "$value": "oklch(100% 0 0)",
+      "$description": "Base surface color (lightest)",
+      "$property": true
+    },
+    "base-200": {
+      "$value": "shade({color.base-100}, 1)",
+      "$description": "Base color, slightly darker shade"
+    },
+    "base-300": {
+      "$value": "shade({color.base-100}, 2)",
+      "$description": "Base color, darker shade"
+    },
+    "base-content": {
+      "$value": "contrast({color.base-100})",
+      "$description": "Foreground content color for base"
+    },
+
+    "info": {
+      "$value": "oklch(72.06% 0.191 231.6)",
+      "$description": "Info color for informative messages",
+      "$property": true
+    },
+    "info-content": {
+      "$value": "contrast({color.info})",
+      "$description": "Foreground content color for info"
+    },
+
+    "success": {
+      "$value": "oklch(64.8% 0.15 160)",
+      "$description": "Success color for positive messages",
+      "$property": true
+    },
+    "success-content": {
+      "$value": "contrast({color.success})",
+      "$description": "Foreground content color for success"
+    },
+
+    "warning": {
+      "$value": "oklch(84.71% 0.199 83.87)",
+      "$description": "Warning color for caution messages",
+      "$property": true
+    },
+    "warning-content": {
+      "$value": "contrast({color.warning})",
+      "$description": "Foreground content color for warning"
+    },
+
+    "error": {
+      "$value": "oklch(71.76% 0.221 22.18)",
+      "$description": "Error color for danger/destructive messages",
+      "$property": true
+    },
+    "error-content": {
+      "$value": "contrast({color.error})",
+      "$description": "Foreground content color for error"
+    }
+  }
+}

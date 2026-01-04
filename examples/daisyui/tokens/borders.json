@@ -1,0 +1,34 @@
+{
+  "border": {
+    "$type": "dimension",
+    "default": {
+      "$value": "1px",
+      "$description": "Default border width for components (button, input, tab)",
+      "$min": "0px",
+      "$max": "10px"
+    }
+  },
+
+  "radius": {
+    "$type": "dimension",
+
+    "box": {
+      "$value": "1rem",
+      "$description": "Border radius for boxes (card, modal, alert)",
+      "$min": "0rem",
+      "$max": "3rem"
+    },
+
+    "field": {
+      "$value": "0.5rem",
+      "$description": "Border radius for fields (button, input, select, tab)",
+      "$min": "0rem",
+      "$max": "2rem"
+    },
+
+    "selector": {
+      "$value": "9999px",
+      "$description": "Border radius for selectors (checkbox, toggle, badge) - fully rounded"
+    }
+  }
+}

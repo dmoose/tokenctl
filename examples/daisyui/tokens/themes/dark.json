@@ -1,0 +1,61 @@
+{
+  "$extends": "light",
+  "$description": "DaisyUI 5 Dark Theme - Extends light theme with dark color scheme",
+
+  "color": {
+    "$type": "color",
+
+    "primary": {
+      "$value": "oklch(65.69% 0.196 275.75)",
+      "$description": "Primary brand color (lighter for dark theme)"
+    },
+
+    "secondary": {
+      "$value": "oklch(74.8% 0.26 342.55)",
+      "$description": "Secondary brand color (lighter for dark theme)"
+    },
+
+    "accent": {
+      "$value": "oklch(74.51% 0.167 183.61)",
+      "$description": "Accent brand color"
+    },
+
+    "neutral": {
+      "$value": "oklch(31.39% 0.021 264.53)",
+      "$description": "Neutral color for dark theme"
+    },
+
+    "base-100": {
+      "$value": "oklch(25.33% 0.016 252.42)",
+      "$description": "Base surface color (dark)"
+    },
+
+    "info": {
+      "$value": "oklch(72.06% 0.191 231.6)",
+      "$description": "Info color"
+    },
+
+    "success": {
+      "$value": "oklch(64.8% 0.15 160)",
+      "$description": "Success color"
+    },
+
+    "warning": {
+      "$value": "oklch(84.71% 0.199 83.87)",
+      "$description": "Warning color"
+    },
+
+    "error": {
+      "$value": "oklch(71.76% 0.221 22.18)",
+      "$description": "Error color"
+    }
+  },
+
+  "effect": {
+    "$type": "effect",
+    "depth": {
+      "$value": 1,
+      "$description": "Enable depth effect for dark theme"
+    }
+  }
+}
