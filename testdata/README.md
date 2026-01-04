@@ -1,3 +1,4 @@
+<!-- tokctl/testdata/README.md -->
 # Test Data
 
 This directory contains test fixtures and expected outputs for tokctl's automated test suite.

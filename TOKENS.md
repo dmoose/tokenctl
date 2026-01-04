@@ -1,1046 +1,963 @@
-# Tokctl Semantic Design System: Developer Guide
+<!-- tokctl/TOKENS.md -->
+# Token-Based Design Systems with tokctl
+
+This guide covers token-based design system concepts and how tokctl implements them. It serves as both a learning resource for the token approach and a reference for tokctl's specific features.
 
 ## Table of Contents
-1. [Why Semantic Design Systems Matter](#why-semantic-design-systems-matter)
-2. [Understanding the Semantic Approach](#understanding-the-semantic-approach)
-3. [Getting Started with Tokctl](#getting-started-with-tokctl)
-4. [Working with Semantic Tokens](#working-with-semantic-tokens)
-5. [Building Components](#building-components)
-6. [Theme Management](#theme-management)
-7. [Advanced Patterns](#advanced-patterns)
-8. [Best Practices](#best-practices)
-9. [Troubleshooting](#troubleshooting)
 
-## Why Semantic Design Systems Matter
+1. [Token Architecture](#token-architecture)
+2. [Token Structure](#token-structure)
+3. [Token Types](#token-types)
+4. [References](#references)
+5. [Expressions & Computed Values](#expressions--computed-values)
+6. [Scale Expansion](#scale-expansion)
+7. [Constraints](#constraints)
+8. [CSS @property Declarations](#css-property-declarations)
+9. [Theme System](#theme-system)
+10. [Components](#components)
+11. [Best Practices](#best-practices)
+12. [Troubleshooting](#troubleshooting)
 
-### The Problem with Traditional CSS
+---
 
-If you've worked with CSS, you've probably written code like this:
+## Token Architecture
 
-```css
-.header {
-  background-color: #3b82f6;
-  color: #ffffff;
-}
+Token-based design systems organize styling decisions into layers of abstraction. This creates a single source of truth that can generate multiple output formats.
 
-.button-primary {
-  background-color: #3b82f6;
-  color: #ffffff;
-}
-
-.link-active {
-  color: #3b82f6;
-}
-```
-
-This approach has several problems:
-
-1. **Magic Numbers**: `#3b82f6` appears everywhere, but what does it represent?
-2. **Maintenance Nightmare**: Changing your brand color requires finding and replacing dozens of hex codes
-3. **Inconsistency**: Different developers might use slightly different blues (`#3b82f6` vs `#2563eb`)
-4. **No Context**: The color value tells you nothing about its purpose or when to use it
-
-### The Utility-First Improvement
-
-Tailwind CSS improved this with utility classes:
-
-```html
-<header class="bg-blue-500 text-white">
-<button class="bg-blue-500 text-white">
-<a class="text-blue-500">
-```
-
-This is better because:
-- **Consistent Values**: `blue-500` always means the same color
-- **Predictable Scale**: `blue-400`, `blue-500`, `blue-600` form a logical progression
-- **Rapid Development**: No need to write custom CSS
-
-But problems remain:
-- **Arbitrary Names**: Why "blue-500"? What makes it "500"?
-- **No Semantic Meaning**: `bg-blue-500` doesn't tell you this is your primary brand color
-- **Theme Switching**: Supporting dark mode requires completely different class names
-
-### The Semantic Solution
-
-Semantic design systems solve these problems by using **meaningful names** that describe **purpose**, not appearance:
-
-```html
-<header class="bg-primary text-primary-content">
-<button class="bg-primary text-primary-content">
-<a class="text-primary">
-```
-
-Now the code tells a story:
-- `bg-primary`: This uses our primary brand color
-- `text-primary-content`: This text is designed to be readable on the primary color
-- `text-primary`: This text uses the primary color for emphasis
-
-## Understanding the Semantic Approach
-
-### Semantic vs. Arbitrary Naming
-
-| Arbitrary (Traditional) | Semantic (Better) | Why Semantic Wins |
-|------------------------|-------------------|-------------------|
-| `bg-blue-500` | `bg-primary` | Describes purpose, not appearance |
-| `text-gray-900` | `text-base-content` | Adapts to themes automatically |
-| `bg-green-100` | `bg-success` | Conveys meaning to developers |
-| `border-red-500` | `border-error` | Self-documenting code |
-
-### The Semantic Color System
-
-Tokctl organizes colors into semantic categories:
-
-#### Brand Colors
-These represent your brand identity:
-- `primary`: Your main brand color (logo, CTAs, key actions)
-- `secondary`: Supporting brand color (accents, highlights)
-- `accent`: Additional brand color (special elements, decorations)
-
-#### Surface Colors
-These create the foundation of your interface:
-- `base-100`: Main background color (page background)
-- `base-200`: Slightly darker (card backgrounds, subtle elevation)
-- `base-300`: Even darker (borders, dividers)
-- `base-content`: Text color that works on base colors
-
-#### Semantic State Colors
-These communicate status and feedback:
-- `success`: Positive actions, confirmations (green family)
-- `warning`: Caution, attention needed (yellow/orange family)
-- `error`: Problems, destructive actions (red family)
-- `info`: Neutral information, tips (blue family)
-
-#### Content Colors
-Every background color has a matching content color:
-- `primary-content`: Text/icons that work on `primary` background
-- `success-content`: Text/icons that work on `success` background
-- `base-content`: Text/icons that work on `base` backgrounds
-
-### Why This System Works
-
-1. **Self-Documenting**: `bg-success` immediately tells you this indicates success
-2. **Theme-Agnostic**: `primary` can be blue in light mode, purple in dark mode
-3. **Consistent Relationships**: `primary-content` always works with `primary`
-4. **Scalable**: Add new semantic colors without breaking existing ones
-
-## Getting Started with Tokctl
-
-### Installation and Setup
-
-```bash
-# Install the CLI tool
-go install github.com/yourusername/tokctl/cmd/tokctl@latest
-
-# Create a new project
-mkdir my-app-design-system
-cd my-app-design-system
-
-# Initialize with semantic template
-tokctl init --template=semantic .
-```
-
-This creates a structured token system:
+### The Layered Approach
 
 ```
-tokens/
-├── brand.tokens.json      # Your brand identity colors
-├── surface.tokens.json    # Background and surface colors
-├── semantic.tokens.json   # State colors (success, error, etc.)
-├── spacing.tokens.json    # Spacing scale
-├── typography.tokens.json # Font scales
-└── themes/
-    ├── light.tokens.json  # Light theme
-    └── dark.tokens.json   # Dark theme
+┌─────────────────────────────────────┐
+│           Components                │  → Button, Card, Input tokens
+│    (reference semantic tokens)      │
+├─────────────────────────────────────┤
+│            Semantic                 │  → primary, success, error, base-100
+│    (reference brand tokens)         │
+├─────────────────────────────────────┤
+│              Brand                  │  → Hex values, OKLCH values
+│       (concrete values)             │
+└─────────────────────────────────────┘
 ```
 
-### Your First Token File
+**Why layers matter:**
+- Change a brand color once, it propagates everywhere
+- Semantic names (`primary`, `success`) work across themes
+- Component tokens reference semantic tokens, not raw values
 
-Let's examine `tokens/brand.tokens.json`:
+### Directory Structure
+
+```
+my-design-system/
+├── tokens/
+│   ├── brand/
+│   │   └── colors.json       # Base color values
+│   ├── semantic/
+│   │   └── status.json       # success, error, warning
+│   ├── spacing/
+│   │   └── scale.json        # Spacing scale
+│   ├── typography/
+│   │   └── fonts.json        # Font families, sizes
+│   └── themes/
+│       ├── light.json        # Light theme overrides
+│       └── dark.json         # Dark theme (can extend light)
+└── dist/
+    └── tokens.css            # Generated output
+```
+
+---
+
+## Token Structure
+
+tokctl uses the W3C Design Tokens format. Each token is defined with a `$value` and optional metadata.
+
+### Basic Token
 
 ```json
 {
-  "brand": {
-    "$type": "color",
-    "$description": "Core brand identity colors",
-    
+  "color": {
     "primary": {
-      "$description": "Primary brand color - use for main CTAs, logos, key actions",
-      "$value": {
-        "colorSpace": "srgb",
-        "components": [0.2, 0.4, 0.9],
-        "hex": "#3366e6"
-      }
-    },
-    "primary-content": {
-      "$description": "Text/icon color that works on primary backgrounds",
-      "$value": {
-        "colorSpace": "srgb",
-        "components": [1, 1, 1],
-        "hex": "#ffffff"
-      }
-    },
-    
-    "secondary": {
-      "$description": "Secondary brand color - use for supporting elements",
-      "$value": {
-        "colorSpace": "srgb",
-        "components": [0.8, 0.2, 0.6],
-        "hex": "#cc3399"
-      }
-    },
-    "secondary-content": {
-      "$description": "Text/icon color that works on secondary backgrounds",
-      "$value": "{brand.primary-content}"
+      "$value": "#3b82f6",
+      "$type": "color",
+      "$description": "Primary brand color"
     }
   }
 }
 ```
 
-**Key Points:**
-- `$type`: Tells Tokctl this is a color token
-- `$description`: Documents when and how to use this token
-- `$value`: The actual color value in W3C standard format
-- `"{brand.primary-content}"`: A reference to another token (DRY principle)
+### Token Fields
 
-### Generate Your First Output
+| Field | Required | Description |
+|-------|----------|-------------|
+| `$value` | Yes | The token's value |
+| `$type` | No | Type hint for validation and generation |
+| `$description` | No | Documentation for the token |
+| `$deprecated` | No | Mark token as deprecated (bool or string reason) |
 
-```bash
-# Generate Tailwind CSS theme
-tokctl build --format=tailwind --output=./dist/theme.css
-```
+### Type Inheritance
 
-This creates:
-
-**dist/theme.css**:
-```css
-@import "tailwindcss";
-
-@theme {
-  --color-primary: oklch(0.59 0.21 258.34);
-  --color-primary-content: oklch(1 0 0);
-  --color-secondary: oklch(0.61 0.24 328.36);
-  --color-secondary-content: oklch(1 0 0);
-}
-```
-
-## Working with Semantic Tokens
-
-### Understanding Token Structure
-
-Every token follows the W3C Design Tokens 2025.10 format:
+When `$type` is set on a group, all child tokens inherit it:
 
 ```json
 {
-  "token-name": {
-    "$type": "color|dimension|typography|...",
-    "$value": "the actual value",
-    "$description": "when and how to use this token",
-    "$deprecated": false
-  }
-}
-```
-
-### Color Tokens
-
-```json
-{
-  "semantic": {
+  "color": {
     "$type": "color",
-    
-    "success": {
-      "$description": "Use for positive feedback, confirmations, completed states",
-      "$value": {
-        "colorSpace": "srgb",
-        "components": [0.1, 0.7, 0.3],
-        "hex": "#1ab34d"
-      }
+    "primary": { "$value": "#3b82f6" },
+    "secondary": { "$value": "#8b5cf6" }
+  }
+}
+```
+
+Both `color.primary` and `color.secondary` inherit `$type: "color"`.
+
+### Nesting
+
+Tokens can be nested to create logical groupings:
+
+```json
+{
+  "color": {
+    "brand": {
+      "$type": "color",
+      "primary": { "$value": "#3b82f6" },
+      "secondary": { "$value": "#8b5cf6" }
     },
-    "success-content": {
-      "$description": "Text color for success backgrounds",
-      "$value": {
-        "colorSpace": "srgb",
-        "components": [1, 1, 1],
-        "hex": "#ffffff"
-      }
+    "status": {
+      "$type": "color",
+      "success": { "$value": "#10b981" },
+      "error": { "$value": "#ef4444" }
     }
   }
 }
 ```
 
-**Usage in HTML:**
-```html
-<div class="bg-success text-success-content p-4 rounded">
-  ✓ Your changes have been saved successfully!
-</div>
+Generated CSS variables: `--color-brand-primary`, `--color-brand-secondary`, `--color-status-success`, `--color-status-error`
+
+---
+
+## Token Types
+
+tokctl validates values based on their `$type`. Supported types:
+
+### color
+
+CSS color values. Accepts hex, rgb, hsl, oklch, or named colors.
+
+```json
+{
+  "color": {
+    "$type": "color",
+    "hex": { "$value": "#3b82f6" },
+    "oklch": { "$value": "oklch(49.12% 0.309 275.75)" },
+    "rgb": { "$value": "rgb(59, 130, 246)" },
+    "named": { "$value": "rebeccapurple" }
+  }
+}
 ```
 
-### Spacing Tokens
+OKLCH is recommended for perceptual uniformity when manipulating colors.
+
+### dimension
+
+CSS length values with units.
 
 ```json
 {
   "spacing": {
     "$type": "dimension",
-    "$description": "Consistent spacing scale",
-    
-    "xs": {
-      "$description": "Extra small spacing - use for tight layouts",
-      "$value": {"value": 4, "unit": "px"}
-    },
-    "sm": {
-      "$description": "Small spacing - use for compact components",
-      "$value": {"value": 8, "unit": "px"}
-    },
-    "md": {
-      "$description": "Medium spacing - default for most components",
-      "$value": {"value": 16, "unit": "px"}
-    },
-    "lg": {
-      "$description": "Large spacing - use for generous layouts",
-      "$value": {"value": 24, "unit": "px"}
-    }
+    "sm": { "$value": "0.5rem" },
+    "md": { "$value": "1rem" },
+    "lg": { "$value": "1.5rem" }
   }
 }
 ```
 
-**Usage in HTML:**
-```html
-<div class="p-md">           <!-- padding: 16px -->
-<div class="mb-lg">          <!-- margin-bottom: 24px -->
-<div class="gap-sm">         <!-- gap: 8px -->
-```
+Valid units: `px`, `rem`, `em`, `%`, `vw`, `vh`, etc.
 
-### Typography Tokens
+### number
+
+Numeric values without units.
 
 ```json
 {
-  "typography": {
-    "$description": "Typography scale and styles",
-    
-    "heading": {
-      "$type": "typography",
-      
-      "h1": {
-        "$description": "Main page headings",
-        "$value": {
-          "fontFamily": ["Inter", "system-ui", "sans-serif"],
-          "fontSize": {"value": 48, "unit": "px"},
-          "fontWeight": 700,
-          "lineHeight": 1.2,
-          "letterSpacing": {"value": -0.5, "unit": "px"}
-        }
-      },
-      "h2": {
-        "$description": "Section headings",
-        "$value": {
-          "fontFamily": ["Inter", "system-ui", "sans-serif"],
-          "fontSize": {"value": 36, "unit": "px"},
-          "fontWeight": 600,
-          "lineHeight": 1.3
-        }
-      }
-    },
-    
-    "body": {
-      "$type": "typography",
-      
-      "large": {
-        "$description": "Large body text, introductions",
-        "$value": {
-          "fontFamily": ["Inter", "system-ui", "sans-serif"],
-          "fontSize": {"value": 18, "unit": "px"},
-          "fontWeight": 400,
-          "lineHeight": 1.6
-        }
-      }
-    }
-  }
-}
-```
-
-### Token References
-
-Tokens can reference other tokens to maintain consistency:
-
-```json
-{
-  "components": {
-    "button": {
-      "$type": "color",
-      
-      "primary-bg": {
-        "$value": "{brand.primary}"
-      },
-      "primary-text": {
-        "$value": "{brand.primary-content}"
-      },
-      "primary-hover": {
-        "$description": "Slightly darker version of primary",
-        "$value": {
-          "colorSpace": "srgb",
-          "components": [0.15, 0.35, 0.8]
-        }
-      }
-    }
-  }
-}
-```
-
-**Benefits of References:**
-- **DRY Principle**: Define colors once, use everywhere
-- **Automatic Updates**: Change `brand.primary`, all references update
-- **Consistency**: Impossible to have mismatched colors
-
-## Building Components
-
-### Component Token Patterns
-
-Organize tokens around your components:
-
-```json
-{
-  "components": {
-    "button": {
-      "$description": "Button component tokens",
-      
-      "variants": {
-        "$description": "Different button styles",
-        
-        "primary": {
-          "$type": "color",
-          "background": {"$value": "{brand.primary}"},
-          "text": {"$value": "{brand.primary-content}"},
-          "border": {"$value": "{brand.primary}"},
-          "hover": {
-            "background": {"$value": "{brand.primary-focus}"}
-          }
-        },
-        
-        "secondary": {
-          "$type": "color",
-          "background": {"$value": "transparent"},
-          "text": {"$value": "{brand.primary}"},
-          "border": {"$value": "{brand.primary}"},
-          "hover": {
-            "background": {"$value": "{brand.primary}"},
-            "text": {"$value": "{brand.primary-content}"}
-          }
-        },
-        
-        "success": {
-          "$type": "color",
-          "background": {"$value": "{semantic.success}"},
-          "text": {"$value": "{semantic.success-content}"},
-          "border": {"$value": "{semantic.success}"}
-        }
-      },
-      
-      "sizes": {
-        "$description": "Button size variations",
-        
-        "small": {
-          "$type": "dimension",
-          "padding-x": {"$value": "{spacing.sm}"},
-          "padding-y": {"$value": "{spacing.xs}"},
-          "font-size": {"$value": {"value": 14, "unit": "px"}},
-          "border-radius": {"$value": {"value": 4, "unit": "px"}}
-        },
-        
-        "medium": {
-          "$type": "dimension",
-          "padding-x": {"$value": "{spacing.md}"},
-          "padding-y": {"$value": "{spacing.sm}"},
-          "font-size": {"$value": {"value": 16, "unit": "px"}},
-          "border-radius": {"$value": {"value": 6, "unit": "px"}}
-        },
-        
-        "large": {
-          "$type": "dimension",
-          "padding-x": {"$value": "{spacing.lg}"},
-          "padding-y": {"$value": "{spacing.md}"},
-          "font-size": {"$value": {"value": 18, "unit": "px"}},
-          "border-radius": {"$value": {"value": 8, "unit": "px"}}
-        }
-      }
-    }
-  }
-}
-```
-
-### Using Component Tokens in Go
-
-Use the generated CSS variables or utility classes directly:
-
-```html
-<button class="bg-primary text-primary-content px-md py-sm rounded-md">
-  Click Me
-</button>
-```
-
-### Creating Reusable Components
-
-```go
-// components/button.templ
-package components
-
-import "github.com/a-h/templ"
-
-type ButtonVariant string
-
-const (
-    ButtonPrimary   ButtonVariant = "primary"
-    ButtonSecondary ButtonVariant = "secondary"
-    ButtonSuccess   ButtonVariant = "success"
-    ButtonError     ButtonVariant = "error"
-)
-
-type ButtonSize string
-
-const (
-    ButtonSmall  ButtonSize = "small"
-    ButtonMedium ButtonSize = "medium"
-    ButtonLarge  ButtonSize = "large"
-)
-
-templ Button(text string, variant ButtonVariant, size ButtonSize) {
-    <button 
-        class={
-            "font-medium transition-colors focus:outline-none focus:ring-2",
-            // Semantic classes
-            "btn-" + string(variant),
-            "btn-" + string(size),
-        }
-    >
-        {text}
-    </button>
-}
-```
-
-**Usage:**
-```go
-// In your templ templates
-@Button("Save Changes", ButtonSuccess, ButtonMedium)
-@Button("Cancel", ButtonSecondary, ButtonMedium)
-@Button("Delete", ButtonError, ButtonSmall)
-```
-
-## Theme Management
-
-### Understanding Themes
-
-Themes are variations of your design system that change the appearance while maintaining the same semantic structure.
-
-### Creating Theme Variations
-
-**themes/light.tokens.json** (default):
-```json
-{
-  "light": {
-    "$description": "Light theme - default appearance",
-    
-    "surface": {
-      "$type": "color",
-      
-      "base-100": {
-        "$description": "Main background - pure white",
-        "$value": {
-          "colorSpace": "srgb",
-          "components": [1, 1, 1],
-          "hex": "#ffffff"
-        }
-      },
-      "base-200": {
-        "$description": "Card backgrounds - light gray",
-        "$value": {
-          "colorSpace": "srgb",
-          "components": [0.98, 0.98, 0.98],
-          "hex": "#fafafa"
-        }
-      },
-      "base-content": {
-        "$description": "Text on base backgrounds - dark gray",
-        "$value": {
-          "colorSpace": "srgb",
-          "components": [0.1, 0.1, 0.1],
-          "hex": "#1a1a1a"
-        }
-      }
-    }
-  }
-}
-```
-
-**themes/dark.tokens.json**:
-```json
-{
-  "dark": {
-    "$extends": "{light}",
-    "$description": "Dark theme - inverted for low-light environments",
-    
-    "surface": {
-      "$type": "color",
-      
-      "base-100": {
-        "$description": "Main background - dark gray",
-        "$value": {
-          "colorSpace": "srgb",
-          "components": [0.1, 0.1, 0.1],
-          "hex": "#1a1a1a"
-        }
-      },
-      "base-200": {
-        "$description": "Card backgrounds - slightly lighter",
-        "$value": {
-          "colorSpace": "srgb",
-          "components": [0.15, 0.15, 0.15],
-          "hex": "#262626"
-        }
-      },
-      "base-content": {
-        "$description": "Text on base backgrounds - light gray",
-        "$value": {
-          "colorSpace": "srgb",
-          "components": [0.9, 0.9, 0.9],
-          "hex": "#e6e6e6"
-        }
-      }
-    },
-    
-    "brand": {
-      "$type": "color",
-      
-      "primary": {
-        "$description": "Slightly brighter primary for dark backgrounds",
-        "$value": {
-          "colorSpace": "srgb",
-          "components": [0.3, 0.5, 0.95],
-          "hex": "#4d7fff"
-        }
-      }
-    }
-  }
-}
-```
-
-### Theme Inheritance with $extends
-
-The `$extends` property creates theme inheritance:
-
-```json
-{
-  "dark": {
-    "$extends": "{light}",
-    // Only override what changes in dark mode
-    // Everything else inherits from light theme
-  }
-}
-```
-
-This means:
-- Dark theme starts with all light theme values
-- Only specified tokens are overridden
-- Unspecified tokens (like `success`, `warning`) remain the same
-
-### Building Multi-Theme Output
-
-```bash
-# Build all themes
-tokctl build --format=tailwind --output=./dist/
-
-# This generates:
-# ./dist/light.css
-# ./dist/dark.css
-# ./dist/theme-variables.css (shared variables)
-```
-
-**Generated CSS structure:**
-```css
-/* theme-variables.css - shared base */
-@import "tailwindcss";
-
-@theme inline {
-  --color-primary: var(--theme-primary);
-  --color-base-100: var(--theme-base-100);
-  --color-base-content: var(--theme-base-content);
-}
-
-/* light.css */
-:root {
-  --theme-primary: oklch(0.59 0.21 258.34);
-  --theme-base-100: oklch(1 0 0);
-  --theme-base-content: oklch(0.1 0 0);
-}
-
-/* dark.css */
-.dark {
-  --theme-primary: oklch(0.69 0.21 258.34);
-  --theme-base-100: oklch(0.1 0 0);
-  --theme-base-content: oklch(0.9 0 0);
-}
-```
-
-### Theme Switching in Your App
-
-```html
-<!DOCTYPE html>
-<html class="light" data-theme="light">
-<head>
-    <link href="/dist/theme-variables.css" rel="stylesheet">
-    <link href="/dist/light.css" rel="stylesheet">
-    <link href="/dist/dark.css" rel="stylesheet">
-</head>
-<body class="bg-base-100 text-base-content">
-    <button onclick="toggleTheme()">Toggle Theme</button>
-    
-    <script>
-        function toggleTheme() {
-            const html = document.documentElement;
-            const currentTheme = html.getAttribute('data-theme');
-            const newTheme = currentTheme === 'light' ? 'dark' : 'light';
-            
-            html.className = newTheme;
-            html.setAttribute('data-theme', newTheme);
-            
-            localStorage.setItem('theme', newTheme);
-        }
-        
-        // Load saved theme
-        const savedTheme = localStorage.getItem('theme') || 'light';
-        document.documentElement.className = savedTheme;
-        document.documentElement.setAttribute('data-theme', savedTheme);
-    </script>
-</body>
-</html>
-```
-
-## Advanced Patterns
-
-### Composite Tokens
-
-Some design elements require multiple values:
-
-```json
-{
-  "effects": {
-    "$description": "Visual effects and shadows",
-    
-    "shadow": {
-      "$type": "shadow",
-      
-      "card": {
-        "$description": "Subtle shadow for cards",
-        "$value": {
-          "color": {
-            "colorSpace": "srgb",
-            "components": [0, 0, 0],
-            "alpha": 0.1
-          },
-          "offsetX": {"value": 0, "unit": "px"},
-          "offsetY": {"value": 4, "unit": "px"},
-          "blur": {"value": 8, "unit": "px"},
-          "spread": {"value": 0, "unit": "px"}
-        }
-      },
-      
-      "focus": {
-        "$description": "Focus ring for interactive elements",
-        "$value": {
-          "color": {
-            "colorSpace": "srgb", 
-            "components": [0.2, 0.4, 0.9],
-            "alpha": 0.5
-          },
-          "offsetX": {"value": 0, "unit": "px"},
-          "offsetY": {"value": 0, "unit": "px"},
-          "blur": {"value": 0, "unit": "px"},
-          "spread": {"value": 2, "unit": "px"}
-        }
-      }
-    }
-  }
-}
-```
-
-### Border Tokens
-
-```json
-{
-  "borders": {
-    "$description": "Border styles and widths",
-    
-    "default": {
-      "$type": "border",
-      "$value": {
-        "color": "{surface.base-300}",
-        "width": {"value": 1, "unit": "px"},
-        "style": "solid"
-      }
-    },
-    
-    "focus": {
-      "$type": "border", 
-      "$value": {
-        "color": "{brand.primary}",
-        "width": {"value": 2, "unit": "px"},
-        "style": "solid"
-      }
-    }
-  }
-}
-```
-
-### Animation Tokens
-
-```json
-{
-  "motion": {
-    "$description": "Animation and transition tokens",
-    
-    "duration": {
-      "$type": "duration",
-      
-      "fast": {
-        "$description": "Quick transitions",
-        "$value": {"value": 150, "unit": "ms"}
-      },
-      "normal": {
-        "$description": "Standard transitions",
-        "$value": {"value": 300, "unit": "ms"}
-      },
-      "slow": {
-        "$description": "Deliberate transitions",
-        "$value": {"value": 500, "unit": "ms"}
-      }
-    },
-    
-    "easing": {
-      "$type": "cubicBezier",
-      
-      "ease-out": {
-        "$description": "Natural deceleration",
-        "$value": [0, 0, 0.2, 1]
-      },
-      "ease-in-out": {
-        "$description": "Smooth acceleration and deceleration", 
-        "$value": [0.4, 0, 0.2, 1]
-      }
-    }
-  }
-}
-```
-
-### Responsive Tokens
-
-```json
-{
-  "breakpoints": {
-    "$description": "Responsive breakpoints",
-    
-    "mobile": {
-      "$type": "dimension",
-      "$value": {"value": 640, "unit": "px"}
-    },
-    "tablet": {
-      "$type": "dimension", 
-      "$value": {"value": 768, "unit": "px"}
-    },
-    "desktop": {
-      "$type": "dimension",
-      "$value": {"value": 1024, "unit": "px"}
-    }
-  }
-}
-```
-
-## Best Practices
-
-### 1. Naming Conventions
-
-**DO:**
-- Use semantic names: `primary`, `success`, `base-content`
-- Be consistent: always pair colors with `-content` variants
-- Use hierarchical organization: `spacing.sm`, `typography.heading.h1`
-
-**DON'T:**
-- Use appearance-based names: `blue-500`, `dark-gray`
-- Mix naming patterns: `primaryColor` vs `primary-color`
-- Create orphaned tokens: `primary` without `primary-content`
-
-### 2. Token Organization
-
-**Group by purpose:**
-```
-tokens/
-├── brand.tokens.json       # Brand identity
-├── surface.tokens.json     # Backgrounds and surfaces
-├── semantic.tokens.json    # State colors
-├── typography.tokens.json  # Text styles
-├── spacing.tokens.json     # Layout spacing
-├── motion.tokens.json      # Animations
-└── components/
-    ├── button.tokens.json  # Button-specific tokens
-    └── card.tokens.json    # Card-specific tokens
-```
-
-### 3. Reference Relationships
-
-**Create logical relationships:**
-```json
-{
-  "brand": {
-    "primary": {"$value": "#3366e6"},
-    "primary-content": {"$value": "#ffffff"}
+  "opacity": {
+    "$type": "number",
+    "disabled": { "$value": 0.5 },
+    "hover": { "$value": 0.8 }
   },
-  "components": {
-    "button": {
-      "primary-bg": {"$value": "{brand.primary}"},
-      "primary-text": {"$value": "{brand.primary-content}"}
+  "font": {
+    "weight": {
+      "$type": "number",
+      "normal": { "$value": 400 },
+      "bold": { "$value": 700 }
     }
   }
 }
 ```
 
-### 4. Documentation
+### fontFamily
 
-**Always include descriptions:**
+Font stack as string or array.
+
 ```json
 {
-  "success": {
-    "$description": "Use for positive feedback, confirmations, completed states. Examples: form success messages, completed progress indicators, positive status badges.",
-    "$value": {"colorSpace": "srgb", "components": [0.1, 0.7, 0.3]}
+  "font": {
+    "family": {
+      "sans": {
+        "$type": "fontFamily",
+        "$value": ["Inter", "ui-sans-serif", "system-ui", "sans-serif"]
+      },
+      "mono": {
+        "$type": "fontFamily",
+        "$value": ["JetBrains Mono", "ui-monospace", "monospace"]
+      }
+    }
   }
 }
 ```
 
-### 5. Validation
+Arrays are joined with commas in CSS output.
 
-**Use Tokctl's built-in validation:**
-```bash
-# Check accessibility compliance
-tokctl validate --wcag=AA
+### duration
 
-# Validate token structure
-tokctl validate --check-references --check-cycles
+Time values for transitions and animations.
 
-# Check naming conventions
-tokctl validate --naming-rules=semantic
-```
-
-## Troubleshooting
-
-### Common Issues
-
-#### 1. "Token reference not found"
-
-**Error:** `Reference {brand.primary} not found`
-
-**Solution:** Check that the referenced token exists and the path is correct:
 ```json
-// ❌ Wrong
-{"$value": "{brand.primary}"}
-
-// ✅ Correct (if token is in same file)
-{"$value": "{brand.primary}"}
-
-// ✅ Correct (if token is in different file)
-// Make sure brand.tokens.json defines brand.primary
-```
-
-#### 2. "Circular reference detected"
-
-**Error:** `Circular reference: brand.primary -> brand.secondary -> brand.primary`
-
-**Solution:** Remove the circular dependency:
-```json
-// ❌ Circular
 {
-  "primary": {"$value": "{brand.secondary}"},
-  "secondary": {"$value": "{brand.primary}"}
-}
-
-// ✅ Fixed
-{
-  "primary": {"$value": "#3366e6"},
-  "secondary": {"$value": "#cc3399"}
-}
-```
-
-#### 3. "Invalid color format"
-
-**Error:** `Invalid color value for token brand.primary`
-
-**Solution:** Use proper W3C color format:
-```json
-// ❌ Wrong
-{"$value": "#3366e6"}
-
-// ✅ Correct
-{
-  "$value": {
-    "colorSpace": "srgb",
-    "components": [0.2, 0.4, 0.9],
-    "hex": "#3366e6"
+  "timing": {
+    "$type": "duration",
+    "fast": { "$value": "150ms" },
+    "normal": { "$value": "250ms" },
+    "slow": { "$value": "400ms" }
   }
 }
 ```
 
-#### 4. "Missing content color"
+### effect
 
-**Warning:** `Brand color 'primary' missing content color 'primary-content'`
+Binary toggle values (0 or 1). Used for feature flags like DaisyUI's depth/noise effects.
 
-**Solution:** Always create content colors for background colors:
 ```json
 {
-  "primary": {
-    "$value": {"colorSpace": "srgb", "components": [0.2, 0.4, 0.9]}
-  },
-  "primary-content": {
-    "$value": {"colorSpace": "srgb", "components": [1, 1, 1]}
+  "effect": {
+    "$type": "effect",
+    "depth": {
+      "$value": 1,
+      "$description": "Enable depth shadows"
+    },
+    "noise": {
+      "$value": 0,
+      "$description": "Enable noise texture"
+    }
   }
 }
 ```
 
-### Debugging Tips
-
-#### 1. Validate frequently
-```bash
-tokctl validate
-```
-Run validation after making changes to catch issues early. Errors now include source file names:
-```
-[Error] color.primary [tokens/brand/colors.json]: reference not found: color.nonexistent
-```
-
-#### 2. Check generated output
-```bash
-tokctl build --format=tailwind --output=./debug
-cat ./debug/tokens.css
-```
-Examine the generated CSS to understand how tokens are being processed.
-
-#### 3. Use the examples
-```bash
-# Build and examine working examples
-tokctl build examples/themes --output=./dist
-tokctl build examples/components --output=./dist
-```
-The `examples/` directory contains working token systems demonstrating all features.
-
-#### 4. Run the demo workflow
-```bash
-make demo
-```
-Runs a complete init → validate → build workflow to verify everything works.
-
-### Getting Help
-
-1. **Check the documentation**: Most issues are covered in this guide
-2. **Validate your tokens**: Run `tokctl validate` to catch common problems
-3. **Check examples**: Look at the `examples/` directory for working patterns
-4. **Run the demo**: Use `make demo` to see a complete workflow in action
-5. **Examine test fixtures**: The `testdata/` directory contains valid and invalid examples
+Validation fails if value is anything other than 0 or 1.
 
 ---
 
-This semantic design system approach will transform how you think about styling. Instead of managing hundreds of arbitrary color values, you'll work with a small set of meaningful, purpose-driven tokens that automatically adapt to themes and maintain consistency across your entire application.
+## References
 
-The key is to think semantically: **what is this element's purpose?** rather than **what color should this be?** This mindset shift will make your code more maintainable, your designs more consistent, and your development process more efficient.
+Tokens can reference other tokens using `{token.path}` syntax.
+
+### Basic Reference
+
+```json
+{
+  "color": {
+    "brand": {
+      "primary": { "$value": "#3b82f6" }
+    }
+  },
+  "components": {
+    "button": {
+      "background": { "$value": "{color.brand.primary}" }
+    }
+  }
+}
+```
+
+`components.button.background` resolves to `#3b82f6`.
+
+### Reference Resolution
+
+References are resolved recursively. Given:
+
+```json
+{
+  "color": {
+    "brand": { "$value": "#3b82f6" },
+    "semantic": { "$value": "{color.brand}" },
+    "button": { "$value": "{color.semantic}" }
+  }
+}
+```
+
+`color.button` resolves to `#3b82f6` through the chain.
+
+### Cycle Detection
+
+Circular references are detected and reported:
+
+```json
+{
+  "a": { "$value": "{b}" },
+  "b": { "$value": "{a}" }
+}
+```
+
+```
+[Error] a: cycle detected: a -> b -> a
+```
+
+### Cross-File References
+
+References work across files. A token in `semantic/status.json` can reference a token defined in `brand/colors.json`.
+
+---
+
+## Expressions & Computed Values
+
+tokctl supports expressions for computed token values.
+
+### calc()
+
+Arithmetic with dimensions:
+
+```json
+{
+  "spacing": {
+    "$type": "dimension",
+    "base": { "$value": "1rem" },
+    "xs": { "$value": "calc({spacing.base} * 0.25)" },
+    "sm": { "$value": "calc({spacing.base} * 0.5)" },
+    "lg": { "$value": "calc({spacing.base} * 1.5)" },
+    "xl": { "$value": "calc({spacing.base} * 2)" }
+  }
+}
+```
+
+Supports `+`, `-`, `*`, `/` operations.
+
+### contrast()
+
+Generates a WCAG AA compliant content color for a background:
+
+```json
+{
+  "color": {
+    "$type": "color",
+    "primary": { "$value": "oklch(49.12% 0.309 275.75)" },
+    "primary-content": { "$value": "contrast({color.primary})" }
+  }
+}
+```
+
+`contrast()` returns white or black (in matching format) based on which provides better contrast.
+
+### darken() and lighten()
+
+Adjust color lightness by percentage:
+
+```json
+{
+  "color": {
+    "$type": "color",
+    "neutral": { "$value": "#1f2937" },
+    "neutral-light": { "$value": "lighten({color.neutral}, 30%)" },
+    "neutral-dark": { "$value": "darken({color.neutral}, 20%)" }
+  }
+}
+```
+
+Operations are performed in OKLCH color space for perceptual uniformity.
+
+### shade()
+
+Derive surface shades from a base color. Each level reduces lightness by ~4%:
+
+```json
+{
+  "color": {
+    "$type": "color",
+    "base-100": { "$value": "oklch(100% 0 0)" },
+    "base-200": { "$value": "shade({color.base-100}, 1)" },
+    "base-300": { "$value": "shade({color.base-100}, 2)" }
+  }
+}
+```
+
+Matches DaisyUI's base color progression pattern.
+
+### scale()
+
+Multiply a dimension by a factor:
+
+```json
+{
+  "size": {
+    "field": { "$value": "2.5rem" },
+    "field-lg": { "$value": "scale({size.field}, 1.2)" }
+  }
+}
+```
+
+---
+
+## Scale Expansion
+
+The `$scale` field automatically generates variant tokens:
+
+```json
+{
+  "size": {
+    "$type": "dimension",
+    "field": {
+      "$value": "2.5rem",
+      "$description": "Base field size",
+      "$scale": {
+        "xs": 0.6,
+        "sm": 0.8,
+        "md": 1.0,
+        "lg": 1.2,
+        "xl": 1.4
+      }
+    }
+  }
+}
+```
+
+This expands to:
+
+| Token | Value | Generated Expression |
+|-------|-------|---------------------|
+| `size.field` | 2.5rem | (base value) |
+| `size.field-xs` | 1.5rem | `calc({size.field} * 0.6)` |
+| `size.field-sm` | 2rem | `calc({size.field} * 0.8)` |
+| `size.field-md` | 2.5rem | `{size.field}` |
+| `size.field-lg` | 3rem | `calc({size.field} * 1.2)` |
+| `size.field-xl` | 3.5rem | `calc({size.field} * 1.4)` |
+
+For factor `1.0`, a direct reference is used instead of calc.
+
+---
+
+## Constraints
+
+Dimension and number tokens support `$min` and `$max` constraints:
+
+```json
+{
+  "size": {
+    "$type": "dimension",
+    "field": {
+      "$value": "2.5rem",
+      "$min": "1rem",
+      "$max": "5rem"
+    }
+  },
+  "opacity": {
+    "$type": "number",
+    "disabled": {
+      "$value": 0.5,
+      "$min": 0,
+      "$max": 1
+    }
+  }
+}
+```
+
+Validation fails if `$value` is outside the specified range:
+
+```
+[Error] size.field [tokens/sizes.json]: constraint violation: value 0.5rem is less than min 1rem
+```
+
+---
+
+## CSS @property Declarations
+
+Add `$property: true` to generate CSS `@property` declarations for type-safe custom properties:
+
+```json
+{
+  "color": {
+    "$type": "color",
+    "primary": {
+      "$value": "oklch(49.12% 0.309 275.75)",
+      "$property": true
+    }
+  }
+}
+```
+
+Generated CSS:
+
+```css
+@property --color-primary {
+  syntax: '<color>';
+  inherits: true;
+  initial-value: oklch(49.12% 0.309 275.75);
+}
+
+@theme {
+  --color-primary: oklch(49.12% 0.309 275.75);
+}
+```
+
+### Custom Inheritance
+
+Disable inheritance for properties that shouldn't cascade:
+
+```json
+{
+  "timing": {
+    "$type": "duration",
+    "fast": {
+      "$value": "150ms",
+      "$property": { "inherits": false }
+    }
+  }
+}
+```
+
+### Type to Syntax Mapping
+
+| Token `$type` | CSS `syntax` |
+|---------------|--------------|
+| `color` | `<color>` |
+| `dimension` | `<length>` |
+| `number` | `<number>` |
+| `duration` | `<time>` |
+| `effect` | `<integer>` |
+
+Types without a mapping (like `fontFamily`) are skipped.
+
+### Animated Theme Transitions
+
+With `@property` declarations, theme switches can animate:
+
+```css
+:root {
+  transition: --color-primary 300ms ease;
+}
+```
+
+Without `@property`, custom properties change instantly. With it, they transition.
+
+---
+
+## Theme System
+
+Themes are defined in `tokens/themes/` and override base tokens.
+
+### Theme Files
+
+**tokens/themes/light.json:**
+```json
+{
+  "color": {
+    "brand": {
+      "primary": { "$value": "#60a5fa" }
+    }
+  }
+}
+```
+
+**tokens/themes/dark.json:**
+```json
+{
+  "$extends": "light",
+  "$description": "Dark theme extends light theme",
+  "color": {
+    "brand": {
+      "primary": { "$value": "#1e40af" }
+    }
+  }
+}
+```
+
+### Theme Inheritance
+
+The `$extends` field creates theme inheritance chains:
+
+- `dark` extends `light`
+- Dark theme inherits all light theme values
+- Only overridden tokens need to be specified
+
+Circular inheritance is detected and reported.
+
+### Generated Output
+
+```css
+@import "tailwindcss";
+
+@theme {
+  --color-brand-primary: #3b82f6;
+  /* ... base tokens */
+}
+
+@layer base {
+  :root, [data-theme="light"] {
+    --color-brand-primary: #60a5fa;
+  }
+  [data-theme="dark"] {
+    --color-brand-primary: #1e40af;
+  }
+}
+```
+
+Only tokens that differ from the base are output in theme blocks.
+
+### Theme Switching
+
+```html
+<html data-theme="light">
+  <!-- or -->
+<html data-theme="dark">
+```
+
+```javascript
+function toggleTheme() {
+  const html = document.documentElement;
+  const current = html.getAttribute('data-theme');
+  html.setAttribute('data-theme', current === 'light' ? 'dark' : 'light');
+}
+```
+
+---
+
+## Components
+
+Components are defined with `$type: "component"` and generate CSS classes.
+
+### Component Structure
+
+```json
+{
+  "components": {
+    "button": {
+      "$type": "component",
+      "$class": "btn",
+      "variants": {
+        "primary": {
+          "$class": "btn-primary",
+          "background-color": "{color.brand.primary}",
+          "color": "{color.brand.primary-content}"
+        },
+        "secondary": {
+          "$class": "btn-secondary",
+          "background-color": "transparent",
+          "border": "1px solid {color.brand.primary}",
+          "color": "{color.brand.primary}"
+        }
+      },
+      "sizes": {
+        "sm": {
+          "$class": "btn-sm",
+          "padding": "{spacing.xs} {spacing.sm}",
+          "font-size": "0.875rem"
+        },
+        "lg": {
+          "$class": "btn-lg",
+          "padding": "{spacing.md} {spacing.lg}",
+          "font-size": "1.125rem"
+        }
+      }
+    }
+  }
+}
+```
+
+### State Selectors
+
+Variants can include pseudo-class states:
+
+```json
+{
+  "primary": {
+    "$class": "btn-primary",
+    "background-color": "{color.brand.primary}",
+    ":hover": {
+      "background-color": "{color.brand.primary-hover}"
+    },
+    ":active": {
+      "transform": "scale(0.98)"
+    }
+  }
+}
+```
+
+### Generated CSS
+
+```css
+@layer components {
+  .btn {
+    /* base styles */
+  }
+  .btn-primary {
+    background-color: var(--color-brand-primary);
+    color: var(--color-brand-primary-content);
+  }
+  .btn-primary:hover {
+    background-color: var(--color-brand-primary-hover);
+  }
+  .btn-secondary {
+    background-color: transparent;
+    border: 1px solid var(--color-brand-primary);
+    color: var(--color-brand-primary);
+  }
+  .btn-sm {
+    padding: var(--spacing-xs) var(--spacing-sm);
+    font-size: 0.875rem;
+  }
+  .btn-lg {
+    padding: var(--spacing-md) var(--spacing-lg);
+    font-size: 1.125rem;
+  }
+}
+```
+
+Token references in component properties are converted to `var(--token-path)`.
+
+---
+
+## Best Practices
+
+### Naming Conventions
+
+**Do:**
+- Use semantic names: `primary`, `success`, `base-content`
+- Pair colors with content variants: `primary` + `primary-content`
+- Use consistent hierarchy: `color.brand.primary`, `spacing.md`
+
+**Don't:**
+- Use appearance-based names: `blue-500`, `dark-gray`
+- Skip content colors for backgrounds
+
+### Content Color Pairing
+
+Every background color should have a matching content color:
+
+```json
+{
+  "color": {
+    "$type": "color",
+    "primary": { "$value": "oklch(49.12% 0.309 275.75)" },
+    "primary-content": { "$value": "contrast({color.primary})" },
+    "success": { "$value": "#10b981" },
+    "success-content": { "$value": "contrast({color.success})" }
+  }
+}
+```
+
+### File Organization
+
+Group tokens by purpose:
+
+```
+tokens/
+├── brand/colors.json       # Core brand colors
+├── semantic/status.json    # success, error, warning, info
+├── spacing/scale.json      # Spacing scale
+├── typography/fonts.json   # Font families
+├── sizing/fields.json      # Component sizes
+└── themes/
+    ├── light.json
+    └── dark.json
+```
+
+### Type Annotations
+
+Always annotate groups with `$type` for validation:
+
+```json
+{
+  "color": {
+    "$type": "color",
+    "$description": "Color tokens",
+    "primary": { "$value": "#3b82f6" }
+  }
+}
+```
+
+---
+
+## Troubleshooting
+
+### Reference Not Found
+
+```
+[Error] components.button.bg [tokens/components.json]: reference not found: color.prinary
+```
+
+**Cause:** Typo in reference path or referenced token doesn't exist.
+
+**Fix:** Check the token path. References are case-sensitive.
+
+### Circular Reference Detected
+
+```
+[Error] color.a: cycle detected: color.a -> color.b -> color.a
+```
+
+**Cause:** Two or more tokens reference each other in a loop.
+
+**Fix:** Break the cycle by using a concrete value for one token:
+
+```json
+{
+  "color": {
+    "a": { "$value": "#3b82f6" },
+    "b": { "$value": "{color.a}" }
+  }
+}
+```
+
+### Invalid Color Format
+
+```
+[Error] color.primary [tokens/brand.json]: invalid color: unable to parse "notacolor"
+```
+
+**Cause:** Color value isn't a valid CSS color.
+
+**Fix:** Use hex, rgb, hsl, oklch, or named colors:
+
+```json
+{
+  "primary": { "$value": "#3b82f6" }
+}
+```
+
+### Constraint Violation
+
+```
+[Error] size.field [tokens/sizes.json]: constraint violation: value 0.5rem is less than min 1rem
+```
+
+**Cause:** Token value is outside `$min`/`$max` bounds.
+
+**Fix:** Adjust the value or constraints.
+
+### Invalid Effect Value
+
+```
+[Error] effect.depth [tokens/effects.json]: invalid effect: effect must be 0 or 1, got 2
+```
+
+**Cause:** Effect tokens only accept 0 or 1.
+
+**Fix:** Use `0` to disable, `1` to enable.
+
+### Expected Object Error
+
+```
+[Error] spacing.md: expected object, got string
+```
+
+**Cause:** A token path points to a primitive instead of a token object.
+
+**Fix:** Ensure all tokens have the `$value` wrapper:
+
+```json
+{
+  "spacing": {
+    "md": { "$value": "1rem" }
+  }
+}
+```
+
+Not:
+
+```json
+{
+  "spacing": {
+    "md": "1rem"
+  }
+}
+```
+
+### Debugging
+
+1. **Validate frequently:**
+   ```bash
+   tokctl validate
+   ```
+   Errors include source file paths for easy location.
+
+2. **Check generated output:**
+   ```bash
+   tokctl build --output=./debug
+   cat ./debug/tokens.css
+   ```
+
+3. **Use the examples:**
+   ```bash
+   tokctl build examples/computed --output=dist/computed
+   tokctl build examples/themes --output=dist/themes
+   tokctl build examples/validation --output=dist/validation
+   ```
+
+4. **Run the demo workflow:**
+   ```bash
+   make demo
+   ```
+
+---
+
+## Quick Reference
+
+### CLI Commands
+
+```bash
+tokctl init [dir]           # Initialize token system
+tokctl validate [dir]       # Validate tokens
+tokctl build [dir]          # Build artifacts
+  --format=tailwind         # CSS output (default)
+  --format=catalog          # JSON catalog
+  --output=<dir>            # Output directory (default: dist)
+```
+
+### Token Syntax
+
+```json
+{
+  "group": {
+    "$type": "color",
+    "$description": "Group description",
+    "token": {
+      "$value": "#3b82f6",
+      "$description": "Token description",
+      "$property": true,
+      "$min": "...",
+      "$max": "...",
+      "$scale": { "xs": 0.6, "md": 1.0, "xl": 1.4 }
+    }
+  }
+}
+```
+
+### Expression Functions
+
+| Function | Example | Description |
+|----------|---------|-------------|
+| Reference | `{color.primary}` | Reference another token |
+| calc | `calc({spacing.base} * 2)` | Arithmetic with dimensions |
+| contrast | `contrast({color.primary})` | WCAG AA content color |
+| darken | `darken({color.neutral}, 20%)` | Reduce lightness |
+| lighten | `lighten({color.neutral}, 30%)` | Increase lightness |
+| shade | `shade({color.base}, 1)` | Derive surface shade |
+| scale | `scale({size.field}, 1.2)` | Multiply dimension |
+
+### Token Types
+
+| Type | Validation |
+|------|------------|
+| `color` | Valid CSS color |
+| `dimension` | Number with unit |
+| `number` | Numeric value |
+| `fontFamily` | String or array |
+| `duration` | Time value |
+| `effect` | 0 or 1 |
+| `component` | Component definition |

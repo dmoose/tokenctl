@@ -1,15 +1,20 @@
+<!-- tokctl/README.md -->
 # tokctl
 
-**tokctl** (Token Control) is a W3C Design Tokens manager that acts as the single source of truth for your design system. It allows you to define atomic and semantic tokens in standard JSON files and generate consumption artifacts (CSS, Go, etc.) for your applications.
+**tokctl** (Token Control) is a W3C Design Tokens manager that acts as the single source of truth for your design system. Define tokens in JSON files and generate CSS artifacts for Tailwind 4 and other consumers.
 
 ## Key Features
 
-- **W3C Compliant**: Uses the standard [W3C Design Token Format](https://tr.designtokens.org/format/).
-- **Semantic First**: Encourages a layered design system (Brand -> Semantic -> Component).
-- **Tailwind 4 Ready**: Generates modern Tailwind CSS `@theme` configurations.
-- **Reference Resolution**: Supports deep referencing (`{brand.primary}`) and cycle detection.
-- **Theme Inheritance**: Use `$extends` to create theme variations that inherit from parent themes.
-- **Detailed Error Messages**: Validation errors show source file names for easy debugging.
+- **W3C Compliant**: Uses the standard [W3C Design Token Format](https://tr.designtokens.org/format/)
+- **Tailwind 4 Ready**: Generates modern `@theme` configurations with `@layer` support
+- **Reference Resolution**: Deep referencing (`{color.brand.primary}`) with cycle detection
+- **Theme Inheritance**: `$extends` for theme variations that inherit from parent themes
+- **Computed Values**: `contrast()`, `darken()`, `lighten()`, `shade()`, `calc()` expressions
+- **Scale Expansion**: `$scale` generates size variants automatically (xs, sm, md, lg, xl)
+- **CSS @property**: `$property` field generates typed CSS custom properties for animations
+- **Constraint Validation**: `$min`/`$max` bounds checking on dimension and number tokens
+- **Type Validation**: Validates colors, dimensions, numbers, fontFamily, effect, duration
+- **Source Tracking**: Validation errors include source file paths
 
 ## Installation
 
@@ -25,174 +30,179 @@ go install github.com/dmoose/tokctl/cmd/tokctl@latest
 tokctl init my-design-system
 ```
 
-This creates a standard directory structure:
+Creates:
 ```
 my-design-system/
 ├── tokens/
-│   ├── brand/
-│   ├── semantic/
-│   ├── spacing/
-│   └── themes/  # Optional: theme variations
+│   ├── brand/colors.json
+│   ├── semantic/status.json
+│   ├── spacing/scale.json
+│   └── themes/
 ```
 
 ### 2. Define Tokens
 
-Edit `tokens/brand/colors.json`:
+**tokens/brand/colors.json:**
 ```json
 {
   "color": {
-    "brand": {
-      "primary": { "$value": "#3b82f6" },
-      "secondary": { "$value": "#8b5cf6" }
-    }
+    "$type": "color",
+    "primary": { "$value": "oklch(49.12% 0.309 275.75)" },
+    "primary-content": { "$value": "contrast({color.primary})" },
+    "secondary": { "$value": "#8b5cf6" }
   }
 }
 ```
 
-### 3. Create Theme Variations (Optional)
+### 3. Create Theme Variations
 
-Edit `tokens/themes/dark.json`:
+**tokens/themes/dark.json:**
 ```json
 {
   "$extends": "light",
-  "$description": "Dark theme extends light theme",
   "color": {
-    "brand": {
-      "primary": { "$value": "#1e40af" }
-    }
+    "primary": { "$value": "oklch(65% 0.2 275)" }
   }
 }
 ```
 
-The `$extends` keyword allows themes to inherit from other themes, creating variations efficiently.
-
-### 4. Define Components
-
-Edit `tokens/components/button.json`:
-```json
-{
-  "components": {
-    "button": {
-      "$type": "component",
-      "$class": "btn",
-      "variants": {
-        "primary": {
-          "$class": "btn-primary",
-          "background-color": "{color.brand.primary}",
-          "color": "#ffffff"
-        }
-      }
-    }
-  }
-}
-```
-
-### 5. Build Artifacts
-
-Generate CSS variables for Tailwind 4:
+### 4. Build
 
 ```bash
-tokctl build my-design-system --format=tailwind --output=./dist
+tokctl build my-design-system --output=./dist
 ```
 
-**Output (`dist/tokens.css`):**
+**Output (dist/tokens.css):**
 ```css
 @import "tailwindcss";
 
 @theme {
-  --color-brand-primary: #3b82f6;
-  --color-brand-secondary: #8b5cf6;
-}
-```
-
-## Output Formats
-
-### Tailwind CSS 4
-
-```css
-@import "tailwindcss";
-
-@theme {
-  --color-primary: oklch(0.59 0.21 258.34);
-  --color-primary-content: oklch(1 0 0);
-  --spacing-sm: 0.5rem;
+  --color-primary: oklch(49.12% 0.309 275.75);
+  --color-primary-content: oklch(100% 0 0);
+  --color-secondary: #8b5cf6;
 }
 
 @layer base {
   [data-theme="dark"] {
-    --color-primary: oklch(0.69 0.21 258.34);
-  }
-}
-
-@layer components {
-  .btn-primary {
-    background-color: var(--color-primary);
-    color: var(--color-primary-content);
+    --color-primary: oklch(65% 0.2 275);
   }
 }
 ```
 
-### JSON Catalog
+## Token Features
 
-A machine-readable dump of the resolved system for tool integration:
+### References
 
-```bash
-tokctl build my-design-system --format=catalog --output=./dist
+```json
+{
+  "button-bg": { "$value": "{color.primary}" }
+}
+```
+
+### Computed Colors
+
+```json
+{
+  "primary-content": { "$value": "contrast({color.primary})" },
+  "primary-hover": { "$value": "darken({color.primary}, 10%)" },
+  "base-200": { "$value": "shade({color.base-100}, 1)" }
+}
+```
+
+### Scale Expansion
+
+```json
+{
+  "size": {
+    "field": {
+      "$value": "2.5rem",
+      "$scale": { "xs": 0.6, "sm": 0.8, "md": 1.0, "lg": 1.2, "xl": 1.4 }
+    }
+  }
+}
+```
+
+Generates: `--size-field`, `--size-field-xs`, `--size-field-sm`, etc.
+
+### CSS @property
+
+```json
+{
+  "color": {
+    "primary": {
+      "$value": "oklch(49% 0.3 275)",
+      "$property": true
+    }
+  }
+}
+```
+
+Enables animated theme transitions.
+
+### Constraints
+
+```json
+{
+  "size": {
+    "field": {
+      "$value": "2.5rem",
+      "$min": "1rem",
+      "$max": "5rem"
+    }
+  }
+}
 ```
 
 ## Commands
 
-- `tokctl init [dir]`: Scaffold a new token system with standard directory structure.
-- `tokctl build [dir]`: Build artifacts (CSS, Catalog).
-  - `--format=tailwind`: Generate Tailwind CSS (default)
-  - `--format=catalog`: Generate JSON catalog
-  - `--output=<dir>`: Output directory (default: `dist`)
-- `tokctl validate [dir]`: Check for broken references, circular dependencies, and schema compliance.
-  - Shows source file names in error messages for easy debugging
-- `make help`: View all available make targets for development
+```bash
+tokctl init [dir]              # Initialize token system
+tokctl validate [dir]          # Validate tokens
+  --strict                     # Fail on warnings
+tokctl build [dir]             # Build artifacts
+  --format=tailwind            # CSS output (default)
+  --format=catalog             # JSON catalog
+  --output=<dir>               # Output directory (default: dist)
+```
 
 ## Examples
 
-Working examples demonstrating tokctl features are in the `examples/` directory:
-
-- **basic/**: Simple token system with brand colors, spacing, and semantic tokens
-- **themes/**: Theme inheritance using `$extends` (light/dark theme variations)
-- **components/**: Component definitions with variants and states
-
-Build any example:
 ```bash
+tokctl build examples/computed --output=dist/computed
 tokctl build examples/themes --output=dist/themes
+tokctl build examples/validation --output=dist/validation
+tokctl build examples/daisyui --output=dist/daisyui
 ```
 
-See [examples/README.md](examples/README.md) for detailed documentation.
+See [examples/README.md](examples/README.md) for details.
 
-## Architecture
+## Token Types
 
-`tokctl` is the **Source of Truth** for your design system. It manages the W3C token graph, resolves references, and handles theme inheritance.
-
-**Core Components**:
-- **Loader**: Recursive JSON loading with source file tracking for error reporting.
-- **Resolver**: Deep reference resolution (`{brand.primary}`) with cycle detection.
-- **Validator**: Validates references, schema compliance, and reports errors with file context.
-- **Generators**: Unified generation API producing Tailwind CSS, JSON catalogs, etc.
-- **Theme Inheritance**: Resolves `$extends` chains with circular dependency protection.
-
-## Development
-
-Build and test:
-```bash
-make build          # Build binary
-make test           # Run all tests
-make coverage       # Generate coverage report
-make demo           # Run full workflow demo
-make examples       # Build all examples
-```
-
-See `make help` for all available targets.
+| Type | Description | Example |
+|------|-------------|---------|
+| `color` | CSS colors | `#3b82f6`, `oklch(49% 0.3 275)` |
+| `dimension` | Length values | `1rem`, `16px` |
+| `number` | Numeric values | `400`, `0.5` |
+| `fontFamily` | Font stacks | `["Inter", "sans-serif"]` |
+| `duration` | Time values | `150ms`, `0.3s` |
+| `effect` | Binary toggle | `0` or `1` |
+| `component` | Component definition | See TOKENS.md |
 
 ## Documentation
 
-- [README.md](README.md) - Quick start and overview (this file)
-- [TOKENS.md](TOKENS.md) - Comprehensive developer guide
-- [examples/](examples/) - Working examples with documentation
-- [testdata/](testdata/) - Test fixtures and expected outputs
+- [README.md](README.md) - Quick start (this file)
+- [TOKENS.md](TOKENS.md) - Token format, types, expressions, constraints
+- [ADVANCED_USAGE.md](ADVANCED_USAGE.md) - CSS composition patterns
+- [examples/](examples/) - Working examples
+- [testdata/](testdata/) - Test fixtures
+
+## Development
+
+```bash
+make build          # Build binary
+make test           # Run tests
+make coverage       # Coverage report
+make demo           # Full workflow demo
+make examples       # Build all examples
+make help           # All targets
+```

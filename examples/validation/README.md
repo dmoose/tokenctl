@@ -1,3 +1,4 @@
+<!-- tokctl/examples/validation/README.md -->
 # Validation Example
 
 This example demonstrates enhanced tokctl features:
@@ -26,9 +27,19 @@ Dimension tokens can have `$min` and `$max` constraints:
       "$min": "1rem",
       "$max": "5rem"
     }
+  },
+  "radius": {
+    "$type": "dimension",
+    "box": {
+      "$value": "1rem",
+      "$min": "0rem",
+      "$max": "3rem"
+    }
   }
 }
 ```
+
+Note: `$min` and `$max` must use the same unit as the value.
 
 Number tokens also support constraints:
 

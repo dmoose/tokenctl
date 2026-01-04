@@ -1,3 +1,4 @@
+<!-- tokctl/examples/README.md -->
 # Tokctl Examples
 
 This directory contains working examples demonstrating various tokctl features. These examples are referenced in the main documentation and can be used as starting points for your own design systems.
