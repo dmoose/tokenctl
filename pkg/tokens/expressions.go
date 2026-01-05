@@ -18,6 +18,7 @@ import (
 //   - contrast({color.primary}) - generate content color
 //   - darken({color.primary}, 10%) - darken a color
 //   - lighten({color.primary}, 10%) - lighten a color
+//   - shade({color.base}, 1) - derive color shade (1=slightly darker, 2=more darker, etc.)
 type ExpressionEvaluator struct {
 	resolver *Resolver
 }
@@ -44,6 +45,10 @@ var (
 	// scaleRegex matches scale({token}, factor) expressions
 	scaleRegex = regexp.MustCompile(`^scale\(\s*\{([^}]+)\}\s*,\s*([0-9.]+)\s*\)$`)
 
+	// shadeRegex matches shade({token}, level) expressions
+	// level is typically 1, 2, 3... where higher = darker
+	shadeRegex = regexp.MustCompile(`^shade\(\s*\{([^}]+)\}\s*,\s*([0-9.]+)\s*\)$`)
+
 	// tokenRefRegex matches {token.path} in expressions
 	tokenRefRegex = regexp.MustCompile(`\{([^}]+)\}`)
 )
@@ -55,7 +60,8 @@ func IsExpression(value string) bool {
 		strings.HasPrefix(value, "contrast(") ||
 		strings.HasPrefix(value, "darken(") ||
 		strings.HasPrefix(value, "lighten(") ||
-		strings.HasPrefix(value, "scale(")
+		strings.HasPrefix(value, "scale(") ||
+		strings.HasPrefix(value, "shade(")
 }
 
 // Evaluate processes an expression string and returns the computed value
@@ -84,6 +90,11 @@ func (e *ExpressionEvaluator) Evaluate(expr string) (interface{}, error) {
 	if matches := scaleRegex.FindStringSubmatch(expr); matches != nil {
 		factor, _ := strconv.ParseFloat(matches[2], 64)
 		return e.evaluateScale(matches[1], factor)
+	}
+
+	if matches := shadeRegex.FindStringSubmatch(expr); matches != nil {
+		level, _ := strconv.ParseFloat(matches[2], 64)
+		return e.evaluateShade(matches[1], level)
 	}
 
 	return nil, fmt.Errorf("unrecognized expression: %s", expr)
@@ -356,6 +367,42 @@ func (e *ExpressionEvaluator) evaluateScale(tokenPath string, factor float64) (s
 	// Round to avoid floating point artifacts
 	result.Value = roundFloat(result.Value, 4)
 	return result.String(), nil
+}
+
+// evaluateShade derives a shade from a base color
+// level: 1 = slightly darker (~4% lightness reduction), 2 = more darker (~8%), etc.
+// This is useful for generating base-200, base-300 from base-100
+func (e *ExpressionEvaluator) evaluateShade(tokenPath string, level float64) (string, error) {
+	resolved, err := e.resolver.resolveReference(tokenPath)
+	if err != nil {
+		return "", fmt.Errorf("shade: failed to resolve %s: %w", tokenPath, err)
+	}
+
+	colorStr, ok := resolved.(string)
+	if !ok {
+		return "", fmt.Errorf("shade: %s is not a string color value", tokenPath)
+	}
+
+	c, err := colors.Parse(colorStr)
+	if err != nil {
+		return "", fmt.Errorf("shade: invalid color %s: %w", colorStr, err)
+	}
+
+	// Each shade level reduces lightness by ~4% (0.04 in OKLCH)
+	// This matches DaisyUI's base color progression
+	l, ch, h := c.OkLch()
+	reduction := level * 0.04
+	newL := l - reduction
+	if newL < 0 {
+		newL = 0
+	}
+
+	result := colors.FromOkLch(newL, ch, h).Clamped()
+
+	if c.OriginalFormat() == colors.FormatOKLCH {
+		return result.ToOKLCH(), nil
+	}
+	return result.Hex(), nil
 }
 
 // roundFloat rounds a float to n decimal places

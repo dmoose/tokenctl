@@ -1,0 +1,17 @@
+{
+  "effect": {
+    "$type": "effect",
+
+    "depth": {
+      "$value": 0,
+      "$description": "Enable subtle depth/shadow effect on components (0 = disabled, 1 = enabled)",
+      "$property": true
+    },
+
+    "noise": {
+      "$value": 0,
+      "$description": "Enable noise texture overlay on components (0 = disabled, 1 = enabled)",
+      "$property": true
+    }
+  }
+}

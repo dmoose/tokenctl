@@ -1,0 +1,31 @@
+{
+  "size": {
+    "$type": "dimension",
+
+    "field": {
+      "$value": "2.5rem",
+      "$description": "Base size for fields (button, input, tab). 2.5rem = 40px",
+      "$property": true,
+      "$scale": {
+        "xs": 0.6,
+        "sm": 0.8,
+        "md": 1.0,
+        "lg": 1.2,
+        "xl": 1.4
+      }
+    },
+
+    "selector": {
+      "$value": "1.5rem",
+      "$description": "Base size for selectors (checkbox, radio, toggle, badge). 1.5rem = 24px",
+      "$property": true,
+      "$scale": {
+        "xs": 0.6,
+        "sm": 0.8,
+        "md": 1.0,
+        "lg": 1.2,
+        "xl": 1.4
+      }
+    }
+  }
+}

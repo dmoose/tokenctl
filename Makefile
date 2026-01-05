@@ -123,7 +123,12 @@ example-validation: build ## Build validation example
 	./$(BUILD_DIR)/$(BINARY_NAME) build examples/validation --output dist/validation
 	@echo "Output: dist/validation/tokens.css"
 
-examples: example-basic example-themes example-components example-computed example-validation ## Build all examples
+example-daisyui: build ## Build DaisyUI 5 theme example
+	@echo "Building DaisyUI example..."
+	./$(BUILD_DIR)/$(BINARY_NAME) build examples/daisyui --output dist/daisyui
+	@echo "Output: dist/daisyui/tokens.css"
+
+examples: example-basic example-themes example-components example-computed example-validation example-daisyui ## Build all examples
 
 ## CI/CD
 

@@ -18,6 +18,8 @@ func TestIsExpression(t *testing.T) {
 		{"darken({color.primary}, 10%)", true},
 		{"lighten({color.primary}, 20%)", true},
 		{"scale({size.base}, 1.5)", true},
+		{"shade({color.base}, 1)", true},
+		{"shade({color.base}, 2)", true},
 		{"{color.primary}", false},
 		{"#3b82f6", false},
 		{"10px", false},
@@ -463,5 +465,72 @@ func TestResolverWithExpressions(t *testing.T) {
 		}
 	} else {
 		t.Error("color.primary-content not found in resolved tokens")
+	}
+}
+
+func TestExpressionEvaluator_Shade(t *testing.T) {
+	tests := []struct {
+		name    string
+		tokens  map[string]interface{}
+		expr    string
+		wantErr bool
+	}{
+		{
+			name:   "shade level 1 from white",
+			tokens: map[string]interface{}{"color.base": "oklch(100% 0 0)"},
+			expr:   "shade({color.base}, 1)",
+		},
+		{
+			name:   "shade level 2 from white",
+			tokens: map[string]interface{}{"color.base": "oklch(100% 0 0)"},
+			expr:   "shade({color.base}, 2)",
+		},
+		{
+			name:   "shade hex color",
+			tokens: map[string]interface{}{"color.base": "#ffffff"},
+			expr:   "shade({color.base}, 1)",
+		},
+		{
+			name:    "shade missing token",
+			tokens:  map[string]interface{}{},
+			expr:    "shade({color.missing}, 1)",
+			wantErr: true,
+		},
+		{
+			name:    "shade invalid color",
+			tokens:  map[string]interface{}{"color.bad": "not-a-color"},
+			expr:    "shade({color.bad}, 1)",
+			wantErr: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			resolver := createTestResolver(tt.tokens)
+			eval := NewExpressionEvaluator(resolver)
+
+			result, err := eval.Evaluate(tt.expr)
+
+			if tt.wantErr {
+				if err == nil {
+					t.Errorf("Evaluate(%q) expected error, got nil", tt.expr)
+				}
+				return
+			}
+
+			if err != nil {
+				t.Fatalf("Evaluate(%q) unexpected error: %v", tt.expr, err)
+			}
+
+			resultStr, ok := result.(string)
+			if !ok {
+				t.Errorf("Evaluate(%q) result is not a string", tt.expr)
+				return
+			}
+
+			if !strings.HasPrefix(resultStr, "#") && !strings.HasPrefix(resultStr, "oklch") {
+				t.Errorf("Evaluate(%q) = %q, expected color format", tt.expr, resultStr)
+			}
+		})
 	}
 }
