@@ -101,12 +101,16 @@ func runBuild(cmd *cobra.Command, args []string) error {
 			return fmt.Errorf("failed to extract components: %w", err)
 		}
 
+		// Extract tokens with $property for @property declarations
+		propertyTokens := tokens.ExtractPropertyTokens(baseDict, resolvedBase)
+
 		// Build generation context
 		ctx := &generators.GenerationContext{
 			BaseDict:       baseDict,
 			ResolvedTokens: resolvedBase,
 			Components:     components,
 			Themes:         themeContexts,
+			PropertyTokens: propertyTokens,
 		}
 
 		// Generate complete CSS

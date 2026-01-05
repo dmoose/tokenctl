@@ -47,6 +47,7 @@ type GenerationContext struct {
 	ResolvedTokens map[string]interface{}                // Flattened, resolved atomic tokens
 	Components     map[string]tokens.ComponentDefinition // Extracted components
 	Themes         map[string]ThemeContext               // Theme-specific contexts
+	PropertyTokens []tokens.PropertyToken                // Tokens with $property for @property declarations
 }
 
 // ThemeContext provides theme-specific generation data
@@ -68,14 +69,20 @@ func NewTailwindGenerator() *TailwindGenerator {
 func (g *TailwindGenerator) Generate(ctx *GenerationContext) (string, error) {
 	var sb strings.Builder
 
-	// 1. Import and base @theme block
+	// 1. @property declarations (before @theme for type registration)
+	if len(ctx.PropertyTokens) > 0 {
+		propertyDecls := g.generatePropertyDeclarations(ctx.PropertyTokens)
+		sb.WriteString(propertyDecls)
+	}
+
+	// 2. Import and base @theme block
 	baseTheme, err := g.generateBaseTheme(ctx.ResolvedTokens)
 	if err != nil {
 		return "", fmt.Errorf("failed to generate base theme: %w", err)
 	}
 	sb.WriteString(baseTheme)
 
-	// 2. Theme variations in @layer base
+	// 3. Theme variations in @layer base
 	if len(ctx.Themes) > 0 {
 		themeVariations, err := g.generateThemeVariations(ctx.Themes)
 		if err != nil {
@@ -85,7 +92,7 @@ func (g *TailwindGenerator) Generate(ctx *GenerationContext) (string, error) {
 		sb.WriteString(themeVariations)
 	}
 
-	// 3. Components in @layer components (always output for consistency)
+	// 4. Components in @layer components (always output for consistency)
 	components, err := g.generateComponents(ctx.Components)
 	if err != nil {
 		return "", fmt.Errorf("failed to generate components: %w", err)
@@ -94,6 +101,32 @@ func (g *TailwindGenerator) Generate(ctx *GenerationContext) (string, error) {
 	sb.WriteString(components)
 
 	return sb.String(), nil
+}
+
+// generatePropertyDeclarations creates @property declarations for typed tokens
+func (g *TailwindGenerator) generatePropertyDeclarations(properties []tokens.PropertyToken) string {
+	var sb strings.Builder
+
+	// Sort by path for deterministic output
+	sorted := make([]tokens.PropertyToken, len(properties))
+	copy(sorted, properties)
+	sort.Slice(sorted, func(i, j int) bool {
+		return sorted[i].Path < sorted[j].Path
+	})
+
+	for _, prop := range sorted {
+		sb.WriteString(fmt.Sprintf("@property %s {\n", prop.CSSName))
+		sb.WriteString(fmt.Sprintf("  syntax: '%s';\n", prop.CSSSyntax))
+		if prop.Inherits {
+			sb.WriteString("  inherits: true;\n")
+		} else {
+			sb.WriteString("  inherits: false;\n")
+		}
+		sb.WriteString(fmt.Sprintf("  initial-value: %s;\n", prop.InitialValue))
+		sb.WriteString("}\n\n")
+	}
+
+	return sb.String()
 }
 
 // generateBaseTheme creates the root @theme block with base tokens

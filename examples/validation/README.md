@@ -1,10 +1,11 @@
 # Validation Example
 
-This example demonstrates the enhanced validation features in tokctl:
+This example demonstrates enhanced tokctl features:
 
 1. **Constraint Validation** - `$min` and `$max` constraints on dimension and number tokens
 2. **Type-Specific Validation** - Validation for color, dimension, number, fontFamily, and effect types
 3. **Effect Tokens** - DaisyUI-style effect toggles (0 or 1)
+4. **CSS @property Declarations** - Type-safe custom properties with animation support
 
 ## Token File
 
@@ -76,6 +77,31 @@ The validator checks values based on their `$type`:
 | `fontFamily` | Non-empty string or array of strings |
 | `effect` | Value must be 0 or 1 |
 
+### CSS @property Declarations
+
+Add `$property: true` to generate `@property` declarations for animatable tokens:
+
+```json
+{
+  "color": {
+    "$type": "color",
+    "primary": {
+      "$value": "oklch(50% 0.2 250)",
+      "$property": true
+    }
+  },
+  "timing": {
+    "fast": {
+      "$value": "150ms",
+      "$type": "duration",
+      "$property": { "inherits": false }
+    }
+  }
+}
+```
+
+This enables smooth CSS transitions on theme changes.
+
 ## Usage
 
 ### Validate
@@ -104,8 +130,10 @@ The generated CSS will include:
   --color-primary-content: oklch(100.00% 0.000 0.00);
   --color-secondary: #8b5cf6;
   --effect-depth: 1;
-  --effect-noise: 0;
-  --font-family-mono: JetBrains Mono, ui-monospace, monospace;
+    --effect-noise: 0;
+    --timing-fast: 150ms;
+    --timing-normal: 250ms;
+    --font-family-mono: JetBrains Mono, ui-monospace, monospace;
   --font-family-sans: Inter, ui-sans-serif, system-ui, sans-serif;
   --opacity-disabled: 0.5;
   --opacity-hover: 0.8;
@@ -127,3 +155,7 @@ To see validation errors, try modifying `tokens.json`:
 4. **Empty fontFamily**: Change `font.family.sans.$value` to `[]`
 
 Run `tokctl validate examples/validation` to see the error messages.
+
+## See Also
+
+- [ADVANCED_USAGE.md](../../ADVANCED_USAGE.md) - Full documentation on `$property` and CSS composition patterns

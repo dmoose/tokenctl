@@ -347,6 +347,96 @@ func TestResolveTokenReferences(t *testing.T) {
 	}
 }
 
+func TestTailwindGenerator_PropertyDeclarations(t *testing.T) {
+	tests := []struct {
+		name       string
+		properties []tokens.PropertyToken
+		expected   []string
+	}{
+		{
+			name: "Color property",
+			properties: []tokens.PropertyToken{
+				{
+					Path:         "color.primary",
+					CSSName:      "--color-primary",
+					CSSSyntax:    "<color>",
+					Inherits:     true,
+					InitialValue: "oklch(50% 0.2 250)",
+				},
+			},
+			expected: []string{
+				"@property --color-primary {",
+				"syntax: '<color>';",
+				"inherits: true;",
+				"initial-value: oklch(50% 0.2 250);",
+			},
+		},
+		{
+			name: "Dimension with inherits false",
+			properties: []tokens.PropertyToken{
+				{
+					Path:         "timing.fast",
+					CSSName:      "--timing-fast",
+					CSSSyntax:    "<time>",
+					Inherits:     false,
+					InitialValue: "150ms",
+				},
+			},
+			expected: []string{
+				"@property --timing-fast {",
+				"syntax: '<time>';",
+				"inherits: false;",
+				"initial-value: 150ms;",
+			},
+		},
+		{
+			name: "Multiple properties sorted by path",
+			properties: []tokens.PropertyToken{
+				{
+					Path:         "spacing.md",
+					CSSName:      "--spacing-md",
+					CSSSyntax:    "<length>",
+					Inherits:     true,
+					InitialValue: "1rem",
+				},
+				{
+					Path:         "color.primary",
+					CSSName:      "--color-primary",
+					CSSSyntax:    "<color>",
+					Inherits:     true,
+					InitialValue: "#3b82f6",
+				},
+			},
+			expected: []string{
+				"@property --color-primary {",
+				"@property --spacing-md {",
+			},
+		},
+	}
+
+	gen := NewTailwindGenerator()
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ctx := &GenerationContext{
+				ResolvedTokens: map[string]interface{}{},
+				PropertyTokens: tt.properties,
+			}
+
+			output, err := gen.Generate(ctx)
+			if err != nil {
+				t.Fatalf("Generate failed: %v", err)
+			}
+
+			for _, exp := range tt.expected {
+				if !containsString(output, exp) {
+					t.Errorf("Expected output to contain %q, but it didn't.\nOutput:\n%s", exp, output)
+				}
+			}
+		})
+	}
+}
+
 func TestTailwindGenerator_EffectTokens(t *testing.T) {
 	tests := []struct {
 		name     string
