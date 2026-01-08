@@ -1,4 +1,4 @@
-// tokctl/pkg/tokens/scale_test.go
+// tokenctl/pkg/tokens/scale_test.go
 
 package tokens
 

@@ -1,4 +1,4 @@
-// tokctl/pkg/tokens/property.go
+// tokenctl/pkg/tokens/property.go
 
 package tokens
 

@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/dmoose/tokctl/pkg/tokens"
+	"github.com/dmoose/tokenctl/pkg/tokens"
 )
 
 // CatalogGenerator generates a structured JSON catalog for external tools

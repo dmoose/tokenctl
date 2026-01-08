@@ -1,4 +1,4 @@
-// tokctl/pkg/colors/colors.go
+// tokenctl/pkg/colors/colors.go
 
 package colors
 

@@ -109,6 +109,6 @@ func runInit(cmd *cobra.Command, args []string) error {
 		fmt.Printf("Created %s\n", fullPath)
 	}
 
-	fmt.Println("Done! You can now run 'tokctl validate' to check your tokens.")
+	fmt.Println("Done! You can now run 'tokenctl validate' to check your tokens.")
 	return nil
 }

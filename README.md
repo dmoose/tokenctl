@@ -1,7 +1,7 @@
-<!-- tokctl/README.md -->
-# tokctl
+<!-- tokenctl/README.md -->
+# tokenctl
 
-**tokctl** (Token Control) is a W3C Design Tokens manager that acts as the single source of truth for your design system. Define tokens in JSON files and generate CSS artifacts for Tailwind 4 and other consumers.
+**tokenctl** (Token Control) is a W3C Design Tokens manager that acts as the single source of truth for your design system. Define tokens in JSON files and generate CSS artifacts for Tailwind 4 and other consumers.
 
 ## Key Features
 
@@ -19,7 +19,7 @@
 ## Installation
 
 ```bash
-go install github.com/dmoose/tokctl/cmd/tokctl@latest
+go install github.com/dmoose/tokenctl/cmd/tokenctl@latest
 ```
 
 ## Quick Start
@@ -27,7 +27,7 @@ go install github.com/dmoose/tokctl/cmd/tokctl@latest
 ### 1. Initialize a System
 
 ```bash
-tokctl init my-design-system
+tokenctl init my-design-system
 ```
 
 Creates:
@@ -69,7 +69,7 @@ my-design-system/
 ### 4. Build
 
 ```bash
-tokctl build my-design-system --output=./dist
+tokenctl build my-design-system --output=./dist
 ```
 
 **Output (dist/tokens.css):**
@@ -156,10 +156,10 @@ Enables animated theme transitions.
 ## Commands
 
 ```bash
-tokctl init [dir]              # Initialize token system
-tokctl validate [dir]          # Validate tokens
+tokenctl init [dir]              # Initialize token system
+tokenctl validate [dir]          # Validate tokens
   --strict                     # Fail on warnings
-tokctl build [dir]             # Build artifacts
+tokenctl build [dir]             # Build artifacts
   --format=tailwind            # CSS output (default)
   --format=catalog             # JSON catalog
   --output=<dir>               # Output directory (default: dist)
@@ -168,10 +168,10 @@ tokctl build [dir]             # Build artifacts
 ## Examples
 
 ```bash
-tokctl build examples/computed --output=dist/computed
-tokctl build examples/themes --output=dist/themes
-tokctl build examples/validation --output=dist/validation
-tokctl build examples/daisyui --output=dist/daisyui
+tokenctl build examples/computed --output=dist/computed
+tokenctl build examples/themes --output=dist/themes
+tokenctl build examples/validation --output=dist/validation
+tokenctl build examples/daisyui --output=dist/daisyui
 ```
 
 See [examples/README.md](examples/README.md) for details.

@@ -3,7 +3,7 @@ package generators
 import (
 	"testing"
 
-	"github.com/dmoose/tokctl/pkg/tokens"
+	"github.com/dmoose/tokenctl/pkg/tokens"
 )
 
 func TestTailwindGenerator(t *testing.T) {

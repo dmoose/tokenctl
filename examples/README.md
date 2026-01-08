@@ -1,7 +1,7 @@
-<!-- tokctl/examples/README.md -->
-# Tokctl Examples
+<!-- tokenctl/examples/README.md -->
+# Tokenctl Examples
 
-This directory contains working examples demonstrating various tokctl features. These examples are referenced in the main documentation and can be used as starting points for your own design systems.
+This directory contains working examples demonstrating various tokenctl features. These examples are referenced in the main documentation and can be used as starting points for your own design systems.
 
 ## Directory Structure
 
@@ -18,14 +18,14 @@ examples/
 
 ### Basic Example
 
-The `basic/` example shows a minimal token system created with `tokctl init`:
+The `basic/` example shows a minimal token system created with `tokenctl init`:
 
 ```bash
 # Validate the tokens
-tokctl validate examples/basic
+tokenctl validate examples/basic
 
 # Build CSS output
-tokctl build examples/basic --output=dist/basic
+tokenctl build examples/basic --output=dist/basic
 ```
 
 **Generated output includes:**
@@ -39,10 +39,10 @@ The `themes/` example demonstrates the `$extends` feature for theme inheritance:
 
 ```bash
 # Validate themes (tests inheritance)
-tokctl validate examples/themes
+tokenctl validate examples/themes
 
 # Build with themes
-tokctl build examples/themes --output=dist/themes
+tokenctl build examples/themes --output=dist/themes
 ```
 
 **Key features:**
@@ -66,10 +66,10 @@ The `components/` example shows how to define reusable component tokens:
 
 ```bash
 # Validate component definitions
-tokctl validate examples/components
+tokenctl validate examples/components
 
 # Build component CSS
-tokctl build examples/components --output=dist/components
+tokenctl build examples/components --output=dist/components
 ```
 
 **Generated output includes:**
@@ -105,7 +105,7 @@ The `computed/` example demonstrates expression evaluation and computed values:
 
 ```bash
 # Build computed values
-tokctl build examples/computed --output=dist/computed
+tokenctl build examples/computed --output=dist/computed
 ```
 
 **Key features:**
@@ -121,10 +121,10 @@ The `validation/` example demonstrates enhanced validation features:
 
 ```bash
 # Validate with constraint checking
-tokctl validate examples/validation
+tokenctl validate examples/validation
 
 # Build tokens
-tokctl build examples/validation --output=dist/validation
+tokenctl build examples/validation --output=dist/validation
 ```
 
 **Key features:**
@@ -160,7 +160,7 @@ cp -r examples/basic my-design-system
 vim my-design-system/tokens/brand/colors.json
 
 # Build
-tokctl build my-design-system --output=dist
+tokenctl build my-design-system --output=dist
 ```
 
 ## Generating Catalog
@@ -168,7 +168,7 @@ tokctl build my-design-system --output=dist
 Examples can also be built as JSON catalogs for integration with other tools:
 
 ```bash
-tokctl build examples/components --format=catalog --output=dist
+tokenctl build examples/components --format=catalog --output=dist
 ```
 
 This creates `catalog.json` with:

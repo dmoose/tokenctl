@@ -1,4 +1,4 @@
-// tokctl/pkg/tokens/dimension_test.go
+// tokenctl/pkg/tokens/dimension_test.go
 
 package tokens
 

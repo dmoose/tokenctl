@@ -1,4 +1,4 @@
-// tokctl/pkg/generators/css_utils_test.go
+// tokenctl/pkg/generators/css_utils_test.go
 package generators
 
 import (

@@ -1,4 +1,4 @@
-// tokctl/cmd/tokctl/integration_test.go
+// tokenctl/cmd/tokenctl/integration_test.go
 package main
 
 import (
@@ -9,12 +9,12 @@ import (
 	"testing"
 )
 
-// TestMain ensures the tokctl binary is built before running tests
+// TestMain ensures the tokenctl binary is built before running tests
 func TestMain(m *testing.M) {
 	// Build the binary
-	cmd := exec.Command("go", "build", "-o", "../../.build/tokctl-test", ".")
+	cmd := exec.Command("go", "build", "-o", "../../.build/tokenctl-test", ".")
 	if err := cmd.Run(); err != nil {
-		panic("failed to build tokctl binary: " + err.Error())
+		panic("failed to build tokenctl binary: " + err.Error())
 	}
 
 	// Run tests
@@ -26,14 +26,14 @@ func TestMain(m *testing.M) {
 	os.Exit(code)
 }
 
-func getTokctlPath() string {
-	return "../../.build/tokctl-test"
+func getTokenctlPath() string {
+	return "../../.build/tokenctl-test"
 }
 
 func TestIntegration_Init(t *testing.T) {
 	tmpDir := t.TempDir()
 
-	cmd := exec.Command(getTokctlPath(), "init", tmpDir)
+	cmd := exec.Command(getTokenctlPath(), "init", tmpDir)
 	output, err := cmd.CombinedOutput()
 	if err != nil {
 		t.Fatalf("init command failed: %v\nOutput: %s", err, output)
@@ -61,7 +61,7 @@ func TestIntegration_Init(t *testing.T) {
 func TestIntegration_Validate_Valid(t *testing.T) {
 	fixtureDir := "../../testdata/fixtures/valid"
 
-	cmd := exec.Command(getTokctlPath(), "validate", fixtureDir)
+	cmd := exec.Command(getTokenctlPath(), "validate", fixtureDir)
 	output, err := cmd.CombinedOutput()
 	if err != nil {
 		t.Fatalf("validate command failed on valid input: %v\nOutput: %s", err, output)
@@ -75,7 +75,7 @@ func TestIntegration_Validate_Valid(t *testing.T) {
 func TestIntegration_Validate_BrokenReference(t *testing.T) {
 	fixtureDir := "../../testdata/fixtures/invalid"
 
-	cmd := exec.Command(getTokctlPath(), "validate", fixtureDir)
+	cmd := exec.Command(getTokenctlPath(), "validate", fixtureDir)
 	output, err := cmd.CombinedOutput()
 
 	// Should fail validation
@@ -94,7 +94,7 @@ func TestIntegration_Build_Valid(t *testing.T) {
 	fixtureDir := "../../testdata/fixtures/valid"
 	outputDir := t.TempDir()
 
-	cmd := exec.Command(getTokctlPath(), "build", fixtureDir, "--output", outputDir)
+	cmd := exec.Command(getTokenctlPath(), "build", fixtureDir, "--output", outputDir)
 	output, err := cmd.CombinedOutput()
 	if err != nil {
 		t.Fatalf("build command failed: %v\nOutput: %s", err, output)
@@ -131,7 +131,7 @@ func TestIntegration_Build_WithThemes(t *testing.T) {
 	fixtureDir := "../../testdata/fixtures/extends"
 	outputDir := t.TempDir()
 
-	cmd := exec.Command(getTokctlPath(), "build", fixtureDir, "--output", outputDir)
+	cmd := exec.Command(getTokenctlPath(), "build", fixtureDir, "--output", outputDir)
 	output, err := cmd.CombinedOutput()
 	if err != nil {
 		t.Fatalf("build command failed: %v\nOutput: %s", err, output)
@@ -164,7 +164,7 @@ func TestIntegration_Build_GoldenFile_Valid(t *testing.T) {
 	fixtureDir := "../../testdata/fixtures/valid"
 	outputDir := t.TempDir()
 
-	cmd := exec.Command(getTokctlPath(), "build", fixtureDir, "--output", outputDir)
+	cmd := exec.Command(getTokenctlPath(), "build", fixtureDir, "--output", outputDir)
 	_, err := cmd.CombinedOutput()
 	if err != nil {
 		t.Fatalf("build command failed: %v", err)
@@ -197,7 +197,7 @@ func TestIntegration_Build_GoldenFile_Extends(t *testing.T) {
 	fixtureDir := "../../testdata/fixtures/extends"
 	outputDir := t.TempDir()
 
-	cmd := exec.Command(getTokctlPath(), "build", fixtureDir, "--output", outputDir)
+	cmd := exec.Command(getTokenctlPath(), "build", fixtureDir, "--output", outputDir)
 	_, err := cmd.CombinedOutput()
 	if err != nil {
 		t.Fatalf("build command failed: %v", err)
@@ -230,7 +230,7 @@ func TestIntegration_Build_Components(t *testing.T) {
 	fixtureDir := "../../examples/components"
 	outputDir := t.TempDir()
 
-	cmd := exec.Command(getTokctlPath(), "build", fixtureDir, "--output", outputDir)
+	cmd := exec.Command(getTokenctlPath(), "build", fixtureDir, "--output", outputDir)
 	output, err := cmd.CombinedOutput()
 	if err != nil {
 		t.Fatalf("build command failed: %v\nOutput: %s", err, output)
@@ -269,7 +269,7 @@ func TestIntegration_Build_Catalog(t *testing.T) {
 	fixtureDir := "../../testdata/fixtures/valid"
 	outputDir := t.TempDir()
 
-	cmd := exec.Command(getTokctlPath(), "build", fixtureDir, "--format", "catalog", "--output", outputDir)
+	cmd := exec.Command(getTokenctlPath(), "build", fixtureDir, "--format", "catalog", "--output", outputDir)
 	output, err := cmd.CombinedOutput()
 	if err != nil {
 		t.Fatalf("build catalog command failed: %v\nOutput: %s", err, output)
@@ -309,7 +309,7 @@ func TestIntegration_Build_InvalidFormat(t *testing.T) {
 	fixtureDir := "../../testdata/fixtures/valid"
 	outputDir := t.TempDir()
 
-	cmd := exec.Command(getTokctlPath(), "build", fixtureDir, "--format", "invalid-format", "--output", outputDir)
+	cmd := exec.Command(getTokenctlPath(), "build", fixtureDir, "--format", "invalid-format", "--output", outputDir)
 	output, err := cmd.CombinedOutput()
 
 	// Should fail
@@ -328,20 +328,20 @@ func TestIntegration_Workflow_InitValidateBuild(t *testing.T) {
 	tmpDir := t.TempDir()
 
 	// Step 1: Init
-	cmd := exec.Command(getTokctlPath(), "init", tmpDir)
+	cmd := exec.Command(getTokenctlPath(), "init", tmpDir)
 	if output, err := cmd.CombinedOutput(); err != nil {
 		t.Fatalf("init failed: %v\nOutput: %s", err, output)
 	}
 
 	// Step 2: Validate
-	cmd = exec.Command(getTokctlPath(), "validate", tmpDir)
+	cmd = exec.Command(getTokenctlPath(), "validate", tmpDir)
 	if output, err := cmd.CombinedOutput(); err != nil {
 		t.Fatalf("validate failed: %v\nOutput: %s", err, output)
 	}
 
 	// Step 3: Build
 	outputDir := filepath.Join(tmpDir, "dist")
-	cmd = exec.Command(getTokctlPath(), "build", tmpDir, "--output", outputDir)
+	cmd = exec.Command(getTokenctlPath(), "build", tmpDir, "--output", outputDir)
 	if output, err := cmd.CombinedOutput(); err != nil {
 		t.Fatalf("build failed: %v\nOutput: %s", err, output)
 	}
@@ -358,7 +358,7 @@ func TestIntegration_ThemeInheritance_Extends(t *testing.T) {
 	fixtureDir := "../../testdata/fixtures/extends"
 
 	// First validate
-	cmd := exec.Command(getTokctlPath(), "validate", fixtureDir)
+	cmd := exec.Command(getTokenctlPath(), "validate", fixtureDir)
 	output, err := cmd.CombinedOutput()
 	if err != nil {
 		t.Fatalf("validate failed on extends fixture: %v\nOutput: %s", err, output)
@@ -366,7 +366,7 @@ func TestIntegration_ThemeInheritance_Extends(t *testing.T) {
 
 	// Then build
 	outputDir := t.TempDir()
-	cmd = exec.Command(getTokctlPath(), "build", fixtureDir, "--output", outputDir)
+	cmd = exec.Command(getTokenctlPath(), "build", fixtureDir, "--output", outputDir)
 	output, err = cmd.CombinedOutput()
 	if err != nil {
 		t.Fatalf("build failed on extends fixture: %v\nOutput: %s", err, output)

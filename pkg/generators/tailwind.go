@@ -6,7 +6,7 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/dmoose/tokctl/pkg/tokens"
+	"github.com/dmoose/tokenctl/pkg/tokens"
 )
 
 // serializeValueForCSS converts any value to a proper CSS string

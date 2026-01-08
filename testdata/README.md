@@ -1,7 +1,7 @@
-<!-- tokctl/testdata/README.md -->
+<!-- tokenctl/testdata/README.md -->
 # Test Data
 
-This directory contains test fixtures and expected outputs for tokctl's automated test suite.
+This directory contains test fixtures and expected outputs for tokenctl's automated test suite.
 
 ## Directory Structure
 
@@ -20,7 +20,7 @@ testdata/
 ## Test Fixtures
 
 ### fixtures/valid/
-Standard token system created with `tokctl init`. Used to test:
+Standard token system created with `tokenctl init`. Used to test:
 - Basic token loading and resolution
 - CSS generation
 - Validation of well-formed tokens
@@ -72,11 +72,11 @@ When intentionally changing output format:
 
 ```bash
 # Regenerate golden file for valid fixture
-tokctl build testdata/fixtures/valid --output=/tmp/test
+tokenctl build testdata/fixtures/valid --output=/tmp/test
 cp /tmp/test/tokens.css testdata/golden/valid.css
 
 # Regenerate golden file for extends fixture
-tokctl build testdata/fixtures/extends --output=/tmp/test
+tokenctl build testdata/fixtures/extends --output=/tmp/test
 cp /tmp/test/tokens.css testdata/golden/extends.css
 ```
 
@@ -84,7 +84,7 @@ cp /tmp/test/tokens.css testdata/golden/extends.css
 
 ## Integration Tests
 
-Integration tests in `cmd/tokctl/integration_test.go` use these fixtures to test:
+Integration tests in `cmd/tokenctl/integration_test.go` use these fixtures to test:
 
 1. **Command-line interface** - All commands (init, validate, build)
 2. **File I/O** - Loading from disk, writing output
@@ -108,7 +108,7 @@ To add a new test case:
 
 3. **Generate golden file (if needed):**
    ```bash
-   tokctl build testdata/fixtures/my-test-case --output=/tmp/test
+   tokenctl build testdata/fixtures/my-test-case --output=/tmp/test
    cp /tmp/test/tokens.css testdata/golden/my-test-case.css
    ```
 

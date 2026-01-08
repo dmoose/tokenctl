@@ -1,4 +1,4 @@
-// tokctl/pkg/tokens/scale.go
+// tokenctl/pkg/tokens/scale.go
 
 package tokens
 

@@ -1,8 +1,8 @@
-# tokctl/Makefile
+# tokenctl/Makefile
 
-BINARY_NAME=tokctl
+BINARY_NAME=tokenctl
 BUILD_DIR=bin
-CMD_DIR=./cmd/tokctl
+CMD_DIR=./cmd/tokenctl
 PKG=./...
 
 .PHONY: all build clean test test-unit test-integration coverage lint install dev-deps help
@@ -11,12 +11,12 @@ all: clean build test
 
 ## Build
 
-build: ## Build the tokctl binary
+build: ## Build the tokenctl binary
 	@echo "Building $(BINARY_NAME)..."
 	@mkdir -p $(BUILD_DIR)
 	go build -o $(BUILD_DIR)/$(BINARY_NAME) $(CMD_DIR)
 
-install: build ## Install tokctl to GOPATH/bin
+install: build ## Install tokenctl to GOPATH/bin
 	@echo "Installing $(BINARY_NAME)..."
 	go install $(CMD_DIR)
 
@@ -41,7 +41,7 @@ test-unit: ## Run unit tests only
 
 test-integration: build ## Run integration tests
 	@echo "Running integration tests..."
-	go test -v ./cmd/tokctl -run TestIntegration
+	go test -v ./cmd/tokenctl -run TestIntegration
 
 coverage: ## Run tests with coverage report
 	@echo "Running tests with coverage..."
@@ -137,7 +137,7 @@ ci: lint test coverage ## Run CI pipeline (lint, test, coverage)
 ## Help
 
 help: ## Show this help message
-	@echo "tokctl Makefile"
+	@echo "tokenctl Makefile"
 	@echo ""
 	@echo "Usage: make [target]"
 	@echo ""

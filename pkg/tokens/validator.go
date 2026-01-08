@@ -1,4 +1,4 @@
-// tokctl/pkg/tokens/validator.go
+// tokenctl/pkg/tokens/validator.go
 
 package tokens
 
@@ -7,7 +7,7 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/dmoose/tokctl/pkg/colors"
+	"github.com/dmoose/tokenctl/pkg/colors"
 )
 
 // ValidationError represents a validation issue

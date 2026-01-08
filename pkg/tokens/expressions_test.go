@@ -1,4 +1,4 @@
-// tokctl/pkg/tokens/expressions_test.go
+// tokenctl/pkg/tokens/expressions_test.go
 
 package tokens
 
