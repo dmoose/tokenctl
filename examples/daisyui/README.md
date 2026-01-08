@@ -1,3 +1,4 @@
+<!-- tokctl/examples/daisyui/README.md -->
 # DaisyUI 5 Theme Generator Example
 
 This example demonstrates how to use tokctl as a **theme generator for DaisyUI 5**. It defines all 26 DaisyUI token variables, allowing you to create custom themes that integrate seamlessly with DaisyUI's component library.

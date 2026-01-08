@@ -1,3 +1,4 @@
+<!-- tokctl/ADVANCED_USAGE.md -->
 # Advanced Usage: Extending tokctl Output
 
 tokctl generates CSS custom properties from your design tokens. For advanced patterns like accessibility preferences, typography systems, and interaction states, you compose additional CSS layers on top of tokctl's output.
@@ -52,6 +53,8 @@ Add `$property: true` to any token:
   inherits: true;
   initial-value: oklch(50% 0.2 250);
 }
+
+@import "tailwindcss";
 
 @theme {
   --color-primary: oklch(50% 0.2 250);
