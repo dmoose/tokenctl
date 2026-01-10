@@ -161,9 +161,57 @@ tokenctl validate [dir]          # Validate tokens
   --strict                     # Fail on warnings
 tokenctl build [dir]             # Build artifacts
   --format=tailwind            # CSS output (default)
-  --format=catalog             # JSON catalog
+  --format=catalog             # JSON catalog (v2.0)
   --output=<dir>               # Output directory (default: dist)
 ```
+
+## Catalog Format (v2.0)
+
+The `--format=catalog` option generates a JSON catalog for external tool integration. The v2.0 schema includes resolved theme data:
+
+```json
+{
+  "meta": {
+    "version": "2.0",
+    "generated_at": "2025-01-03T12:00:00Z",
+    "tokenctl_version": "1.1.0"
+  },
+  "tokens": {
+    "color.primary": "#3b82f6",
+    "spacing.sm": "0.5rem"
+  },
+  "components": {
+    "button": {
+      "classes": ["btn", "btn-primary"],
+      "definitions": { }
+    }
+  },
+  "themes": {
+    "light": {
+      "extends": null,
+      "tokens": { "color.primary": "#60a5fa" },
+      "diff": { "color.primary": "#60a5fa" }
+    },
+    "dark": {
+      "extends": "light",
+      "description": "Dark theme extends light",
+      "tokens": { "color.primary": "#1e40af" },
+      "diff": { "color.primary": "#1e40af" }
+    }
+  }
+}
+```
+
+| Field | Description |
+|-------|-------------|
+| `meta.version` | Catalog schema version (semver) |
+| `meta.tokenctl_version` | tokenctl version that generated this catalog |
+| `tokens` | Flattened, resolved base tokens |
+| `components` | Component definitions with generated class names |
+| `themes.<name>.extends` | Parent theme name (null if extends base) |
+| `themes.<name>.description` | Theme description from `$description` field |
+| `themes.<name>.tokens` | Fully resolved token values for this theme |
+| `themes.<name>.diff` | Only tokens that differ from parent/base |
 
 ## Examples
 

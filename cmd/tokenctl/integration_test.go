@@ -289,19 +289,61 @@ func TestIntegration_Build_Catalog(t *testing.T) {
 
 	contentStr := string(content)
 
-	// Should have catalog structure
+	// Should have catalog structure (v2.0)
 	expectedStrings := []string{
 		"\"meta\":",
 		"\"tokens\":",
 		"\"components\":",
-		"\"version\":",
+		"\"version\": \"2.0\"",
 		"\"generated_at\":",
+		"\"tokenctl_version\":",
 	}
 
 	for _, expected := range expectedStrings {
 		if !strings.Contains(contentStr, expected) {
 			t.Errorf("Expected catalog to contain '%s', but it didn't.\nOutput:\n%s", expected, contentStr)
 		}
+	}
+}
+
+func TestIntegration_Build_CatalogWithThemes(t *testing.T) {
+	fixtureDir := "../../testdata/fixtures/extends"
+	outputDir := t.TempDir()
+
+	cmd := exec.Command(getTokenctlPath(), "build", fixtureDir, "--format", "catalog", "--output", outputDir)
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		t.Fatalf("build catalog command failed: %v\nOutput: %s", err, output)
+	}
+
+	// Verify catalog.json was created
+	outputFile := filepath.Join(outputDir, "catalog.json")
+	content, err := os.ReadFile(outputFile)
+	if err != nil {
+		t.Fatalf("Failed to read catalog file: %v", err)
+	}
+
+	contentStr := string(content)
+
+	// Should have themes section
+	expectedStrings := []string{
+		"\"themes\":",
+		"\"light\":",
+		"\"dark\":",
+		"\"extends\": \"light\"",
+		"\"tokens\":",
+		"\"diff\":",
+	}
+
+	for _, expected := range expectedStrings {
+		if !strings.Contains(contentStr, expected) {
+			t.Errorf("Expected catalog to contain '%s', but it didn't.\nOutput:\n%s", expected, contentStr)
+		}
+	}
+
+	// Verify dark theme has description from fixture
+	if !strings.Contains(contentStr, "Dark theme extends light theme") {
+		t.Errorf("Expected dark theme description in catalog output")
 	}
 }
 

@@ -1,3 +1,4 @@
+// tokenctl/cmd/tokenctl/build.go
 package main
 
 import (
@@ -125,7 +126,53 @@ func runBuild(cmd *cobra.Command, args []string) error {
 		if err != nil {
 			return fmt.Errorf("failed to extract components: %w", err)
 		}
-		content, err = gen.Generate(resolvedBase, components)
+
+		// Build theme inputs for catalog
+		var catalogThemes map[string]generators.CatalogThemeInput
+		if len(themes) > 0 {
+			// Resolve theme inheritance chains (handles $extends)
+			inheritedThemes, err := tokens.ResolveThemeInheritance(baseDict, themes)
+			if err != nil {
+				return fmt.Errorf("failed to resolve theme inheritance: %w", err)
+			}
+
+			catalogThemes = make(map[string]generators.CatalogThemeInput)
+			for name, mergedDict := range inheritedThemes {
+				// Resolve theme tokens
+				themeResolver, err := tokens.NewResolver(mergedDict)
+				if err != nil {
+					return fmt.Errorf("failed to resolve theme %s: %w", name, err)
+				}
+				resolvedTheme, err := themeResolver.ResolveAll()
+				if err != nil {
+					return fmt.Errorf("resolution failed for theme %s: %w", name, err)
+				}
+
+				// Calculate diff from base
+				themeDiff := tokens.Diff(resolvedTheme, resolvedBase)
+
+				// Extract extends and description from original theme dict
+				var extends *string
+				var description string
+				if originalTheme, ok := themes[name]; ok {
+					if extendsVal, ok := originalTheme.Root["$extends"].(string); ok {
+						extends = &extendsVal
+					}
+					if descVal, ok := originalTheme.Root["$description"].(string); ok {
+						description = descVal
+					}
+				}
+
+				catalogThemes[name] = generators.CatalogThemeInput{
+					Extends:        extends,
+					Description:    description,
+					ResolvedTokens: resolvedTheme,
+					DiffTokens:     themeDiff,
+				}
+			}
+		}
+
+		content, err = gen.Generate(resolvedBase, components, catalogThemes)
 		if err != nil {
 			return fmt.Errorf("catalog generation failed: %w", err)
 		}

@@ -1,3 +1,4 @@
+// tokenctl/pkg/generators/catalog.go
 package generators
 
 import (
@@ -7,6 +8,12 @@ import (
 
 	"github.com/dmoose/tokenctl/pkg/tokens"
 )
+
+// CatalogSchemaVersion is the current catalog schema version
+const CatalogSchemaVersion = "2.0"
+
+// TokenctlVersion is the tokenctl version (updated on releases)
+const TokenctlVersion = "1.1.0"
 
 // CatalogGenerator generates a structured JSON catalog for external tools
 type CatalogGenerator struct {
@@ -21,11 +28,13 @@ type CatalogSchema struct {
 	Meta       CatalogMeta                 `json:"meta"`
 	Tokens     map[string]interface{}      `json:"tokens"`
 	Components map[string]ComponentSummary `json:"components"`
+	Themes     map[string]ThemeInfo        `json:"themes,omitempty"`
 }
 
 type CatalogMeta struct {
-	Version     string `json:"version"`
-	GeneratedAt string `json:"generated_at"`
+	Version         string `json:"version"`
+	GeneratedAt     string `json:"generated_at"`
+	TokenctlVersion string `json:"tokenctl_version"`
 }
 
 type ComponentSummary struct {
@@ -33,19 +42,38 @@ type ComponentSummary struct {
 	Definitions map[string]tokens.VariantDef `json:"definitions"`
 }
 
+// ThemeInfo contains resolved theme data for external consumers
+type ThemeInfo struct {
+	Extends     *string                `json:"extends"`
+	Description string                 `json:"description,omitempty"`
+	Tokens      map[string]interface{} `json:"tokens"`
+	Diff        map[string]interface{} `json:"diff,omitempty"`
+}
+
+// CatalogThemeInput provides theme data from the build process
+type CatalogThemeInput struct {
+	Extends        *string                // Parent theme name (nil if extends base)
+	Description    string                 // From $description field
+	ResolvedTokens map[string]interface{} // Fully resolved token values
+	DiffTokens     map[string]interface{} // Only tokens that differ from parent/base
+}
+
 // Generate creates the JSON catalog
 func (g *CatalogGenerator) Generate(
 	resolvedTokens map[string]interface{},
 	components map[string]tokens.ComponentDefinition,
+	themes map[string]CatalogThemeInput,
 ) (string, error) {
 
 	catalog := CatalogSchema{
 		Meta: CatalogMeta{
-			Version:     "1.0",
-			GeneratedAt: time.Now().Format(time.RFC3339),
+			Version:         CatalogSchemaVersion,
+			GeneratedAt:     time.Now().Format(time.RFC3339),
+			TokenctlVersion: TokenctlVersion,
 		},
 		Tokens:     make(map[string]interface{}),
 		Components: make(map[string]ComponentSummary),
+		Themes:     make(map[string]ThemeInfo),
 	}
 
 	// 1. Filter Atomic Tokens (exclude components/maps)
@@ -89,6 +117,22 @@ func (g *CatalogGenerator) Generate(
 		catalog.Components[name] = summary
 	}
 
+	// 3. Process Themes
+	for name, themeInput := range themes {
+		themeInfo := ThemeInfo{
+			Extends:     themeInput.Extends,
+			Description: themeInput.Description,
+			Tokens:      filterAtomicTokens(themeInput.ResolvedTokens),
+			Diff:        filterAtomicTokens(themeInput.DiffTokens),
+		}
+		catalog.Themes[name] = themeInfo
+	}
+
+	// Omit themes section if empty
+	if len(catalog.Themes) == 0 {
+		catalog.Themes = nil
+	}
+
 	// Marshal to JSON
 	bytes, err := json.MarshalIndent(catalog, "", "  ")
 	if err != nil {
@@ -96,4 +140,18 @@ func (g *CatalogGenerator) Generate(
 	}
 
 	return string(bytes), nil
+}
+
+// filterAtomicTokens filters out nested maps, keeping only atomic token values
+func filterAtomicTokens(tokens map[string]interface{}) map[string]interface{} {
+	if tokens == nil {
+		return nil
+	}
+	result := make(map[string]interface{})
+	for k, v := range tokens {
+		if _, ok := v.(map[string]interface{}); !ok {
+			result[k] = v
+		}
+	}
+	return result
 }
