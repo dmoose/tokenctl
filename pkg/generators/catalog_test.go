@@ -311,6 +311,173 @@ func TestCatalogGenerator_Generate_EmptyThemesOmitted(t *testing.T) {
 	}
 }
 
+func TestCatalogGenerator_CategoryFilter_Colors(t *testing.T) {
+	opts := CatalogOptions{Category: "color"}
+	gen := NewCatalogGeneratorWithOptions(opts)
+
+	resolvedTokens := map[string]interface{}{
+		"color.primary":   "#3b82f6",
+		"color.secondary": "#8b5cf6",
+		"spacing.sm":      "0.5rem",
+		"spacing.md":      "1rem",
+		"font.family":     "Inter",
+	}
+
+	components := map[string]tokens.ComponentDefinition{
+		"button": {
+			Class: "btn",
+			Base:  map[string]interface{}{"display": "inline-flex"},
+		},
+	}
+
+	result, err := gen.Generate(resolvedTokens, components, nil)
+	if err != nil {
+		t.Fatalf("Generate failed: %v", err)
+	}
+
+	var catalog CatalogSchema
+	if err := json.Unmarshal([]byte(result), &catalog); err != nil {
+		t.Fatalf("Failed to parse catalog JSON: %v", err)
+	}
+
+	// Should only have color tokens
+	if len(catalog.Tokens) != 2 {
+		t.Errorf("Expected 2 color tokens, got %d: %v", len(catalog.Tokens), catalog.Tokens)
+	}
+	if _, ok := catalog.Tokens["color.primary"]; !ok {
+		t.Error("Expected color.primary in filtered catalog")
+	}
+	if _, ok := catalog.Tokens["spacing.sm"]; ok {
+		t.Error("Expected spacing.sm to be filtered out")
+	}
+
+	// Components should be omitted when filtering to non-component category
+	if catalog.Components != nil {
+		t.Error("Expected components to be omitted when filtering to color category")
+	}
+
+	// Meta should include category
+	if catalog.Meta.Category != "color" {
+		t.Errorf("Expected meta.category to be 'color', got %s", catalog.Meta.Category)
+	}
+}
+
+func TestCatalogGenerator_CategoryFilter_Components(t *testing.T) {
+	opts := CatalogOptions{Category: "components"}
+	gen := NewCatalogGeneratorWithOptions(opts)
+
+	resolvedTokens := map[string]interface{}{
+		"color.primary": "#3b82f6",
+		"spacing.sm":    "0.5rem",
+	}
+
+	components := map[string]tokens.ComponentDefinition{
+		"button": {
+			Class: "btn",
+			Base:  map[string]interface{}{"display": "inline-flex"},
+			Variants: map[string]tokens.VariantDef{
+				"primary": {Class: "btn-primary", Properties: map[string]interface{}{}},
+			},
+		},
+	}
+
+	result, err := gen.Generate(resolvedTokens, components, nil)
+	if err != nil {
+		t.Fatalf("Generate failed: %v", err)
+	}
+
+	var catalog CatalogSchema
+	if err := json.Unmarshal([]byte(result), &catalog); err != nil {
+		t.Fatalf("Failed to parse catalog JSON: %v", err)
+	}
+
+	// Should have no tokens (filtering to components)
+	if len(catalog.Tokens) != 0 {
+		t.Errorf("Expected 0 tokens when filtering to components, got %d", len(catalog.Tokens))
+	}
+
+	// Components should be present
+	if catalog.Components == nil || len(catalog.Components) != 1 {
+		t.Errorf("Expected 1 component, got %v", catalog.Components)
+	}
+}
+
+func TestCatalogGenerator_CategoryFilter_WithThemes(t *testing.T) {
+	opts := CatalogOptions{Category: "color"}
+	gen := NewCatalogGeneratorWithOptions(opts)
+
+	resolvedTokens := map[string]interface{}{
+		"color.primary": "#3b82f6",
+		"spacing.sm":    "0.5rem",
+	}
+
+	components := map[string]tokens.ComponentDefinition{}
+
+	themes := map[string]CatalogThemeInput{
+		"dark": {
+			Extends: nil,
+			ResolvedTokens: map[string]interface{}{
+				"color.primary": "#1e40af",
+				"spacing.sm":    "0.75rem",
+			},
+			DiffTokens: map[string]interface{}{
+				"color.primary": "#1e40af",
+				"spacing.sm":    "0.75rem",
+			},
+		},
+	}
+
+	result, err := gen.Generate(resolvedTokens, components, themes)
+	if err != nil {
+		t.Fatalf("Generate failed: %v", err)
+	}
+
+	var catalog CatalogSchema
+	if err := json.Unmarshal([]byte(result), &catalog); err != nil {
+		t.Fatalf("Failed to parse catalog JSON: %v", err)
+	}
+
+	// Should only have color tokens in themes too
+	darkTheme := catalog.Themes["dark"]
+	if len(darkTheme.Tokens) != 1 {
+		t.Errorf("Expected 1 token in theme, got %d: %v", len(darkTheme.Tokens), darkTheme.Tokens)
+	}
+	if _, ok := darkTheme.Tokens["color.primary"]; !ok {
+		t.Error("Expected color.primary in theme tokens")
+	}
+	if _, ok := darkTheme.Tokens["spacing.sm"]; ok {
+		t.Error("Expected spacing.sm to be filtered from theme tokens")
+	}
+}
+
+func TestCatalogGenerator_CategoryFilter_PluralSingular(t *testing.T) {
+	// Test that "colors" matches "color" category
+	tests := []struct {
+		category string
+		tokenKey string
+		expected bool
+	}{
+		{"color", "color.primary", true},
+		{"colors", "color.primary", true},
+		{"spacing", "spacing.md", true},
+		{"spacings", "spacing.md", true},
+		{"font", "font.family", true},
+		{"fonts", "font.family", true},
+		{"color", "spacing.md", false},
+		{"spacing", "color.primary", false},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.category+"_"+tt.tokenKey, func(t *testing.T) {
+			gen := NewCatalogGeneratorWithOptions(CatalogOptions{Category: tt.category})
+			result := gen.matchesCategory(tt.tokenKey)
+			if result != tt.expected {
+				t.Errorf("matchesCategory(%s, %s) = %v, want %v", tt.category, tt.tokenKey, result, tt.expected)
+			}
+		})
+	}
+}
+
 func TestFilterAtomicTokens(t *testing.T) {
 	tests := []struct {
 		name     string

@@ -43,11 +43,13 @@ func serializeValueForCSS(val interface{}) string {
 
 // GenerationContext provides all necessary data for generation
 type GenerationContext struct {
-	BaseDict       *tokens.Dictionary                    // Original base dictionary (unresolved)
-	ResolvedTokens map[string]interface{}                // Flattened, resolved atomic tokens
-	Components     map[string]tokens.ComponentDefinition // Extracted components
-	Themes         map[string]ThemeContext               // Theme-specific contexts
-	PropertyTokens []tokens.PropertyToken                // Tokens with $property for @property declarations
+	BaseDict         *tokens.Dictionary                    // Original base dictionary (unresolved)
+	ResolvedTokens   map[string]interface{}                // Flattened, resolved atomic tokens
+	Components       map[string]tokens.ComponentDefinition // Extracted components
+	Themes           map[string]ThemeContext               // Theme-specific contexts
+	PropertyTokens   []tokens.PropertyToken                // Tokens with $property for @property declarations
+	Breakpoints      map[string]string                     // Breakpoint definitions (name -> min-width)
+	ResponsiveTokens []tokens.ResponsiveToken              // Tokens with responsive overrides
 }
 
 // ThemeContext provides theme-specific generation data
@@ -99,6 +101,15 @@ func (g *TailwindGenerator) Generate(ctx *GenerationContext) (string, error) {
 	}
 	sb.WriteString("\n")
 	sb.WriteString(components)
+
+	// 5. Responsive overrides via media queries
+	if len(ctx.ResponsiveTokens) > 0 {
+		responsiveCSS := tokens.GenerateResponsiveCSS(ctx.Breakpoints, ctx.ResponsiveTokens)
+		if responsiveCSS != "" {
+			sb.WriteString("\n")
+			sb.WriteString(responsiveCSS)
+		}
+	}
 
 	return sb.String(), nil
 }

@@ -6,12 +6,15 @@ import (
 
 // ComponentDefinition represents a semantic component
 type ComponentDefinition struct {
-	Name     string                 `json:"-"`
-	Class    string                 `json:"$class"`
-	Base     map[string]interface{} `json:"base"`
-	Variants map[string]VariantDef  `json:"variants"`
-	Sizes    map[string]VariantDef  `json:"sizes"`
-	States   map[string]interface{} `json:"states"` // Reserved for future state enforcement
+	Name        string                 `json:"-"`
+	Class       string                 `json:"$class"`
+	Description string                 `json:"$description,omitempty"`
+	Contains    []string               `json:"$contains,omitempty"`  // Child components this can contain
+	Requires    string                 `json:"$requires,omitempty"`  // Parent component this must be inside
+	Base        map[string]interface{} `json:"base"`
+	Variants    map[string]VariantDef  `json:"variants"`
+	Sizes       map[string]VariantDef  `json:"sizes"`
+	States      map[string]interface{} `json:"states"` // Reserved for future state enforcement
 }
 
 // VariantDef represents a specific variant (primary, outline) or size (sm, lg)
@@ -80,6 +83,23 @@ func walkComponents(node map[string]interface{}, currentPath string, results map
 			return err
 		}
 		comp.Name = currentPath
+
+		// Extract composition metadata (may not be handled by JSON unmarshal)
+		if desc, ok := node["$description"].(string); ok {
+			comp.Description = desc
+		}
+		if requires, ok := node["$requires"].(string); ok {
+			comp.Requires = requires
+		}
+		if contains, ok := node["$contains"].([]interface{}); ok {
+			comp.Contains = make([]string, 0, len(contains))
+			for _, item := range contains {
+				if s, ok := item.(string); ok {
+					comp.Contains = append(comp.Contains, s)
+				}
+			}
+		}
+
 		results[currentPath] = comp
 		return nil
 	}
