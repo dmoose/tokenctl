@@ -237,6 +237,9 @@ func deepMergeWithWarnings(dst, src map[string]interface{}, currentPath string, 
 			path = currentPath + "." + key
 		}
 
+		// Skip warning for metadata keys ($ prefix) - these are expected to be redefined across files
+		isMetadataKey := strings.HasPrefix(key, "$")
+
 		if dstVal, ok := dst[key]; ok {
 			// Collision handling
 			dstMap, dstOk := dstVal.(map[string]interface{})
@@ -249,7 +252,7 @@ func deepMergeWithWarnings(dst, src map[string]interface{}, currentPath string, 
 
 				if isDstToken || isSrcToken {
 					// One or both are tokens - this is an overwrite
-					if warnConflicts {
+					if warnConflicts && !isMetadataKey {
 						log.Printf("Warning: Token '%s' redefined (overwriting)\n", path)
 					}
 					dst[key] = srcVal
@@ -261,7 +264,7 @@ func deepMergeWithWarnings(dst, src map[string]interface{}, currentPath string, 
 				}
 			} else {
 				// Type mismatch or value overwrite
-				if warnConflicts {
+				if warnConflicts && !isMetadataKey {
 					log.Printf("Warning: Token '%s' redefined (overwriting %T with %T)\n", path, dstVal, srcVal)
 				}
 				dst[key] = srcVal

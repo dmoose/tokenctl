@@ -98,6 +98,12 @@ demo: build ## Run full demo workflow (init -> validate -> build)
 	@echo "\n✅ Demo complete! Output in .demo/dist/"
 	@rm -rf .demo
 
+example-baseline: build ## Build baseline example (complete design system)
+	@echo "Building baseline example..."
+	./$(BUILD_DIR)/$(BINARY_NAME) build examples/baseline --format=css --output examples/baseline/dist
+	@echo "Output: examples/baseline/dist/tokens.css"
+	@echo "Demo:   open examples/baseline/demo.html"
+
 example-basic: build ## Build basic example
 	@echo "Building basic example..."
 	./$(BUILD_DIR)/$(BINARY_NAME) build examples/basic --output dist/basic
@@ -128,11 +134,13 @@ example-daisyui: build ## Build DaisyUI 5 theme example
 	./$(BUILD_DIR)/$(BINARY_NAME) build examples/daisyui --output dist/daisyui
 	@echo "Output: dist/daisyui/tokens.css"
 
-examples: example-basic example-themes example-components example-computed example-validation example-daisyui ## Build all examples
+examples: example-baseline example-basic example-themes example-components example-computed example-validation example-daisyui ## Build all examples
 
 ## CI/CD
 
 ci: lint test coverage ## Run CI pipeline (lint, test, coverage)
+
+check: fmt vet ## Quick quality check (format + vet)
 
 ## Help
 

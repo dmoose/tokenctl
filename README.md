@@ -1,7 +1,10 @@
-<!-- tokenctl/README.md -->
 # tokenctl
 
-**tokenctl** (Token Control) is a W3C Design Tokens manager that acts as the single source of truth for your design system. Define tokens in JSON files and generate CSS artifacts for Tailwind 4 and other consumers.
+[![Go](https://github.com/dmoose/tokenctl/actions/workflows/go.yml/badge.svg)](https://github.com/dmoose/tokenctl/actions/workflows/go.yml)
+[![Go Report Card](https://goreportcard.com/badge/github.com/dmoose/tokenctl)](https://goreportcard.com/report/github.com/dmoose/tokenctl)
+[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
+
+A W3C Design Tokens CLI that generates CSS from JSON token definitions. Define your design system once, output to Tailwind 4, pure CSS, or JSON manifests.
 
 ## Key Features
 
@@ -183,16 +186,16 @@ tokenctl search [query]                # Search tokens
   --dir=<dir>                        # Token directory (default: .)
 ```
 
-## Catalog Format (v2.0)
+## Catalog Format (v2.1)
 
-The `--format=catalog` option generates a JSON catalog for external tool integration. The v2.0 schema includes resolved theme data:
+The `--format=catalog` option generates a JSON catalog for external tool integration. The v2.1 schema includes resolved theme data:
 
 ```json
 {
   "meta": {
-    "version": "2.0",
+    "version": "2.1",
     "generated_at": "2025-01-03T12:00:00Z",
-    "tokenctl_version": "1.1.0"
+    "tokenctl_version": "1.2.0"
   },
   "tokens": {
     "color.primary": "#3b82f6",
@@ -273,3 +276,7 @@ make demo           # Full workflow demo
 make examples       # Build all examples
 make help           # All targets
 ```
+
+## License
+
+Apache 2.0 - See [LICENSE](LICENSE) for details.

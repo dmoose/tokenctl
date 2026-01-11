@@ -1,0 +1,95 @@
+{
+  "$layer": "component",
+  "components": {
+    "link": {
+      "$type": "component",
+      "$class": "link",
+      "$description": "Styled anchor links",
+      "base": {
+        "color": "var(--color-link)",
+        "text-decoration": "underline",
+        "text-underline-offset": "2px",
+        "transition": "color var(--transition-fast)",
+        "&:hover": {
+          "color": "var(--color-link-hover)"
+        },
+        "&:visited": {
+          "color": "var(--color-link-visited)"
+        }
+      }
+    },
+    "list": {
+      "$type": "component",
+      "$class": "list",
+      "$description": "Styled unordered and ordered lists",
+      "base": {
+        "padding-left": "var(--spacing-6)",
+        "margin-bottom": "var(--spacing-4)"
+      },
+      "variants": {
+        "none": {
+          "$class": "list-none",
+          "list-style-type": "none",
+          "padding-left": "0"
+        }
+      }
+    },
+    "list-item": {
+      "$type": "component",
+      "$class": "list-item",
+      "$description": "List item with spacing",
+      "base": {
+        "margin-bottom": "var(--spacing-2)"
+      }
+    },
+    "dl": {
+      "$type": "component",
+      "$class": "dl",
+      "$description": "Description list",
+      "base": {
+        "margin-bottom": "var(--spacing-4)"
+      }
+    },
+    "dt": {
+      "$type": "component",
+      "$class": "dt",
+      "$description": "Description term",
+      "base": {
+        "font-weight": "var(--font-weight-semibold)",
+        "color": "var(--color-text)"
+      }
+    },
+    "dd": {
+      "$type": "component",
+      "$class": "dd",
+      "$description": "Description details",
+      "base": {
+        "margin-left": "0",
+        "margin-bottom": "var(--spacing-3)",
+        "color": "var(--color-text-muted)"
+      }
+    },
+    "divider": {
+      "$type": "component",
+      "$class": "divider",
+      "$description": "Horizontal divider line",
+      "base": {
+        "border": "none",
+        "border-top": "1px solid var(--color-border)",
+        "margin": "var(--spacing-6) 0"
+      },
+      "variants": {
+        "subtle": {
+          "$class": "divider-subtle",
+          "border-top-color": "var(--color-border)",
+          "margin": "var(--spacing-4) 0"
+        },
+        "strong": {
+          "$class": "divider-strong",
+          "border-top-width": "2px",
+          "border-top-color": "var(--color-border-strong)"
+        }
+      }
+    }
+  }
+}

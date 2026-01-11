@@ -1,0 +1,63 @@
+{
+  "$layer": "component",
+  "components": {
+    "alert": {
+      "$type": "component",
+      "$class": "alert",
+      "$description": "Contextual feedback messages for user actions",
+      "base": {
+        "display": "flex",
+        "align-items": "flex-start",
+        "gap": "var(--spacing-3)",
+        "padding": "var(--spacing-4)",
+        "border-radius": "var(--radius-md)",
+        "border": "1px solid var(--color-border)",
+        "background-color": "var(--color-surface-raised)",
+        "font-size": "var(--font-size-sm)",
+        "line-height": "var(--line-height-normal)"
+      },
+      "variants": {
+        "info": {
+          "$class": "alert-info",
+          "properties": {
+            "background-color": "var(--color-primary-subtle)",
+            "border-color": "var(--color-primary)",
+            "color": "var(--color-primary)"
+          }
+        },
+        "success": {
+          "$class": "alert-success",
+          "properties": {
+            "background-color": "var(--color-success-subtle)",
+            "border-color": "var(--color-success)",
+            "color": "var(--color-success-content)"
+          }
+        },
+        "warning": {
+          "$class": "alert-warning",
+          "properties": {
+            "background-color": "var(--color-warning-subtle)",
+            "border-color": "var(--color-warning)",
+            "color": "var(--color-warning-content)"
+          }
+        },
+        "error": {
+          "$class": "alert-error",
+          "properties": {
+            "background-color": "var(--color-error-subtle)",
+            "border-color": "var(--color-error)",
+            "color": "var(--color-error-content)"
+          }
+        }
+      }
+    },
+    "alert-title": {
+      "$type": "component",
+      "$class": "alert-title",
+      "base": {
+        "font-weight": "var(--font-weight-semibold)",
+        "margin-bottom": "var(--spacing-1)"
+      }
+    }
+  }
+}

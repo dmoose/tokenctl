@@ -23,16 +23,15 @@ This guide explains the philosophy, architecture, and best practices for buildin
 
 ### The Problem
 
-Modern web development often devolves into CSS chaos:
-- Specificity wars with cascading overrides
-- `!important` scattered throughout codebases
+Large web projects often struggle with CSS maintainability:
+- Specificity conflicts requiring cascading overrides
 - Inconsistent spacing, colors, and typography
 - No single source of truth for design decisions
-- LLMs generating arbitrary CSS values that drift from the system
+- Generated code (including LLM output) that drifts from the system
 
 ### The Solution
 
-tokenctl enforces a **tokens-first** approach:
+tokenctl uses a **tokens-first** approach:
 
 1. **All styling decisions become tokens** - Colors, spacing, typography, effects
 2. **Tokens reference other tokens** - Building a semantic hierarchy

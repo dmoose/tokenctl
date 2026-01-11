@@ -173,8 +173,8 @@
             <div class="prose">
               <p>This is a paragraph of body text demonstrating the prose styling. The prose class provides
               sensible defaults for rich text content with proper line-height and max-width for readability.</p>
-              <p>Multiple paragraphs flow naturally with appropriate spacing. The text color uses the
-              semantic <code>--color-text</code> variable which automatically adapts to the current theme.</p>
+              <p>Text can include <a class="link" href="#">inline links</a> that are styled with the link class.
+              Links have hover and visited states that adapt to the current theme.</p>
             </div>
           </div>
         </div>
@@ -362,8 +362,157 @@
       </div>
     </section>
 
-    <!-- Colors Section -->
+    <!-- Alerts Section -->
     <section class="section" style="background: var(--color-surface-sunken);">
+      <div class="container">
+        <h2 class="section-title">Alerts</h2>
+        <div class="stack">
+          <div class="alert alert-info">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/>
+            </svg>
+            <div>
+              <div class="alert-title">Information</div>
+              <div>This is an informational alert with helpful context for the user.</div>
+            </div>
+          </div>
+          <div class="alert alert-success">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>
+            </svg>
+            <div>
+              <div class="alert-title">Success</div>
+              <div>Your changes have been saved successfully.</div>
+            </div>
+          </div>
+          <div class="alert alert-warning">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+            </svg>
+            <div>
+              <div class="alert-title">Warning</div>
+              <div>Please review the changes before proceeding.</div>
+            </div>
+          </div>
+          <div class="alert alert-error">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/>
+            </svg>
+            <div>
+              <div class="alert-title">Error</div>
+              <div>Something went wrong. Please try again later.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Tables Section -->
+    <section class="section">
+      <div class="container">
+        <h2 class="section-title">Tables</h2>
+        <div class="card">
+          <div class="card-body" style="padding: 0; overflow-x: auto;">
+            <table class="table">
+              <thead>
+                <tr class="tr">
+                  <th class="th">Name</th>
+                  <th class="th">Role</th>
+                  <th class="th">Status</th>
+                  <th class="th">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr class="tr">
+                  <td class="td">Alice Johnson</td>
+                  <td class="td">Developer</td>
+                  <td class="td"><span class="badge badge-success">Active</span></td>
+                  <td class="td"><button class="btn btn-ghost btn-sm">Edit</button></td>
+                </tr>
+                <tr class="tr">
+                  <td class="td">Bob Smith</td>
+                  <td class="td">Designer</td>
+                  <td class="td"><span class="badge badge-success">Active</span></td>
+                  <td class="td"><button class="btn btn-ghost btn-sm">Edit</button></td>
+                </tr>
+                <tr class="tr">
+                  <td class="td">Carol Williams</td>
+                  <td class="td">Manager</td>
+                  <td class="td"><span class="badge badge-warning">Away</span></td>
+                  <td class="td"><button class="btn btn-ghost btn-sm">Edit</button></td>
+                </tr>
+                <tr class="tr">
+                  <td class="td">David Brown</td>
+                  <td class="td">Developer</td>
+                  <td class="td"><span class="badge">Offline</span></td>
+                  <td class="td"><button class="btn btn-ghost btn-sm">Edit</button></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Lists & Dividers Section -->
+    <section class="section" style="background: var(--color-surface-sunken);">
+      <div class="container">
+        <h2 class="section-title">Lists & Dividers</h2>
+        <div class="grid" style="grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));">
+          <div>
+            <h3 class="subsection-title">Unordered List</h3>
+            <ul class="list">
+              <li class="list-item">First item in the list</li>
+              <li class="list-item">Second item with more content</li>
+              <li class="list-item">Third item</li>
+              <li class="list-item">Fourth and final item</li>
+            </ul>
+          </div>
+          <div>
+            <h3 class="subsection-title">Ordered List</h3>
+            <ol class="list">
+              <li class="list-item">Clone the repository</li>
+              <li class="list-item">Install dependencies</li>
+              <li class="list-item">Configure environment</li>
+              <li class="list-item">Run the application</li>
+            </ol>
+          </div>
+          <div>
+            <h3 class="subsection-title">Description List</h3>
+            <dl class="dl">
+              <dt class="dt">Design Tokens</dt>
+              <dd class="dd">Named entities that store visual design attributes</dd>
+              <dt class="dt">CSS Variables</dt>
+              <dd class="dd">Custom properties that hold specific values to be reused</dd>
+              <dt class="dt">Theming</dt>
+              <dd class="dd">The ability to switch between different visual styles</dd>
+            </dl>
+          </div>
+        </div>
+
+        <hr class="divider">
+
+        <div class="row" style="justify-content: center; gap: var(--spacing-8);">
+          <div class="text-center">
+            <div style="font-size: var(--font-size-sm); color: var(--color-text-muted); margin-bottom: var(--spacing-2);">Default Divider</div>
+            <code style="font-size: var(--font-size-xs);">.divider</code>
+          </div>
+          <div class="text-center">
+            <div style="font-size: var(--font-size-sm); color: var(--color-text-muted); margin-bottom: var(--spacing-2);">Strong Divider</div>
+            <code style="font-size: var(--font-size-xs);">.divider-strong</code>
+          </div>
+        </div>
+
+        <hr class="divider divider-strong">
+
+        <p class="text-center" style="color: var(--color-text-muted); margin: 0;">
+          Dividers help separate content sections visually.
+        </p>
+      </div>
+    </section>
+
+    <!-- Colors Section -->
+    <section class="section">
       <div class="container">
         <h2 class="section-title">Color System</h2>
         <div class="stack-lg">
