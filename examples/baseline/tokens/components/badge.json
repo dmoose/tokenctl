@@ -1,0 +1,44 @@
+{
+  "$layer": "component",
+  "components": {
+    "badge": {
+      "$type": "component",
+      "$class": "badge",
+      "$description": "Small label for status, counts, or categorization",
+      "base": {
+        "display": "inline-flex",
+        "align-items": "center",
+        "padding": "{spacing.0.5} {spacing.2}",
+        "font-family": "{font.family.sans}",
+        "font-size": "{font.size.xs}",
+        "font-weight": "{font.weight.medium}",
+        "line-height": "{font.leading.tight}",
+        "border-radius": "{radius.full}",
+        "background": "{color.surface-sunken}",
+        "color": "{color.text-muted}"
+      },
+      "variants": {
+        "primary": {
+          "$class": "badge-primary",
+          "background": "{color.primary-subtle}",
+          "color": "{color.primary}"
+        },
+        "success": {
+          "$class": "badge-success",
+          "background": "{color.success-subtle}",
+          "color": "{color.success-content}"
+        },
+        "warning": {
+          "$class": "badge-warning",
+          "background": "{color.warning-subtle}",
+          "color": "{color.warning-content}"
+        },
+        "error": {
+          "$class": "badge-error",
+          "background": "{color.error-subtle}",
+          "color": "{color.error-content}"
+        }
+      }
+    }
+  }
+}

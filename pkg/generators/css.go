@@ -21,20 +21,26 @@ func NewCSSGenerator() *CSSGenerator {
 func (g *CSSGenerator) Generate(ctx *GenerationContext) (string, error) {
 	var sb strings.Builder
 
-	// 1. @property declarations (if any)
+	// 1. Layer order declaration
+	sb.WriteString("@layer reset, tokens, themes, components;\n\n")
+
+	// 2. @property declarations (if any)
 	if len(ctx.PropertyTokens) > 0 {
 		propertyDecls := g.generatePropertyDeclarations(ctx.PropertyTokens)
 		sb.WriteString(propertyDecls)
 	}
 
-	// 2. Root variables
+	// 3. Reset layer
+	sb.WriteString(generateReset())
+
+	// 4. Root variables (in tokens layer)
 	rootVars, err := g.generateRootVariables(ctx.ResolvedTokens)
 	if err != nil {
 		return "", fmt.Errorf("failed to generate root variables: %w", err)
 	}
 	sb.WriteString(rootVars)
 
-	// 3. Theme variations
+	// 5. Theme variations
 	if len(ctx.Themes) > 0 {
 		themeVariations, err := g.generateThemeVariations(ctx.Themes)
 		if err != nil {
@@ -43,7 +49,7 @@ func (g *CSSGenerator) Generate(ctx *GenerationContext) (string, error) {
 		sb.WriteString(themeVariations)
 	}
 
-	// 4. Components
+	// 6. Components
 	if len(ctx.Components) > 0 {
 		components, err := g.generateComponents(ctx.Components)
 		if err != nil {
@@ -52,7 +58,7 @@ func (g *CSSGenerator) Generate(ctx *GenerationContext) (string, error) {
 		sb.WriteString(components)
 	}
 
-	// 5. Responsive overrides via media queries
+	// 7. Responsive overrides via media queries
 	if len(ctx.ResponsiveTokens) > 0 {
 		responsiveCSS := tokens.GenerateResponsiveCSS(ctx.Breakpoints, ctx.ResponsiveTokens)
 		if responsiveCSS != "" {
@@ -90,10 +96,11 @@ func (g *CSSGenerator) generatePropertyDeclarations(properties []tokens.Property
 	return sb.String()
 }
 
-// generateRootVariables creates :root block with base tokens
+// generateRootVariables creates :root block with base tokens in @layer tokens
 func (g *CSSGenerator) generateRootVariables(resolvedTokens map[string]interface{}) (string, error) {
 	var sb strings.Builder
-	sb.WriteString(":root {\n")
+	sb.WriteString("@layer tokens {\n")
+	sb.WriteString("  :root {\n")
 
 	// Sort keys for deterministic output
 	keys := make([]string, 0, len(resolvedTokens))
@@ -111,9 +118,10 @@ func (g *CSSGenerator) generateRootVariables(resolvedTokens map[string]interface
 
 		cssVar := strings.ReplaceAll(path, ".", "-")
 		cssValue := serializeValueForCSS(value)
-		sb.WriteString(fmt.Sprintf("  --%s: %s;\n", cssVar, cssValue))
+		sb.WriteString(fmt.Sprintf("    --%s: %s;\n", cssVar, cssValue))
 	}
 
+	sb.WriteString("  }\n")
 	sb.WriteString("}\n\n")
 	return sb.String(), nil
 }
@@ -121,6 +129,7 @@ func (g *CSSGenerator) generateRootVariables(resolvedTokens map[string]interface
 // generateThemeVariations creates theme-specific CSS with data-theme selectors
 func (g *CSSGenerator) generateThemeVariations(themes map[string]ThemeContext) (string, error) {
 	var sb strings.Builder
+	sb.WriteString("@layer themes {\n")
 
 	// Sort theme names for deterministic output
 	themeNames := make([]string, 0, len(themes))
@@ -143,7 +152,7 @@ func (g *CSSGenerator) generateThemeVariations(themes map[string]ThemeContext) (
 			selector = fmt.Sprintf(`:root, [data-theme="%s"]`, themeName)
 		}
 
-		sb.WriteString(fmt.Sprintf("%s {\n", selector))
+		sb.WriteString(fmt.Sprintf("  %s {\n", selector))
 
 		// Sort token keys for deterministic output
 		tokenKeys := make([]string, 0, len(themeCtx.DiffTokens))
@@ -156,12 +165,13 @@ func (g *CSSGenerator) generateThemeVariations(themes map[string]ThemeContext) (
 			val := themeCtx.DiffTokens[key]
 			cssVar := strings.ReplaceAll(key, ".", "-")
 			cssValue := serializeValueForCSS(val)
-			sb.WriteString(fmt.Sprintf("  --%s: %s;\n", cssVar, cssValue))
+			sb.WriteString(fmt.Sprintf("    --%s: %s;\n", cssVar, cssValue))
 		}
 
-		sb.WriteString("}\n\n")
+		sb.WriteString("  }\n")
 	}
 
+	sb.WriteString("}\n\n")
 	return sb.String(), nil
 }
 
@@ -237,6 +247,21 @@ func (g *CSSGenerator) generateComponents(components map[string]tokens.Component
 
 	sb.WriteString("}\n")
 	return sb.String(), nil
+}
+
+// generateReset creates a minimal modern CSS reset in @layer reset
+func generateReset() string {
+	return `@layer reset {
+  *, *::before, *::after { box-sizing: border-box; }
+  * { margin: 0; }
+  html { line-height: 1.5; -webkit-text-size-adjust: 100%; }
+  body { font-family: var(--font-family-sans, system-ui, sans-serif); }
+  img, picture, video, canvas, svg { display: block; max-width: 100%; }
+  input, button, textarea, select { font: inherit; }
+  p, h1, h2, h3, h4, h5, h6 { overflow-wrap: break-word; }
+}
+
+`
 }
 
 // buildStateSelector converts state key to CSS selector

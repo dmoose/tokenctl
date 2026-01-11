@@ -1,0 +1,115 @@
+{
+  "$layer": "semantic",
+  "color": {
+    "$type": "color",
+    "primary": {
+      "$value": "{brand.blue.500}",
+      "$customizable": true,
+      "$description": "Primary brand color for key actions and focus",
+      "$usage": ["Primary buttons", "Links", "Focus rings", "Active states"]
+    },
+    "primary-hover": {
+      "$value": "{brand.blue.600}",
+      "$description": "Hover state for primary elements"
+    },
+    "primary-active": {
+      "$value": "{brand.blue.700}",
+      "$description": "Active/pressed state for primary elements"
+    },
+    "primary-subtle": {
+      "$value": "{brand.blue.100}",
+      "$description": "Subtle primary background"
+    },
+    "primary-content": {
+      "$value": "{brand.white}",
+      "$description": "Text color on primary backgrounds"
+    },
+
+    "secondary": {
+      "$value": "{brand.gray.600}",
+      "$customizable": true,
+      "$description": "Secondary actions, less prominent than primary",
+      "$usage": ["Secondary buttons", "Icon buttons", "Subtle actions"]
+    },
+    "secondary-hover": {
+      "$value": "{brand.gray.700}"
+    },
+    "secondary-content": {
+      "$value": "{brand.white}"
+    },
+
+    "success": {
+      "$value": "{brand.green.500}",
+      "$description": "Positive outcomes, confirmations"
+    },
+    "success-subtle": {
+      "$value": "{brand.green.100}"
+    },
+    "success-content": {
+      "$value": "{brand.green.700}"
+    },
+
+    "warning": {
+      "$value": "{brand.amber.500}",
+      "$description": "Caution states, requires attention"
+    },
+    "warning-subtle": {
+      "$value": "{brand.amber.100}"
+    },
+    "warning-content": {
+      "$value": "{brand.amber.700}"
+    },
+
+    "error": {
+      "$value": "{brand.red.500}",
+      "$description": "Errors, destructive actions"
+    },
+    "error-subtle": {
+      "$value": "{brand.red.100}"
+    },
+    "error-content": {
+      "$value": "{brand.red.700}"
+    },
+
+    "surface": {
+      "$value": "{brand.white}",
+      "$customizable": true,
+      "$description": "Main background surface"
+    },
+    "surface-raised": {
+      "$value": "{brand.white}",
+      "$description": "Elevated surfaces like cards, modals"
+    },
+    "surface-sunken": {
+      "$value": "{brand.gray.50}",
+      "$description": "Recessed areas, input backgrounds"
+    },
+
+    "border": {
+      "$value": "{brand.gray.200}",
+      "$description": "Default border color"
+    },
+    "border-strong": {
+      "$value": "{brand.gray.300}",
+      "$description": "Emphasized borders"
+    },
+    "border-focus": {
+      "$value": "{brand.blue.500}",
+      "$description": "Focus ring color"
+    },
+
+    "text": {
+      "$value": "{brand.gray.900}",
+      "$customizable": true,
+      "$description": "Primary text color"
+    },
+    "text-muted": {
+      "$value": "{brand.gray.500}",
+      "$description": "Secondary, less important text"
+    },
+    "text-subtle": {
+      "$value": "{brand.gray.400}",
+      "$description": "Placeholder text, disabled states"
+    }
+  }
+}

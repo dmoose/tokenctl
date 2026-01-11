@@ -1,0 +1,82 @@
+{
+  "$layer": "component",
+  "components": {
+    "card": {
+      "$type": "component",
+      "$class": "card",
+      "$description": "Container for grouping related content with optional image and actions",
+      "$contains": ["card-body", "card-title", "card-text", "card-actions", "card-image"],
+      "base": {
+        "display": "flex",
+        "flex-direction": "column",
+        "background": "{color.surface-raised}",
+        "border-radius": "{radius.lg}",
+        "border": "1px solid {color.border}",
+        "box-shadow": "{shadow.sm}",
+        "overflow": "hidden"
+      }
+    },
+    "card-image": {
+      "$type": "component",
+      "$class": "card-image",
+      "$description": "Image container at top of card",
+      "$requires": "card",
+      "base": {
+        "width": "100%",
+        "aspect-ratio": "16 / 9",
+        "object-fit": "cover"
+      }
+    },
+    "card-body": {
+      "$type": "component",
+      "$class": "card-body",
+      "$description": "Main content area inside a card with padding",
+      "$requires": "card",
+      "$contains": ["card-title", "card-text", "card-actions"],
+      "base": {
+        "padding": "{spacing.5}",
+        "display": "flex",
+        "flex-direction": "column",
+        "gap": "{spacing.3}",
+        "flex": "1"
+      }
+    },
+    "card-title": {
+      "$type": "component",
+      "$class": "card-title",
+      "$description": "Heading text inside a card",
+      "$requires": "card",
+      "base": {
+        "margin": "0",
+        "font-size": "{font.size.lg}",
+        "font-weight": "{font.weight.semibold}",
+        "color": "{color.text}",
+        "line-height": "{font.leading.tight}"
+      }
+    },
+    "card-text": {
+      "$type": "component",
+      "$class": "card-text",
+      "$description": "Body text inside a card",
+      "$requires": "card",
+      "base": {
+        "margin": "0",
+        "font-size": "{font.size.sm}",
+        "color": "{color.text-muted}",
+        "line-height": "{font.leading.relaxed}"
+      }
+    },
+    "card-actions": {
+      "$type": "component",
+      "$class": "card-actions",
+      "$description": "Action buttons area, typically at bottom of card body",
+      "$requires": "card",
+      "base": {
+        "display": "flex",
+        "gap": "{spacing.2}",
+        "margin-top": "auto",
+        "padding-top": "{spacing.2}"
+      }
+    }
+  }
+}
