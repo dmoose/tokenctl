@@ -4,6 +4,7 @@ package main
 import (
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/dmoose/tokenctl/pkg/generators"
 	"github.com/dmoose/tokenctl/pkg/tokens"
@@ -13,19 +14,52 @@ import (
 var buildCmd = &cobra.Command{
 	Use:   "build [directory]",
 	Short: "Build token artifacts",
-	Args:  cobra.MaximumNArgs(1),
-	RunE:  runBuild,
+	Long: `Build token artifacts from JSON token definitions.
+
+Output formats:
+  tailwind          Tailwind CSS 4 with @theme and @layer (default)
+  css               Pure CSS without Tailwind import
+  catalog           Full JSON catalog for external tools
+  manifest:CATEGORY Category-scoped JSON manifest for LLM context
+                    Categories: color, spacing, font, size, components, etc.
+
+Flags:
+  --customizable-only   Only include tokens marked with $customizable: true
+                        Useful for generating LLM manifests of override points
+
+Examples:
+  tokenctl build ./my-tokens --format=tailwind
+  tokenctl build ./my-tokens --format=manifest:color
+  tokenctl build ./my-tokens --format=manifest:color --customizable-only
+  tokenctl build ./my-tokens --format=manifest:components`,
+	Args: cobra.MaximumNArgs(1),
+	RunE: runBuild,
 }
 
 var (
-	format    string
-	outputDir string
+	format           string
+	outputDir        string
+	customizableOnly bool
 )
 
 func init() {
-	buildCmd.Flags().StringVarP(&format, "format", "f", "tailwind", "Output format (tailwind, catalog)")
+	buildCmd.Flags().StringVarP(&format, "format", "f", "tailwind", "Output format (tailwind, css, catalog, manifest:CATEGORY)")
 	buildCmd.Flags().StringVarP(&outputDir, "output", "o", "dist", "Output directory")
+	buildCmd.Flags().BoolVar(&customizableOnly, "customizable-only", false, "Only include tokens marked $customizable: true (manifest/catalog only)")
 	rootCmd.AddCommand(buildCmd)
+}
+
+// parseFormat extracts format type and optional category from format string
+// e.g., "manifest:color" returns ("manifest", "color")
+func parseFormat(format string) (formatType string, category string) {
+	if strings.HasPrefix(format, "manifest:") {
+		parts := strings.SplitN(format, ":", 2)
+		if len(parts) == 2 {
+			return "manifest", parts[1]
+		}
+		return "manifest", ""
+	}
+	return format, ""
 }
 
 func runBuild(cmd *cobra.Command, args []string) error {
@@ -63,10 +97,10 @@ func runBuild(cmd *cobra.Command, args []string) error {
 
 	// 3. Prepare Generation Context
 	var content string
-	switch format {
-	case "tailwind":
-		gen := generators.NewTailwindGenerator()
+	formatType, category := parseFormat(format)
 
+	switch formatType {
+	case "tailwind", "css":
 		// Resolve theme inheritance chains (handles $extends)
 		inheritedThemes, err := tokens.ResolveThemeInheritance(baseDict, themes)
 		if err != nil {
@@ -105,27 +139,51 @@ func runBuild(cmd *cobra.Command, args []string) error {
 		// Extract tokens with $property for @property declarations
 		propertyTokens := tokens.ExtractPropertyTokens(baseDict, resolvedBase)
 
+		// Extract breakpoints and responsive tokens
+		breakpoints := tokens.ExtractBreakpoints(baseDict)
+		responsiveTokens := tokens.ExtractResponsiveTokens(baseDict)
+
 		// Build generation context
 		ctx := &generators.GenerationContext{
-			BaseDict:       baseDict,
-			ResolvedTokens: resolvedBase,
-			Components:     components,
-			Themes:         themeContexts,
-			PropertyTokens: propertyTokens,
+			BaseDict:         baseDict,
+			ResolvedTokens:   resolvedBase,
+			Components:       components,
+			Themes:           themeContexts,
+			PropertyTokens:   propertyTokens,
+			Breakpoints:      breakpoints,
+			ResponsiveTokens: responsiveTokens,
 		}
 
-		// Generate complete CSS
-		content, err = gen.Generate(ctx)
-		if err != nil {
-			return fmt.Errorf("tailwind generation failed: %w", err)
+		// Generate CSS using appropriate generator
+		if formatType == "css" {
+			gen := generators.NewCSSGenerator()
+			content, err = gen.Generate(ctx)
+			if err != nil {
+				return fmt.Errorf("css generation failed: %w", err)
+			}
+		} else {
+			gen := generators.NewTailwindGenerator()
+			content, err = gen.Generate(ctx)
+			if err != nil {
+				return fmt.Errorf("tailwind generation failed: %w", err)
+			}
 		}
 
-	case "catalog":
-		gen := generators.NewCatalogGenerator()
+	case "catalog", "manifest":
+		// Create generator with optional category and customizable filters
+		opts := generators.CatalogOptions{
+			Category:         category,
+			CustomizableOnly: customizableOnly,
+		}
+		gen := generators.NewCatalogGeneratorWithOptions(opts)
+
 		components, err := baseDict.ExtractComponents()
 		if err != nil {
 			return fmt.Errorf("failed to extract components: %w", err)
 		}
+
+		// Extract rich metadata from base dictionary
+		metadata := tokens.ExtractMetadata(baseDict)
 
 		// Build theme inputs for catalog
 		var catalogThemes map[string]generators.CatalogThemeInput
@@ -172,13 +230,13 @@ func runBuild(cmd *cobra.Command, args []string) error {
 			}
 		}
 
-		content, err = gen.Generate(resolvedBase, components, catalogThemes)
+		content, err = gen.GenerateWithMetadata(resolvedBase, components, catalogThemes, metadata)
 		if err != nil {
 			return fmt.Errorf("catalog generation failed: %w", err)
 		}
 
 	default:
-		return fmt.Errorf("unknown format: %s", format)
+		return fmt.Errorf("unknown format: %s (valid: tailwind, css, catalog, manifest:CATEGORY)", format)
 	}
 
 	// 4. Write
@@ -186,9 +244,21 @@ func runBuild(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("failed to create output dir: %w", err)
 	}
 
-	outfile := fmt.Sprintf("%s/tokens.css", outputDir)
-	if format == "catalog" {
+	// Determine output filename based on format
+	var outfile string
+	switch formatType {
+	case "tailwind", "css":
+		outfile = fmt.Sprintf("%s/tokens.css", outputDir)
+	case "catalog":
 		outfile = fmt.Sprintf("%s/catalog.json", outputDir)
+	case "manifest":
+		if category != "" {
+			outfile = fmt.Sprintf("%s/manifest-%s.json", outputDir, category)
+		} else {
+			outfile = fmt.Sprintf("%s/manifest.json", outputDir)
+		}
+	default:
+		outfile = fmt.Sprintf("%s/tokens.css", outputDir)
 	}
 
 	if err := os.WriteFile(outfile, []byte(content), 0644); err != nil {

@@ -289,12 +289,12 @@ func TestIntegration_Build_Catalog(t *testing.T) {
 
 	contentStr := string(content)
 
-	// Should have catalog structure (v2.0)
+	// Should have catalog structure (v2.1)
+	// Note: components is omitted when empty (correct behavior)
 	expectedStrings := []string{
 		"\"meta\":",
 		"\"tokens\":",
-		"\"components\":",
-		"\"version\": \"2.0\"",
+		"\"version\": \"2.1\"",
 		"\"generated_at\":",
 		"\"tokenctl_version\":",
 	}

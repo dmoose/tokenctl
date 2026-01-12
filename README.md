@@ -7,11 +7,18 @@
 
 - **W3C Compliant**: Uses the standard [W3C Design Token Format](https://tr.designtokens.org/format/)
 - **Tailwind 4 Ready**: Generates modern `@theme` configurations with `@layer` support
+- **Pure CSS Output**: Generate CSS without Tailwind dependency (`--format=css`)
 - **Reference Resolution**: Deep referencing (`{color.brand.primary}`) with cycle detection
 - **Theme Inheritance**: `$extends` for theme variations that inherit from parent themes
 - **Computed Values**: `contrast()`, `darken()`, `lighten()`, `shade()`, `calc()` expressions
 - **Scale Expansion**: `$scale` generates size variants automatically (xs, sm, md, lg, xl)
 - **CSS @property**: `$property` field generates typed CSS custom properties for animations
+- **Responsive Tokens**: `$breakpoints` and `$responsive` for media query generation
+- **Layer Validation**: `--strict-layers` enforces brand → semantic → component architecture
+- **Token Search**: CLI search by name, type, or category
+- **LLM Manifests**: Category-scoped JSON manifests for context-efficient LLM usage
+- **Rich Metadata**: `$description`, `$usage`, `$avoid` fields for documentation
+- **Component Composition**: `$contains`, `$requires` for component relationships
 - **Constraint Validation**: `$min`/`$max` bounds checking on dimension and number tokens
 - **Type Validation**: Validates colors, dimensions, numbers, fontFamily, effect, duration
 - **Source Tracking**: Validation errors include source file paths
@@ -156,13 +163,24 @@ Enables animated theme transitions.
 ## Commands
 
 ```bash
-tokenctl init [dir]              # Initialize token system
-tokenctl validate [dir]          # Validate tokens
-  --strict                     # Fail on warnings
-tokenctl build [dir]             # Build artifacts
-  --format=tailwind            # CSS output (default)
-  --format=catalog             # JSON catalog (v2.0)
-  --output=<dir>               # Output directory (default: dist)
+tokenctl init [dir]                    # Initialize token system
+
+tokenctl build [dir]                   # Build artifacts
+  --format=tailwind                  # Tailwind 4 CSS (default)
+  --format=css                       # Pure CSS (no Tailwind import)
+  --format=catalog                   # Full JSON catalog
+  --format=manifest:CATEGORY         # Category-scoped manifest
+  --output=<dir>                     # Output directory (default: dist)
+  --customizable-only                # Only tokens marked $customizable: true
+
+tokenctl validate [dir]                # Validate tokens
+  --strict                           # Fail on warnings
+  --strict-layers                    # Enforce layer reference rules
+
+tokenctl search [query]                # Search tokens
+  --type=<type>                      # Filter by type (color, dimension, etc.)
+  --category=<cat>                   # Filter by category
+  --dir=<dir>                        # Token directory (default: .)
 ```
 
 ## Catalog Format (v2.0)
@@ -239,6 +257,7 @@ See [examples/README.md](examples/README.md) for details.
 ## Documentation
 
 - [README.md](README.md) - Quick start (this file)
+- [HOWTO.md](HOWTO.md) - Comprehensive design system guide
 - [TOKENS.md](TOKENS.md) - Token format, types, expressions, constraints
 - [ADVANCED_USAGE.md](ADVANCED_USAGE.md) - CSS composition patterns
 - [examples/](examples/) - Working examples
