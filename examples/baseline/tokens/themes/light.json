@@ -1,0 +1,14 @@
+{
+  "$description": "Light theme - the default baseline theme",
+  "color": {
+    "$type": "color",
+    "surface": { "$value": "{brand.white}" },
+    "surface-raised": { "$value": "{brand.white}" },
+    "surface-sunken": { "$value": "{brand.gray.50}" },
+    "text": { "$value": "{brand.gray.900}" },
+    "text-muted": { "$value": "{brand.gray.500}" },
+    "text-subtle": { "$value": "{brand.gray.400}" },
+    "border": { "$value": "{brand.gray.200}" },
+    "border-strong": { "$value": "{brand.gray.300}" }
+  }
+}

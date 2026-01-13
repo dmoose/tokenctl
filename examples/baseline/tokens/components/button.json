@@ -1,0 +1,99 @@
+{
+  "$layer": "component",
+  "components": {
+    "btn": {
+      "$type": "component",
+      "$class": "btn",
+      "$description": "Interactive button element for actions and navigation",
+      "base": {
+        "display": "inline-flex",
+        "align-items": "center",
+        "justify-content": "center",
+        "gap": "{spacing.2}",
+        "padding": "{spacing.2} {spacing.4}",
+        "font-family": "{font.family.sans}",
+        "font-size": "{font.size.sm}",
+        "font-weight": "{font.weight.medium}",
+        "line-height": "{font.leading.tight}",
+        "text-decoration": "none",
+        "border-radius": "{radius.md}",
+        "border": "1px solid transparent",
+        "cursor": "pointer",
+        "transition": "all {transition.fast} ease-in-out"
+      },
+      "variants": {
+        "primary": {
+          "$class": "btn-primary",
+          "background": "{color.primary}",
+          "color": "{color.primary-content}",
+          "border-color": "{color.primary}",
+          "&:hover": {
+            "background": "{color.primary-hover}",
+            "border-color": "{color.primary-hover}"
+          },
+          "&:active": {
+            "background": "{color.primary-active}",
+            "border-color": "{color.primary-active}"
+          },
+          "&:focus-visible": {
+            "outline": "2px solid {color.border-focus}",
+            "outline-offset": "2px"
+          }
+        },
+        "secondary": {
+          "$class": "btn-secondary",
+          "background": "{color.secondary}",
+          "color": "{color.secondary-content}",
+          "border-color": "{color.secondary}",
+          "&:hover": {
+            "background": "{color.secondary-hover}",
+            "border-color": "{color.secondary-hover}"
+          },
+          "&:focus-visible": {
+            "outline": "2px solid {color.border-focus}",
+            "outline-offset": "2px"
+          }
+        },
+        "outline": {
+          "$class": "btn-outline",
+          "background": "transparent",
+          "color": "{color.primary}",
+          "border-color": "{color.primary}",
+          "&:hover": {
+            "background": "{color.primary-subtle}",
+            "color": "{color.primary-hover}"
+          },
+          "&:focus-visible": {
+            "outline": "2px solid {color.border-focus}",
+            "outline-offset": "2px"
+          }
+        },
+        "ghost": {
+          "$class": "btn-ghost",
+          "background": "transparent",
+          "color": "{color.text}",
+          "border-color": "transparent",
+          "&:hover": {
+            "background": "{color.surface-sunken}"
+          },
+          "&:focus-visible": {
+            "outline": "2px solid {color.border-focus}",
+            "outline-offset": "2px"
+          }
+        }
+      },
+      "sizes": {
+        "sm": {
+          "$class": "btn-sm",
+          "padding": "{spacing.1} {spacing.3}",
+          "font-size": "{font.size.xs}"
+        },
+        "lg": {
+          "$class": "btn-lg",
+          "padding": "{spacing.3} {spacing.6}",
+          "font-size": "{font.size.base}"
+        }
+      }
+    }
+  }
+}

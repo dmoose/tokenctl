@@ -1,0 +1,115 @@
+{
+  "$layer": "component",
+  "components": {
+    "container": {
+      "$type": "component",
+      "$class": "container",
+      "$description": "Centered content container with max-width",
+      "base": {
+        "width": "100%",
+        "max-width": "1280px",
+        "margin-left": "auto",
+        "margin-right": "auto",
+        "padding-left": "{spacing.4}",
+        "padding-right": "{spacing.4}"
+      }
+    },
+    "stack": {
+      "$type": "component",
+      "$class": "stack",
+      "$description": "Vertical stack with consistent spacing between children",
+      "base": {
+        "display": "flex",
+        "flex-direction": "column",
+        "gap": "{spacing.4}"
+      }
+    },
+    "stack-sm": {
+      "$type": "component",
+      "$class": "stack-sm",
+      "$description": "Vertical stack with small spacing",
+      "base": {
+        "display": "flex",
+        "flex-direction": "column",
+        "gap": "{spacing.2}"
+      }
+    },
+    "stack-lg": {
+      "$type": "component",
+      "$class": "stack-lg",
+      "$description": "Vertical stack with large spacing",
+      "base": {
+        "display": "flex",
+        "flex-direction": "column",
+        "gap": "{spacing.8}"
+      }
+    },
+    "row": {
+      "$type": "component",
+      "$class": "row",
+      "$description": "Horizontal row with consistent spacing",
+      "base": {
+        "display": "flex",
+        "flex-direction": "row",
+        "align-items": "center",
+        "gap": "{spacing.4}",
+        "flex-wrap": "wrap"
+      }
+    },
+    "grid": {
+      "$type": "component",
+      "$class": "grid",
+      "$description": "Responsive grid layout",
+      "base": {
+        "display": "grid",
+        "gap": "{spacing.4}",
+        "grid-template-columns": "repeat(auto-fit, minmax(280px, 1fr))"
+      }
+    },
+    "section": {
+      "$type": "component",
+      "$class": "section",
+      "$description": "Page section with vertical padding",
+      "base": {
+        "padding-top": "{spacing.12}",
+        "padding-bottom": "{spacing.12}"
+      }
+    },
+    "prose": {
+      "$type": "component",
+      "$class": "prose",
+      "$description": "Rich text content with sensible typography defaults",
+      "base": {
+        "font-family": "{font.family.sans}",
+        "font-size": "{font.size.base}",
+        "line-height": "{font.leading.relaxed}",
+        "color": "{color.text}",
+        "max-width": "65ch"
+      }
+    },
+    "text-center": {
+      "$type": "component",
+      "$class": "text-center",
+      "$description": "Center-aligned text",
+      "base": {
+        "text-align": "center"
+      }
+    },
+    "sr-only": {
+      "$type": "component",
+      "$class": "sr-only",
+      "$description": "Visually hidden but accessible to screen readers",
+      "base": {
+        "position": "absolute",
+        "width": "1px",
+        "height": "1px",
+        "padding": "0",
+        "margin": "-1px",
+        "overflow": "hidden",
+        "clip": "rect(0, 0, 0, 0)",
+        "white-space": "nowrap",
+        "border-width": "0"
+      }
+    }
+  }
+}

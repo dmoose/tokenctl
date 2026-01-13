@@ -1,0 +1,53 @@
+{
+  "$layer": "brand",
+  "brand": {
+    "$type": "color",
+    "blue": {
+      "50":  { "$value": "oklch(97% 0.01 250)" },
+      "100": { "$value": "oklch(93% 0.03 250)" },
+      "200": { "$value": "oklch(87% 0.06 250)" },
+      "300": { "$value": "oklch(78% 0.10 250)" },
+      "400": { "$value": "oklch(68% 0.15 250)" },
+      "500": { "$value": "oklch(55% 0.20 250)", "$description": "Base blue" },
+      "600": { "$value": "oklch(48% 0.18 250)" },
+      "700": { "$value": "oklch(42% 0.15 250)" },
+      "800": { "$value": "oklch(35% 0.12 250)" },
+      "900": { "$value": "oklch(28% 0.08 250)" }
+    },
+    "gray": {
+      "50":  { "$value": "oklch(98% 0.005 250)" },
+      "100": { "$value": "oklch(95% 0.005 250)" },
+      "200": { "$value": "oklch(90% 0.005 250)" },
+      "300": { "$value": "oklch(82% 0.005 250)" },
+      "400": { "$value": "oklch(65% 0.005 250)" },
+      "500": { "$value": "oklch(55% 0.005 250)" },
+      "600": { "$value": "oklch(45% 0.005 250)" },
+      "700": { "$value": "oklch(35% 0.010 250)" },
+      "800": { "$value": "oklch(25% 0.015 250)" },
+      "900": { "$value": "oklch(18% 0.015 250)" }
+    },
+    "green": {
+      "50":  { "$value": "oklch(97% 0.02 145)" },
+      "100": { "$value": "oklch(93% 0.04 145)" },
+      "500": { "$value": "oklch(60% 0.18 145)", "$description": "Success green" },
+      "600": { "$value": "oklch(52% 0.16 145)" },
+      "700": { "$value": "oklch(45% 0.14 145)" }
+    },
+    "amber": {
+      "50":  { "$value": "oklch(97% 0.03 85)" },
+      "100": { "$value": "oklch(93% 0.06 85)" },
+      "500": { "$value": "oklch(75% 0.18 85)", "$description": "Warning amber" },
+      "600": { "$value": "oklch(68% 0.17 80)" },
+      "700": { "$value": "oklch(60% 0.15 75)" }
+    },
+    "red": {
+      "50":  { "$value": "oklch(97% 0.02 25)" },
+      "100": { "$value": "oklch(93% 0.04 25)" },
+      "500": { "$value": "oklch(55% 0.22 25)", "$description": "Error red" },
+      "600": { "$value": "oklch(48% 0.20 25)" },
+      "700": { "$value": "oklch(42% 0.18 25)" }
+    },
+    "white": { "$value": "oklch(100% 0 0)" },
+    "black": { "$value": "oklch(0% 0 0)" }
+  }
+}

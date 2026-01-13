@@ -1,0 +1,20 @@
+{
+  "$extends": "light",
+  "$description": "Dark theme - inverted colors for dark mode",
+  "color": {
+    "$type": "color",
+    "surface": { "$value": "{brand.gray.900}" },
+    "surface-raised": { "$value": "{brand.gray.800}" },
+    "surface-sunken": { "$value": "{brand.gray.900}" },
+    "text": { "$value": "{brand.gray.50}" },
+    "text-muted": { "$value": "{brand.gray.400}" },
+    "text-subtle": { "$value": "{brand.gray.500}" },
+    "border": { "$value": "{brand.gray.700}" },
+    "border-strong": { "$value": "{brand.gray.600}" },
+
+    "primary-subtle": { "$value": "oklch(30% 0.08 250)" },
+    "success-subtle": { "$value": "oklch(25% 0.06 145)" },
+    "warning-subtle": { "$value": "oklch(30% 0.08 85)" },
+    "error-subtle": { "$value": "oklch(25% 0.06 25)" }
+  }
+}
