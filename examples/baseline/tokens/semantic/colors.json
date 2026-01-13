@@ -110,6 +110,20 @@
     "text-subtle": {
       "$value": "{brand.gray.400}",
       "$description": "Placeholder text, disabled states"
+    },
+
+    "link": {
+      "$value": "{brand.blue.500}",
+      "$customizable": true,
+      "$description": "Default link color"
+    },
+    "link-hover": {
+      "$value": "{brand.blue.700}",
+      "$description": "Link hover state"
+    },
+    "link-visited": {
+      "$value": "{brand.blue.600}",
+      "$description": "Visited link color"
     }
   }
 }

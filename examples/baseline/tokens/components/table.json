@@ -1,0 +1,57 @@
+{
+  "$layer": "component",
+  "components": {
+    "table": {
+      "$type": "component",
+      "$class": "table",
+      "$description": "Data table with optional striped rows and hover states",
+      "base": {
+        "width": "100%",
+        "border-collapse": "collapse",
+        "font-size": "var(--font-size-sm)",
+        "text-align": "left"
+      },
+      "variants": {
+        "striped": {
+          "$class": "table-striped"
+        },
+        "bordered": {
+          "$class": "table-bordered",
+          "border": "1px solid var(--color-border)"
+        }
+      }
+    },
+    "th": {
+      "$type": "component",
+      "$class": "th",
+      "$description": "Table header cell",
+      "base": {
+        "padding": "var(--spacing-3) var(--spacing-4)",
+        "font-weight": "var(--font-weight-semibold)",
+        "color": "var(--color-text)",
+        "background-color": "var(--color-surface-sunken)",
+        "border-bottom": "2px solid var(--color-border)"
+      }
+    },
+    "td": {
+      "$type": "component",
+      "$class": "td",
+      "$description": "Table data cell",
+      "base": {
+        "padding": "var(--spacing-3) var(--spacing-4)",
+        "border-bottom": "1px solid var(--color-border)"
+      }
+    },
+    "tr": {
+      "$type": "component",
+      "$class": "tr",
+      "$description": "Table row with hover state",
+      "base": {
+        "transition": "background-color var(--transition-fast)",
+        "&:hover": {
+          "background-color": "var(--color-surface-sunken)"
+        }
+      }
+    }
+  }
+}

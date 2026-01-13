@@ -7,14 +7,37 @@ This directory contains working examples demonstrating various tokenctl features
 
 ```
 examples/
+├── baseline/       # Complete design system with components, theming, responsive tokens
 ├── basic/          # Simple token system (brand, spacing, semantic colors)
-├── themes/         # Theme inheritance with $extends
 ├── components/     # Component definitions with variants and sizes
 ├── computed/       # Computed values (calc, contrast, darken, lighten, scale)
+├── daisyui/        # DaisyUI 5 theme generator example
+├── themes/         # Theme inheritance with $extends
 └── validation/     # Constraint validation and effect tokens
 ```
 
 ## Running Examples
+
+### Baseline Example
+
+The `baseline/` example is a complete design system demonstrating all tokenctl features:
+
+```bash
+# Build the CSS
+tokenctl build examples/baseline --format=css --output=examples/baseline/dist
+
+# Open the demo
+open examples/baseline/demo.html
+```
+
+**Key features:**
+- Three-layer architecture (brand → semantic → component)
+- Full component library (buttons, cards, forms, alerts, tables)
+- Light and dark themes
+- Responsive typography
+- Built-in CSS reset
+
+See [examples/baseline/README.md](baseline/README.md) for full documentation.
 
 ### Basic Example
 
@@ -147,6 +170,23 @@ tokenctl build examples/validation --output=dist/validation
   }
 }
 ```
+
+### DaisyUI Example
+
+The `daisyui/` example shows how to use tokenctl as a theme generator for DaisyUI 5:
+
+```bash
+# Build DaisyUI-compatible tokens
+tokenctl build examples/daisyui --output=dist/daisyui
+```
+
+**Key features:**
+- All 26 DaisyUI token variables
+- Auto-generated content colors via `contrast()`
+- `$scale` for size variants
+- `$property` for animated theme transitions
+
+See [examples/daisyui/README.md](daisyui/README.md) for integration instructions.
 
 ## Using Examples as Templates
 
