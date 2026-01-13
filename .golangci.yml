@@ -1,0 +1,11 @@
+# golangci-lint v2 configuration
+# https://golangci-lint.run/usage/configuration/
+
+version: "2"
+
+linters:
+  enable:
+    - modernize  # Go modernization suggestions (any, slices, maps, etc.)
+
+run:
+  timeout: 5m

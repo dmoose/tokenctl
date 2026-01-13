@@ -5,6 +5,9 @@ BUILD_DIR=bin
 CMD_DIR=./cmd/tokenctl
 PKG=./...
 
+# Pin golangci-lint version (keep in sync with .github/workflows/go.yml)
+GOLANGCI_LINT_VERSION := v2.8.0
+
 .PHONY: all build clean test test-unit test-integration coverage lint install dev-deps help
 
 all: clean build test
@@ -56,14 +59,18 @@ coverage-html: coverage ## Generate and open HTML coverage report
 
 ## Quality
 
-lint: ## Run linters
+lint: ## Run linters (auto-installs golangci-lint v2 if needed)
 	@echo "Linting..."
-	@if command -v golangci-lint >/dev/null 2>&1; then \
-		golangci-lint run; \
-	else \
-		echo "⚠️  golangci-lint not installed, falling back to go vet"; \
-		go vet $(PKG); \
+	@if ! which golangci-lint > /dev/null 2>&1; then \
+		echo "Installing golangci-lint $(GOLANGCI_LINT_VERSION)..."; \
+		go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@$(GOLANGCI_LINT_VERSION); \
 	fi
+	@installed=$$(golangci-lint version 2>/dev/null | grep -oE 'v[0-9]+' | head -1); \
+	if [ "$$installed" != "v2" ]; then \
+		echo "Upgrading golangci-lint to v2..."; \
+		go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@$(GOLANGCI_LINT_VERSION); \
+	fi
+	golangci-lint run ./...
 
 fmt: ## Format code
 	@echo "Formatting code..."
@@ -77,10 +84,7 @@ vet: ## Run go vet
 
 dev-deps: ## Install development dependencies
 	@echo "Installing development dependencies..."
-	@if ! command -v golangci-lint >/dev/null 2>&1; then \
-		echo "Installing golangci-lint..."; \
-		go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest; \
-	fi
+	go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@$(GOLANGCI_LINT_VERSION)
 
 ## Examples
 

@@ -16,22 +16,6 @@ type Dimension struct {
 	Unit  string
 }
 
-// Common CSS units
-var validUnits = map[string]bool{
-	// Absolute lengths
-	"px": true, "cm": true, "mm": true, "in": true, "pt": true, "pc": true,
-	// Relative lengths
-	"em": true, "rem": true, "ex": true, "ch": true,
-	"vw": true, "vh": true, "vmin": true, "vmax": true,
-	"%": true,
-	// Time
-	"s": true, "ms": true,
-	// Angle
-	"deg": true, "rad": true, "turn": true,
-	// No unit (pure number)
-	"": true,
-}
-
 // dimensionRegex matches a number followed by an optional unit
 var dimensionRegex = regexp.MustCompile(`^(-?[0-9]*\.?[0-9]+)(px|cm|mm|in|pt|pc|em|rem|ex|ch|vw|vh|vmin|vmax|%|s|ms|deg|rad|turn)?$`)
 

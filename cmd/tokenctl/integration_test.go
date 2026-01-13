@@ -21,7 +21,7 @@ func TestMain(m *testing.M) {
 	code := m.Run()
 
 	// Cleanup
-	os.RemoveAll("../../.build")
+	_ = os.RemoveAll("../../.build")
 
 	os.Exit(code)
 }

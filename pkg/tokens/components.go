@@ -2,6 +2,7 @@ package tokens
 
 import (
 	"encoding/json"
+	"maps"
 )
 
 // ComponentDefinition represents a semantic component
@@ -11,32 +12,32 @@ type ComponentDefinition struct {
 	Description string                 `json:"$description,omitempty"`
 	Contains    []string               `json:"$contains,omitempty"` // Child components this can contain
 	Requires    string                 `json:"$requires,omitempty"` // Parent component this must be inside
-	Base        map[string]interface{} `json:"base"`
+	Base        map[string]any `json:"base"`
 	Variants    map[string]VariantDef  `json:"variants"`
 	Sizes       map[string]VariantDef  `json:"sizes"`
-	States      map[string]interface{} `json:"states"` // Reserved for future state enforcement
+	States      map[string]any `json:"states"` // Reserved for future state enforcement
 }
 
 // VariantDef represents a specific variant (primary, outline) or size (sm, lg)
 type VariantDef struct {
 	Class      string                 `json:"$class"`
-	Properties map[string]interface{} `json:"-"` // CSS properties
+	Properties map[string]any `json:"-"` // CSS properties
 	States     map[string]State       `json:"-"` // :hover, :focus, etc
 }
 
 // State represents a CSS pseudo-class state
 type State struct {
-	Properties map[string]interface{}
+	Properties map[string]any
 }
 
 // Helper to unmarshal VariantDef handling generic map properties
 func (v *VariantDef) UnmarshalJSON(data []byte) error {
-	var raw map[string]interface{}
+	var raw map[string]any
 	if err := json.Unmarshal(data, &raw); err != nil {
 		return err
 	}
 
-	v.Properties = make(map[string]interface{})
+	v.Properties = make(map[string]any)
 	v.States = make(map[string]State)
 
 	for key, val := range raw {
@@ -47,11 +48,9 @@ func (v *VariantDef) UnmarshalJSON(data []byte) error {
 
 		// Check if it's a state (starts with & or :)
 		if len(key) > 0 && (key[0] == '&' || key[0] == ':') {
-			stateProps := make(map[string]interface{})
-			if stateMap, ok := val.(map[string]interface{}); ok {
-				for pKey, pVal := range stateMap {
-					stateProps[pKey] = pVal
-				}
+			stateProps := make(map[string]any)
+			if stateMap, ok := val.(map[string]any); ok {
+				maps.Copy(stateProps, stateMap)
 			}
 			v.States[key] = State{Properties: stateProps}
 			continue
@@ -70,7 +69,7 @@ func (d *Dictionary) ExtractComponents() (map[string]ComponentDefinition, error)
 	return components, err
 }
 
-func walkComponents(node map[string]interface{}, currentPath string, results map[string]ComponentDefinition) error {
+func walkComponents(node map[string]any, currentPath string, results map[string]ComponentDefinition) error {
 	// Check if this node is a component definition
 	if t, ok := node["$type"]; ok && t == "component" {
 		// Marshal to JSON and back to struct to use generic unmarshaling
@@ -91,7 +90,7 @@ func walkComponents(node map[string]interface{}, currentPath string, results map
 		if requires, ok := node["$requires"].(string); ok {
 			comp.Requires = requires
 		}
-		if contains, ok := node["$contains"].([]interface{}); ok {
+		if contains, ok := node["$contains"].([]any); ok {
 			comp.Contains = make([]string, 0, len(contains))
 			for _, item := range contains {
 				if s, ok := item.(string); ok {
@@ -109,7 +108,7 @@ func walkComponents(node map[string]interface{}, currentPath string, results map
 		if len(key) > 0 && key[0] == '$' {
 			continue
 		}
-		if child, ok := val.(map[string]interface{}); ok {
+		if child, ok := val.(map[string]any); ok {
 			childPath := key
 			if currentPath != "" {
 				childPath = currentPath + "." + key

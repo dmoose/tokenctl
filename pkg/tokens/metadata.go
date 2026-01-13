@@ -8,12 +8,12 @@ import (
 // TokenMetadata holds rich metadata for a token
 type TokenMetadata struct {
 	Path         string      `json:"path"`
-	Value        interface{} `json:"value"`
+	Value        any `json:"value"`
 	Type         string      `json:"type,omitempty"`
 	Description  string      `json:"description,omitempty"`
 	Usage        []string    `json:"usage,omitempty"`
 	Avoid        string      `json:"avoid,omitempty"`
-	Deprecated   interface{} `json:"deprecated,omitempty"`
+	Deprecated   any `json:"deprecated,omitempty"`
 	Customizable bool        `json:"customizable,omitempty"`
 	SourceFile   string      `json:"source_file,omitempty"`
 }
@@ -28,7 +28,7 @@ func ExtractMetadata(d *Dictionary) map[string]*TokenMetadata {
 
 // extractMetadataRecursive walks the tree and extracts metadata
 // inheritedType is the $type from parent groups
-func extractMetadataRecursive(d *Dictionary, node map[string]interface{}, currentPath string, inheritedType string, result map[string]*TokenMetadata) {
+func extractMetadataRecursive(d *Dictionary, node map[string]any, currentPath string, inheritedType string, result map[string]*TokenMetadata) {
 	// Check for $type at this level
 	currentType := inheritedType
 	if t, ok := node["$type"].(string); ok {
@@ -52,7 +52,7 @@ func extractMetadataRecursive(d *Dictionary, node map[string]interface{}, curren
 			switch u := usage.(type) {
 			case string:
 				meta.Usage = []string{u}
-			case []interface{}:
+			case []any:
 				for _, item := range u {
 					if s, ok := item.(string); ok {
 						meta.Usage = append(meta.Usage, s)
@@ -93,7 +93,7 @@ func extractMetadataRecursive(d *Dictionary, node map[string]interface{}, curren
 			continue
 		}
 
-		childMap, ok := val.(map[string]interface{})
+		childMap, ok := val.(map[string]any)
 		if !ok {
 			continue
 		}

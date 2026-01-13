@@ -213,8 +213,8 @@ func parseOKLCH(input string) (colorful.Color, error) {
 // parseColorComponent parses a color component value (0-255 or 0%-100%)
 func parseColorComponent(s string, max float64) (float64, error) {
 	s = strings.TrimSpace(s)
-	if strings.HasSuffix(s, "%") {
-		v, err := strconv.ParseFloat(strings.TrimSuffix(s, "%"), 64)
+	if pct, found := strings.CutSuffix(s, "%"); found {
+		v, err := strconv.ParseFloat(pct, 64)
 		if err != nil {
 			return 0, err
 		}
@@ -267,7 +267,7 @@ func (c Color) ToRGB() string {
 
 // ToHSL returns the color as an hsl() CSS string
 func (c Color) ToHSL() string {
-	h, s, l := c.Color.Hsl()
+	h, s, l := c.Hsl()
 	return fmt.Sprintf("hsl(%.1f, %.1f%%, %.1f%%)", h, s*100, l*100)
 }
 

@@ -15,7 +15,7 @@ func NewThemeGenerator() *ThemeGenerator {
 }
 
 // GenerateThemes generates CSS blocks for multiple themes
-func (g *ThemeGenerator) GenerateThemes(themes map[string]map[string]interface{}) (string, error) {
+func (g *ThemeGenerator) GenerateThemes(themes map[string]map[string]any) (string, error) {
 	var sb strings.Builder
 	sb.WriteString("@layer base {\n")
 

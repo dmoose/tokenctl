@@ -10,7 +10,7 @@ import (
 func TestExpandScales(t *testing.T) {
 	tests := []struct {
 		name          string
-		input         map[string]interface{}
+		input         map[string]any
 		wantTokens    []string // Token paths that should exist after expansion
 		wantNotTokens []string // Token paths that should NOT exist
 		wantValues    map[string]string
@@ -18,11 +18,11 @@ func TestExpandScales(t *testing.T) {
 	}{
 		{
 			name: "basic scale expansion",
-			input: map[string]interface{}{
-				"size": map[string]interface{}{
-					"field": map[string]interface{}{
+			input: map[string]any{
+				"size": map[string]any{
+					"field": map[string]any{
 						"$value": "2.5rem",
-						"$scale": map[string]interface{}{
+						"$scale": map[string]any{
 							"xs": 0.6,
 							"sm": 0.8,
 							"md": 1.0,
@@ -50,12 +50,12 @@ func TestExpandScales(t *testing.T) {
 		},
 		{
 			name: "scale with type inheritance",
-			input: map[string]interface{}{
-				"spacing": map[string]interface{}{
-					"base": map[string]interface{}{
+			input: map[string]any{
+				"spacing": map[string]any{
+					"base": map[string]any{
 						"$value": "1rem",
 						"$type":  "dimension",
-						"$scale": map[string]interface{}{
+						"$scale": map[string]any{
 							"sm": 0.5,
 							"lg": 2.0,
 						},
@@ -70,12 +70,12 @@ func TestExpandScales(t *testing.T) {
 		},
 		{
 			name: "nested tokens with scales",
-			input: map[string]interface{}{
-				"components": map[string]interface{}{
-					"button": map[string]interface{}{
-						"height": map[string]interface{}{
+			input: map[string]any{
+				"components": map[string]any{
+					"button": map[string]any{
+						"height": map[string]any{
 							"$value": "40px",
-							"$scale": map[string]interface{}{
+							"$scale": map[string]any{
 								"sm": 0.8,
 								"lg": 1.2,
 							},
@@ -91,9 +91,9 @@ func TestExpandScales(t *testing.T) {
 		},
 		{
 			name: "token without scale unchanged",
-			input: map[string]interface{}{
-				"color": map[string]interface{}{
-					"primary": map[string]interface{}{
+			input: map[string]any{
+				"color": map[string]any{
+					"primary": map[string]any{
 						"$value": "#3b82f6",
 					},
 				},
@@ -108,11 +108,11 @@ func TestExpandScales(t *testing.T) {
 		},
 		{
 			name: "scale removed after expansion",
-			input: map[string]interface{}{
-				"size": map[string]interface{}{
-					"base": map[string]interface{}{
+			input: map[string]any{
+				"size": map[string]any{
+					"base": map[string]any{
 						"$value": "1rem",
-						"$scale": map[string]interface{}{
+						"$scale": map[string]any{
 							"sm": 0.5,
 						},
 					},
@@ -125,9 +125,9 @@ func TestExpandScales(t *testing.T) {
 		},
 		{
 			name: "invalid scale type",
-			input: map[string]interface{}{
-				"size": map[string]interface{}{
-					"base": map[string]interface{}{
+			input: map[string]any{
+				"size": map[string]any{
+					"base": map[string]any{
 						"$value": "1rem",
 						"$scale": "not-an-object",
 					},
@@ -137,11 +137,11 @@ func TestExpandScales(t *testing.T) {
 		},
 		{
 			name: "invalid scale factor",
-			input: map[string]interface{}{
-				"size": map[string]interface{}{
-					"base": map[string]interface{}{
+			input: map[string]any{
+				"size": map[string]any{
+					"base": map[string]any{
 						"$value": "1rem",
-						"$scale": map[string]interface{}{
+						"$scale": map[string]any{
 							"sm": "not-a-number",
 						},
 					},
@@ -198,11 +198,11 @@ func TestExpandScales(t *testing.T) {
 
 func TestExpandScales_ScaleRemovedFromBaseToken(t *testing.T) {
 	dict := &Dictionary{
-		Root: map[string]interface{}{
-			"size": map[string]interface{}{
-				"base": map[string]interface{}{
+		Root: map[string]any{
+			"size": map[string]any{
+				"base": map[string]any{
 					"$value": "1rem",
-					"$scale": map[string]interface{}{
+					"$scale": map[string]any{
 						"sm": 0.5,
 					},
 				},
@@ -217,7 +217,7 @@ func TestExpandScales_ScaleRemovedFromBaseToken(t *testing.T) {
 	}
 
 	// Check that $scale is removed from the base token
-	baseToken := dict.Root["size"].(map[string]interface{})["base"].(map[string]interface{})
+	baseToken := dict.Root["size"].(map[string]any)["base"].(map[string]any)
 	if _, hasScale := baseToken["$scale"]; hasScale {
 		t.Error("$scale should be removed from base token after expansion")
 	}
@@ -230,11 +230,11 @@ func TestExpandScales_ScaleRemovedFromBaseToken(t *testing.T) {
 
 func TestExpandScales_SourceFileTracking(t *testing.T) {
 	dict := &Dictionary{
-		Root: map[string]interface{}{
-			"size": map[string]interface{}{
-				"field": map[string]interface{}{
+		Root: map[string]any{
+			"size": map[string]any{
+				"field": map[string]any{
 					"$value": "2.5rem",
-					"$scale": map[string]interface{}{
+					"$scale": map[string]any{
 						"sm": 0.8,
 						"lg": 1.2,
 					},
@@ -265,12 +265,12 @@ func TestExpandScales_SourceFileTracking(t *testing.T) {
 
 func TestExpandScales_DescriptionInheritance(t *testing.T) {
 	dict := &Dictionary{
-		Root: map[string]interface{}{
-			"size": map[string]interface{}{
-				"field": map[string]interface{}{
+		Root: map[string]any{
+			"size": map[string]any{
+				"field": map[string]any{
 					"$value":       "40px",
 					"$description": "Base field size",
-					"$scale": map[string]interface{}{
+					"$scale": map[string]any{
 						"sm": 0.8,
 					},
 				},
@@ -285,7 +285,7 @@ func TestExpandScales_DescriptionInheritance(t *testing.T) {
 	}
 
 	// Check that expanded token has a description
-	smToken := dict.Root["size"].(map[string]interface{})["field-sm"].(map[string]interface{})
+	smToken := dict.Root["size"].(map[string]any)["field-sm"].(map[string]any)
 	desc, ok := smToken["$description"].(string)
 	if !ok {
 		t.Error("Expanded token should have a description")
@@ -343,7 +343,7 @@ func TestTypographyScale(t *testing.T) {
 func TestToFloat64(t *testing.T) {
 	tests := []struct {
 		name   string
-		input  interface{}
+		input  any
 		want   float64
 		wantOk bool
 	}{
@@ -371,7 +371,7 @@ func TestToFloat64(t *testing.T) {
 }
 
 // Helper function to check if a token exists at a path
-func tokenExists(root map[string]interface{}, path string) bool {
+func tokenExists(root map[string]any, path string) bool {
 	parts := strings.Split(path, ".")
 	current := root
 
@@ -383,7 +383,7 @@ func tokenExists(root map[string]interface{}, path string) bool {
 
 		if i == len(parts)-1 {
 			// Last part - check if it's a token
-			if m, ok := val.(map[string]interface{}); ok {
+			if m, ok := val.(map[string]any); ok {
 				_, hasValue := m["$value"]
 				return hasValue
 			}
@@ -391,7 +391,7 @@ func tokenExists(root map[string]interface{}, path string) bool {
 		}
 
 		// Navigate deeper
-		if m, ok := val.(map[string]interface{}); ok {
+		if m, ok := val.(map[string]any); ok {
 			current = m
 		} else {
 			return false
@@ -402,7 +402,7 @@ func tokenExists(root map[string]interface{}, path string) bool {
 }
 
 // Helper function to get a token's value
-func getTokenValue(root map[string]interface{}, path string) string {
+func getTokenValue(root map[string]any, path string) string {
 	parts := strings.Split(path, ".")
 	current := root
 
@@ -413,7 +413,7 @@ func getTokenValue(root map[string]interface{}, path string) string {
 		}
 
 		if i == len(parts)-1 {
-			if m, ok := val.(map[string]interface{}); ok {
+			if m, ok := val.(map[string]any); ok {
 				if v, ok := m["$value"].(string); ok {
 					return v
 				}
@@ -421,7 +421,7 @@ func getTokenValue(root map[string]interface{}, path string) string {
 			return ""
 		}
 
-		if m, ok := val.(map[string]interface{}); ok {
+		if m, ok := val.(map[string]any); ok {
 			current = m
 		} else {
 			return ""

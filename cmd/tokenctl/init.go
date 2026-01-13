@@ -46,47 +46,47 @@ func runInit(cmd *cobra.Command, args []string) error {
 	}
 
 	// Create default token files
-	defaults := map[string]interface{}{
-		"tokens/brand/colors.json": map[string]interface{}{
-			"color": map[string]interface{}{
-				"brand": map[string]interface{}{
+	defaults := map[string]any{
+		"tokens/brand/colors.json": map[string]any{
+			"color": map[string]any{
+				"brand": map[string]any{
 					"$type":        "color",
 					"$description": "Core brand identity colors",
-					"primary": map[string]interface{}{
+					"primary": map[string]any{
 						"$value": "#3b82f6",
 					},
-					"secondary": map[string]interface{}{
+					"secondary": map[string]any{
 						"$value": "#8b5cf6",
 					},
 				},
 			},
 		},
-		"tokens/semantic/status.json": map[string]interface{}{
-			"color": map[string]interface{}{
-				"status": map[string]interface{}{
+		"tokens/semantic/status.json": map[string]any{
+			"color": map[string]any{
+				"status": map[string]any{
 					"$type": "color",
-					"success": map[string]interface{}{
+					"success": map[string]any{
 						"$value": "#10b981",
 					},
-					"error": map[string]interface{}{
+					"error": map[string]any{
 						"$value": "#ef4444",
 					},
-					"warning": map[string]interface{}{
+					"warning": map[string]any{
 						"$value": "#f59e0b",
 					},
 				},
 			},
 		},
-		"tokens/spacing/scale.json": map[string]interface{}{
-			"spacing": map[string]interface{}{
+		"tokens/spacing/scale.json": map[string]any{
+			"spacing": map[string]any{
 				"$type": "dimension",
-				"sm": map[string]interface{}{
+				"sm": map[string]any{
 					"$value": "0.5rem",
 				},
-				"md": map[string]interface{}{
+				"md": map[string]any{
 					"$value": "1rem",
 				},
-				"lg": map[string]interface{}{
+				"lg": map[string]any{
 					"$value": "1.5rem",
 				},
 			},
@@ -99,7 +99,7 @@ func runInit(cmd *cobra.Command, args []string) error {
 		if err != nil {
 			return fmt.Errorf("failed to create file %s: %w", fullPath, err)
 		}
-		defer f.Close()
+		defer func() { _ = f.Close() }()
 
 		enc := json.NewEncoder(f)
 		enc.SetIndent("", "  ")

@@ -43,19 +43,19 @@ func NewCatalogGeneratorWithOptions(opts CatalogOptions) *CatalogGenerator {
 // CatalogSchema represents the output format
 type CatalogSchema struct {
 	Meta       CatalogMeta                 `json:"meta"`
-	Tokens     map[string]interface{}      `json:"tokens"`
+	Tokens     map[string]any      `json:"tokens"`
 	Components map[string]ComponentSummary `json:"components,omitempty"`
 	Themes     map[string]ThemeInfo        `json:"themes,omitempty"`
 }
 
 // RichTokenInfo contains full token information for LLM consumption
 type RichTokenInfo struct {
-	Value        interface{} `json:"value"`
+	Value        any `json:"value"`
 	Type         string      `json:"type,omitempty"`
 	Description  string      `json:"description,omitempty"`
 	Usage        []string    `json:"usage,omitempty"`
 	Avoid        string      `json:"avoid,omitempty"`
-	Deprecated   interface{} `json:"deprecated,omitempty"`
+	Deprecated   any `json:"deprecated,omitempty"`
 	Customizable bool        `json:"customizable,omitempty"`
 }
 
@@ -78,22 +78,22 @@ type ComponentSummary struct {
 type ThemeInfo struct {
 	Extends     *string                `json:"extends"`
 	Description string                 `json:"description,omitempty"`
-	Tokens      map[string]interface{} `json:"tokens"`
-	Diff        map[string]interface{} `json:"diff,omitempty"`
+	Tokens      map[string]any `json:"tokens"`
+	Diff        map[string]any `json:"diff,omitempty"`
 }
 
 // CatalogThemeInput provides theme data from the build process
 type CatalogThemeInput struct {
 	Extends        *string                // Parent theme name (nil if extends base)
 	Description    string                 // From $description field
-	ResolvedTokens map[string]interface{} // Fully resolved token values
-	DiffTokens     map[string]interface{} // Only tokens that differ from parent/base
+	ResolvedTokens map[string]any // Fully resolved token values
+	DiffTokens     map[string]any // Only tokens that differ from parent/base
 }
 
 // Generate creates the JSON catalog
 // metadata is optional - if provided, tokens will include rich metadata (description, usage, avoid)
 func (g *CatalogGenerator) Generate(
-	resolvedTokens map[string]interface{},
+	resolvedTokens map[string]any,
 	components map[string]tokens.ComponentDefinition,
 	themes map[string]CatalogThemeInput,
 ) (string, error) {
@@ -102,7 +102,7 @@ func (g *CatalogGenerator) Generate(
 
 // GenerateWithMetadata creates the JSON catalog with optional rich metadata
 func (g *CatalogGenerator) GenerateWithMetadata(
-	resolvedTokens map[string]interface{},
+	resolvedTokens map[string]any,
 	components map[string]tokens.ComponentDefinition,
 	themes map[string]CatalogThemeInput,
 	metadata map[string]*tokens.TokenMetadata,
@@ -115,14 +115,14 @@ func (g *CatalogGenerator) GenerateWithMetadata(
 			TokenctlVersion: TokenctlVersion,
 			Category:        g.Category,
 		},
-		Tokens:     make(map[string]interface{}),
+		Tokens:     make(map[string]any),
 		Components: make(map[string]ComponentSummary),
 		Themes:     make(map[string]ThemeInfo),
 	}
 
 	// 1. Filter Atomic Tokens (exclude components/maps)
 	for k, v := range resolvedTokens {
-		if _, ok := v.(map[string]interface{}); !ok {
+		if _, ok := v.(map[string]any); !ok {
 			// Apply category filter if specified
 			if g.Category != "" && !g.matchesCategory(k) {
 				continue
@@ -248,13 +248,13 @@ func (g *CatalogGenerator) GenerateWithMetadata(
 }
 
 // filterAtomicTokens filters out nested maps, keeping only atomic token values
-func filterAtomicTokens(tokens map[string]interface{}) map[string]interface{} {
+func filterAtomicTokens(tokens map[string]any) map[string]any {
 	if tokens == nil {
 		return nil
 	}
-	result := make(map[string]interface{})
+	result := make(map[string]any)
 	for k, v := range tokens {
-		if _, ok := v.(map[string]interface{}); !ok {
+		if _, ok := v.(map[string]any); !ok {
 			result[k] = v
 		}
 	}
@@ -271,12 +271,9 @@ func (g *CatalogGenerator) matchesCategory(tokenPath string) bool {
 	}
 
 	// Get first segment of the token path
-	firstDot := strings.Index(tokenPath, ".")
-	var topLevel string
-	if firstDot == -1 {
+	topLevel, _, found := strings.Cut(tokenPath, ".")
+	if !found {
 		topLevel = tokenPath
-	} else {
-		topLevel = tokenPath[:firstDot]
 	}
 
 	// Direct match
@@ -301,12 +298,12 @@ func (g *CatalogGenerator) matchesCategory(tokenPath string) bool {
 }
 
 // filterByCategory filters a token map to only include tokens matching the category
-func (g *CatalogGenerator) filterByCategory(tokens map[string]interface{}) map[string]interface{} {
+func (g *CatalogGenerator) filterByCategory(tokens map[string]any) map[string]any {
 	if g.Category == "" || tokens == nil {
 		return tokens
 	}
 
-	result := make(map[string]interface{})
+	result := make(map[string]any)
 	for k, v := range tokens {
 		if g.matchesCategory(k) {
 			result[k] = v

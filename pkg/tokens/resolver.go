@@ -3,13 +3,14 @@ package tokens
 import (
 	"fmt"
 	"regexp"
+	"slices"
 	"strings"
 )
 
 // Resolver handles the resolution of token references ({path.to.token})
 type Resolver struct {
-	flatTokens map[string]interface{}
-	cache      map[string]interface{}
+	flatTokens map[string]any
+	cache      map[string]any
 	stack      []string // Cycle detection stack
 	exprEval   *ExpressionEvaluator
 }
@@ -19,13 +20,13 @@ var refRegex = regexp.MustCompile(`\{([^}]+)\}`)
 
 // NewResolver creates a new resolver from a dictionary
 func NewResolver(d *Dictionary) (*Resolver, error) {
-	flat := make(map[string]interface{})
+	flat := make(map[string]any)
 	if err := flatten(d.Root, "", flat); err != nil {
 		return nil, err
 	}
 	r := &Resolver{
 		flatTokens: flat,
-		cache:      make(map[string]interface{}),
+		cache:      make(map[string]any),
 		stack:      []string{},
 	}
 	// Create expression evaluator with reference to this resolver
@@ -34,8 +35,8 @@ func NewResolver(d *Dictionary) (*Resolver, error) {
 }
 
 // ResolveAll resolves all tokens in the dictionary
-func (r *Resolver) ResolveAll() (map[string]interface{}, error) {
-	resolved := make(map[string]interface{})
+func (r *Resolver) ResolveAll() (map[string]any, error) {
+	resolved := make(map[string]any)
 	for path, val := range r.flatTokens {
 		r.stack = []string{} // Reset stack for each root token
 		res, err := r.ResolveValue(path, val)
@@ -48,7 +49,7 @@ func (r *Resolver) ResolveAll() (map[string]interface{}, error) {
 }
 
 // ResolveValue resolves a value that might contain references or expressions
-func (r *Resolver) ResolveValue(path string, value interface{}) (interface{}, error) {
+func (r *Resolver) ResolveValue(path string, value any) (any, error) {
 	// If it's not a string, it can't contain a reference (in this spec version)
 	// Unless it's a composite value which we don't fully support resolving *inside* yet
 	valStr, ok := value.(string)
@@ -67,10 +68,8 @@ func (r *Resolver) ResolveValue(path string, value interface{}) (interface{}, er
 	}
 
 	// Cycle detection
-	for _, p := range r.stack {
-		if p == path {
-			return nil, fmt.Errorf("circular dependency detected: %s -> %s", strings.Join(r.stack, " -> "), path)
-		}
+	if slices.Contains(r.stack, path) {
+		return nil, fmt.Errorf("circular dependency detected: %s -> %s", strings.Join(r.stack, " -> "), path)
 	}
 	r.stack = append(r.stack, path)
 	defer func() {
@@ -111,12 +110,10 @@ func (r *Resolver) ResolveValue(path string, value interface{}) (interface{}, er
 }
 
 // resolveExpression evaluates an expression value
-func (r *Resolver) resolveExpression(path string, expr string) (interface{}, error) {
+func (r *Resolver) resolveExpression(path string, expr string) (any, error) {
 	// Cycle detection
-	for _, p := range r.stack {
-		if p == path {
-			return nil, fmt.Errorf("circular dependency detected: %s -> %s", strings.Join(r.stack, " -> "), path)
-		}
+	if slices.Contains(r.stack, path) {
+		return nil, fmt.Errorf("circular dependency detected: %s -> %s", strings.Join(r.stack, " -> "), path)
 	}
 	r.stack = append(r.stack, path)
 	defer func() {
@@ -133,7 +130,7 @@ func (r *Resolver) resolveExpression(path string, expr string) (interface{}, err
 	return result, nil
 }
 
-func (r *Resolver) resolveReference(path string) (interface{}, error) {
+func (r *Resolver) resolveReference(path string) (any, error) {
 	// Check cache
 	if val, ok := r.cache[path]; ok {
 		return val, nil
@@ -157,7 +154,7 @@ func (r *Resolver) resolveReference(path string) (interface{}, error) {
 }
 
 // flatten walks the dictionary and flattens it into dot-notation paths mapping to $value
-func flatten(node map[string]interface{}, currentPath string, result map[string]interface{}) error {
+func flatten(node map[string]any, currentPath string, result map[string]any) error {
 	if IsToken(node) {
 		result[currentPath] = node["$value"]
 		return nil
@@ -168,7 +165,7 @@ func flatten(node map[string]interface{}, currentPath string, result map[string]
 			continue
 		}
 
-		childMap, ok := val.(map[string]interface{})
+		childMap, ok := val.(map[string]any)
 		if !ok {
 			// Skip malformed children
 			continue

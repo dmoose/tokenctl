@@ -101,7 +101,7 @@ func ContentColorWithRatio(background Color, ratio float64) Color {
 	}
 
 	// Binary search for optimal lightness
-	for i := 0; i < 25; i++ {
+	for range 25 {
 		midL := (minL + maxL) / 2
 		testColor := FromOkLch(midL, contentChroma, h).Clamped()
 		testRatio := ContrastRatio(background, testColor)

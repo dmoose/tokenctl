@@ -65,7 +65,7 @@ func IsExpression(value string) bool {
 }
 
 // Evaluate processes an expression string and returns the computed value
-func (e *ExpressionEvaluator) Evaluate(expr string) (interface{}, error) {
+func (e *ExpressionEvaluator) Evaluate(expr string) (any, error) {
 	expr = strings.TrimSpace(expr)
 
 	// Try each expression type
@@ -102,7 +102,7 @@ func (e *ExpressionEvaluator) Evaluate(expr string) (interface{}, error) {
 
 // evaluateCalc evaluates a calc() expression
 // Supports: +, -, *, / with dimensions and token references
-func (e *ExpressionEvaluator) evaluateCalc(inner string) (interface{}, error) {
+func (e *ExpressionEvaluator) evaluateCalc(inner string) (any, error) {
 	// First, resolve all token references in the expression
 	resolved, err := e.resolveTokensInExpression(inner)
 	if err != nil {

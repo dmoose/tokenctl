@@ -74,7 +74,7 @@ func NewLayerValidator(d *Dictionary) *LayerValidator {
 }
 
 // extractLayers walks the dictionary and builds the layer map
-func (v *LayerValidator) extractLayers(node map[string]interface{}, currentPath string, inheritedLayer string) {
+func (v *LayerValidator) extractLayers(node map[string]any, currentPath string, inheritedLayer string) {
 	// Check for $layer at this level
 	currentLayer := inheritedLayer
 	if layer, ok := node["$layer"].(string); ok {
@@ -93,7 +93,7 @@ func (v *LayerValidator) extractLayers(node map[string]interface{}, currentPath 
 			continue
 		}
 
-		childMap, ok := val.(map[string]interface{})
+		childMap, ok := val.(map[string]any)
 		if !ok {
 			continue
 		}
@@ -123,7 +123,7 @@ func (v *LayerValidator) ValidateReferences(d *Dictionary) []LayerViolation {
 }
 
 // walkAndValidate recursively validates layer references
-func (v *LayerValidator) walkAndValidate(d *Dictionary, node map[string]interface{}, currentPath string, violations *[]LayerViolation) {
+func (v *LayerValidator) walkAndValidate(d *Dictionary, node map[string]any, currentPath string, violations *[]LayerViolation) {
 	if IsToken(node) {
 		value, ok := node["$value"].(string)
 		if !ok {
@@ -166,7 +166,7 @@ func (v *LayerValidator) walkAndValidate(d *Dictionary, node map[string]interfac
 			continue
 		}
 
-		childMap, ok := val.(map[string]interface{})
+		childMap, ok := val.(map[string]any)
 		if !ok {
 			continue
 		}

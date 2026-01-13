@@ -19,7 +19,7 @@ type Constraint struct {
 
 // ParseConstraints extracts $min and $max from a token definition
 // Returns nil if no constraints are defined
-func ParseConstraints(token map[string]interface{}) (*Constraint, error) {
+func ParseConstraints(token map[string]any) (*Constraint, error) {
 	minVal, hasMin := token["$min"]
 	maxVal, hasMax := token["$max"]
 
@@ -52,7 +52,7 @@ func ParseConstraints(token map[string]interface{}) (*Constraint, error) {
 }
 
 // parseConstraintValue parses a single constraint value (min or max)
-func parseConstraintValue(val interface{}, c *Constraint, isMin bool) error {
+func parseConstraintValue(val any, c *Constraint, isMin bool) error {
 	switch v := val.(type) {
 	case float64:
 		c.IsNumber = true
@@ -136,7 +136,7 @@ func (c *Constraint) validate() error {
 
 // CheckValue validates that a value satisfies the constraint
 // Returns an error describing the violation, or nil if valid
-func (c *Constraint) CheckValue(value interface{}) error {
+func (c *Constraint) CheckValue(value any) error {
 	if c == nil {
 		return nil
 	}
@@ -148,7 +148,7 @@ func (c *Constraint) CheckValue(value interface{}) error {
 }
 
 // checkNumber validates a numeric value against constraints
-func (c *Constraint) checkNumber(value interface{}) error {
+func (c *Constraint) checkNumber(value any) error {
 	var num float64
 
 	switch v := value.(type) {
@@ -178,7 +178,7 @@ func (c *Constraint) checkNumber(value interface{}) error {
 }
 
 // checkDimension validates a dimension value against constraints
-func (c *Constraint) checkDimension(value interface{}) error {
+func (c *Constraint) checkDimension(value any) error {
 	var dim Dimension
 
 	switch v := value.(type) {
