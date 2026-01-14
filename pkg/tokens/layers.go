@@ -42,11 +42,11 @@ func CanReference(fromLayer, toLayer Layer) bool {
 
 // LayerViolation represents a layer reference violation
 type LayerViolation struct {
-	TokenPath   string
-	TokenLayer  Layer
-	RefPath     string
-	RefLayer    Layer
-	SourceFile  string
+	TokenPath  string
+	TokenLayer Layer
+	RefPath    string
+	RefLayer   Layer
+	SourceFile string
 }
 
 func (v LayerViolation) Error() string {

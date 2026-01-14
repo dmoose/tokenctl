@@ -302,9 +302,9 @@ func TestCSSGenerator_DeterministicOutput(t *testing.T) {
 	g := NewCSSGenerator()
 	ctx := &GenerationContext{
 		ResolvedTokens: map[string]interface{}{
-			"z.last":    "3",
-			"a.first":   "1",
-			"m.middle":  "2",
+			"z.last":   "3",
+			"a.first":  "1",
+			"m.middle": "2",
 		},
 	}
 
