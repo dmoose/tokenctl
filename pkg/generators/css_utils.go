@@ -5,13 +5,13 @@ import (
 	"strings"
 )
 
-// SerializeValue converts any interface{} to a CSS value string
+// SerializeValue converts any any to a CSS value string
 // For arrays, uses comma separation (safe default for most CSS properties)
-func SerializeValue(val interface{}) string {
+func SerializeValue(val any) string {
 	switch v := val.(type) {
 	case string:
 		return v
-	case []interface{}:
+	case []any:
 		parts := make([]string, len(v))
 		for i, item := range v {
 			parts[i] = fmt.Sprintf("%v", item)
@@ -26,11 +26,11 @@ func SerializeValue(val interface{}) string {
 // Different CSS properties require different separators for array values:
 // - Space-separated: margin, padding, border-width, border-radius, etc.
 // - Comma-separated: font-family, box-shadow, text-shadow, transform, transition
-func SerializeValueForProperty(property string, val interface{}) string {
+func SerializeValueForProperty(property string, val any) string {
 	switch v := val.(type) {
 	case string:
 		return v
-	case []interface{}:
+	case []any:
 		separator := getArraySeparator(property)
 		parts := make([]string, len(v))
 		for i, item := range v {

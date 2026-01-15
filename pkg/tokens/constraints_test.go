@@ -7,7 +7,7 @@ import (
 )
 
 func TestParseConstraints_NoConstraints(t *testing.T) {
-	token := map[string]interface{}{
+	token := map[string]any{
 		"$value": "10px",
 		"$type":  "dimension",
 	}
@@ -22,7 +22,7 @@ func TestParseConstraints_NoConstraints(t *testing.T) {
 }
 
 func TestParseConstraints_DimensionMinOnly(t *testing.T) {
-	token := map[string]interface{}{
+	token := map[string]any{
 		"$value": "10px",
 		"$type":  "dimension",
 		"$min":   "5px",
@@ -34,12 +34,14 @@ func TestParseConstraints_DimensionMinOnly(t *testing.T) {
 	}
 	if constraint == nil {
 		t.Fatal("expected constraint, got nil")
+		return // unreachable, but satisfies staticcheck
 	}
 	if constraint.IsNumber {
 		t.Error("expected dimension constraint, got number")
 	}
 	if constraint.Min == nil {
 		t.Fatal("expected min constraint")
+		return // unreachable, but satisfies staticcheck
 	}
 	if constraint.Min.Value != 5 || constraint.Min.Unit != "px" {
 		t.Errorf("expected min 5px, got %s", constraint.Min.String())
@@ -50,7 +52,7 @@ func TestParseConstraints_DimensionMinOnly(t *testing.T) {
 }
 
 func TestParseConstraints_DimensionMaxOnly(t *testing.T) {
-	token := map[string]interface{}{
+	token := map[string]any{
 		"$value": "10px",
 		"$type":  "dimension",
 		"$max":   "20px",
@@ -62,9 +64,11 @@ func TestParseConstraints_DimensionMaxOnly(t *testing.T) {
 	}
 	if constraint == nil {
 		t.Fatal("expected constraint, got nil")
+		return // unreachable, but satisfies staticcheck
 	}
 	if constraint.Max == nil {
 		t.Fatal("expected max constraint")
+		return // unreachable, but satisfies staticcheck
 	}
 	if constraint.Max.Value != 20 || constraint.Max.Unit != "px" {
 		t.Errorf("expected max 20px, got %s", constraint.Max.String())
@@ -72,7 +76,7 @@ func TestParseConstraints_DimensionMaxOnly(t *testing.T) {
 }
 
 func TestParseConstraints_DimensionMinAndMax(t *testing.T) {
-	token := map[string]interface{}{
+	token := map[string]any{
 		"$value": "2.5rem",
 		"$type":  "dimension",
 		"$min":   "1rem",
@@ -85,9 +89,11 @@ func TestParseConstraints_DimensionMinAndMax(t *testing.T) {
 	}
 	if constraint == nil {
 		t.Fatal("expected constraint, got nil")
+		return // unreachable, but satisfies staticcheck
 	}
 	if constraint.Min == nil || constraint.Max == nil {
 		t.Fatal("expected both min and max constraints")
+		return // unreachable, but satisfies staticcheck
 	}
 	if constraint.Min.Value != 1 || constraint.Min.Unit != "rem" {
 		t.Errorf("expected min 1rem, got %s", constraint.Min.String())
@@ -98,7 +104,7 @@ func TestParseConstraints_DimensionMinAndMax(t *testing.T) {
 }
 
 func TestParseConstraints_NumberConstraints(t *testing.T) {
-	token := map[string]interface{}{
+	token := map[string]any{
 		"$value": 0.5,
 		"$type":  "number",
 		"$min":   0.0,
@@ -124,7 +130,7 @@ func TestParseConstraints_NumberConstraints(t *testing.T) {
 }
 
 func TestParseConstraints_IntConstraints(t *testing.T) {
-	token := map[string]interface{}{
+	token := map[string]any{
 		"$value": 5,
 		"$type":  "number",
 		"$min":   1,
@@ -144,7 +150,7 @@ func TestParseConstraints_IntConstraints(t *testing.T) {
 }
 
 func TestParseConstraints_InvalidMinGreaterThanMax(t *testing.T) {
-	token := map[string]interface{}{
+	token := map[string]any{
 		"$value": "10px",
 		"$type":  "dimension",
 		"$min":   "20px",
@@ -158,7 +164,7 @@ func TestParseConstraints_InvalidMinGreaterThanMax(t *testing.T) {
 }
 
 func TestParseConstraints_MismatchedUnits(t *testing.T) {
-	token := map[string]interface{}{
+	token := map[string]any{
 		"$value": "10px",
 		"$type":  "dimension",
 		"$min":   "1rem",
@@ -172,7 +178,7 @@ func TestParseConstraints_MismatchedUnits(t *testing.T) {
 }
 
 func TestConstraint_CheckValue_DimensionInRange(t *testing.T) {
-	token := map[string]interface{}{
+	token := map[string]any{
 		"$min": "5px",
 		"$max": "20px",
 	}
@@ -214,7 +220,7 @@ func TestConstraint_CheckValue_NumberInRange(t *testing.T) {
 
 	tests := []struct {
 		name    string
-		value   interface{}
+		value   any
 		wantErr bool
 	}{
 		{"middle", 0.5, false},
@@ -238,7 +244,7 @@ func TestConstraint_CheckValue_NumberInRange(t *testing.T) {
 }
 
 func TestConstraint_CheckValue_UnitMismatch(t *testing.T) {
-	token := map[string]interface{}{
+	token := map[string]any{
 		"$min": "5px",
 		"$max": "20px",
 	}
@@ -255,7 +261,7 @@ func TestConstraint_CheckValue_UnitMismatch(t *testing.T) {
 }
 
 func TestConstraint_CheckValue_InvalidDimension(t *testing.T) {
-	token := map[string]interface{}{
+	token := map[string]any{
 		"$min": "5px",
 		"$max": "20px",
 	}
@@ -330,7 +336,7 @@ func TestConstraint_String(t *testing.T) {
 }
 
 func TestParseConstraints_StringNumber(t *testing.T) {
-	token := map[string]interface{}{
+	token := map[string]any{
 		"$value": "5",
 		"$min":   "0",
 		"$max":   "10",
@@ -349,7 +355,7 @@ func TestParseConstraints_StringNumber(t *testing.T) {
 }
 
 func TestParseConstraints_InvalidConstraintValue(t *testing.T) {
-	token := map[string]interface{}{
+	token := map[string]any{
 		"$value": "10px",
 		"$min":   "invalid",
 	}
@@ -361,7 +367,7 @@ func TestParseConstraints_InvalidConstraintValue(t *testing.T) {
 }
 
 func TestParseConstraints_UnsupportedType(t *testing.T) {
-	token := map[string]interface{}{
+	token := map[string]any{
 		"$value": "10px",
 		"$min":   []string{"invalid"},
 	}

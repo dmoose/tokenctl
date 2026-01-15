@@ -53,12 +53,12 @@ func TestLoader_LoadBase(t *testing.T) {
 	}
 
 	// Verify base contains the brand color
-	color, ok := dict.Root["color"].(map[string]interface{})
+	color, ok := dict.Root["color"].(map[string]any)
 	if !ok {
 		t.Fatal("Expected color group in base")
 	}
 
-	primary, ok := color["primary"].(map[string]interface{})
+	primary, ok := color["primary"].(map[string]any)
 	if !ok {
 		t.Fatal("Expected primary token in base")
 	}
@@ -121,12 +121,12 @@ func TestLoader_LoadThemes(t *testing.T) {
 		t.Fatal("Expected light theme")
 	}
 
-	color, ok := lightTheme.Root["color"].(map[string]interface{})
+	color, ok := lightTheme.Root["color"].(map[string]any)
 	if !ok {
 		t.Fatal("Expected color group in light theme")
 	}
 
-	primary, ok := color["primary"].(map[string]interface{})
+	primary, ok := color["primary"].(map[string]any)
 	if !ok {
 		t.Fatal("Expected primary token in light theme")
 	}
@@ -141,12 +141,12 @@ func TestLoader_LoadThemes(t *testing.T) {
 		t.Fatal("Expected dark theme")
 	}
 
-	color, ok = darkTheme.Root["color"].(map[string]interface{})
+	color, ok = darkTheme.Root["color"].(map[string]any)
 	if !ok {
 		t.Fatal("Expected color group in dark theme")
 	}
 
-	primary, ok = color["primary"].(map[string]interface{})
+	primary, ok = color["primary"].(map[string]any)
 	if !ok {
 		t.Fatal("Expected primary token in dark theme")
 	}
@@ -163,9 +163,9 @@ func TestLoader_MergeConflictWarnings(t *testing.T) {
 	defer log.SetOutput(os.Stderr)
 
 	dict1 := &Dictionary{
-		Root: map[string]interface{}{
-			"spacing": map[string]interface{}{
-				"base": map[string]interface{}{
+		Root: map[string]any{
+			"spacing": map[string]any{
+				"base": map[string]any{
 					"$value": "1rem",
 				},
 			},
@@ -173,9 +173,9 @@ func TestLoader_MergeConflictWarnings(t *testing.T) {
 	}
 
 	dict2 := &Dictionary{
-		Root: map[string]interface{}{
-			"spacing": map[string]interface{}{
-				"base": map[string]interface{}{
+		Root: map[string]any{
+			"spacing": map[string]any{
+				"base": map[string]any{
 					"$value": "2rem",
 				},
 			},
@@ -194,8 +194,8 @@ func TestLoader_MergeConflictWarnings(t *testing.T) {
 	}
 
 	// Verify the second value won
-	spacing := dict1.Root["spacing"].(map[string]interface{})
-	base := spacing["base"].(map[string]interface{})
+	spacing := dict1.Root["spacing"].(map[string]any)
+	base := spacing["base"].(map[string]any)
 	if base["$value"] != "2rem" {
 		t.Errorf("Expected 2rem (second value), got %v", base["$value"])
 	}
@@ -208,9 +208,9 @@ func TestLoader_MergeNoWarnings(t *testing.T) {
 	defer log.SetOutput(os.Stderr)
 
 	dict1 := &Dictionary{
-		Root: map[string]interface{}{
-			"spacing": map[string]interface{}{
-				"base": map[string]interface{}{
+		Root: map[string]any{
+			"spacing": map[string]any{
+				"base": map[string]any{
 					"$value": "1rem",
 				},
 			},
@@ -218,9 +218,9 @@ func TestLoader_MergeNoWarnings(t *testing.T) {
 	}
 
 	dict2 := &Dictionary{
-		Root: map[string]interface{}{
-			"spacing": map[string]interface{}{
-				"base": map[string]interface{}{
+		Root: map[string]any{
+			"spacing": map[string]any{
+				"base": map[string]any{
 					"$value": "2rem",
 				},
 			},
@@ -246,9 +246,9 @@ func TestLoader_TypeMismatchWarning(t *testing.T) {
 	defer log.SetOutput(os.Stderr)
 
 	dict1 := &Dictionary{
-		Root: map[string]interface{}{
-			"value": map[string]interface{}{
-				"item": map[string]interface{}{
+		Root: map[string]any{
+			"value": map[string]any{
+				"item": map[string]any{
 					"$value": "original",
 				},
 			},
@@ -256,7 +256,7 @@ func TestLoader_TypeMismatchWarning(t *testing.T) {
 	}
 
 	dict2 := &Dictionary{
-		Root: map[string]interface{}{
+		Root: map[string]any{
 			"value": "string-not-map",
 		},
 	}
@@ -327,9 +327,9 @@ func TestParseJSON(t *testing.T) {
 
 func TestDictionary_WriteJSON(t *testing.T) {
 	dict := &Dictionary{
-		Root: map[string]interface{}{
-			"color": map[string]interface{}{
-				"primary": map[string]interface{}{
+		Root: map[string]any{
+			"color": map[string]any{
+				"primary": map[string]any{
 					"$value": "#3b82f6",
 					"$type":  "color",
 				},
@@ -389,34 +389,34 @@ func TestLoader_InvalidJSON(t *testing.T) {
 
 func TestDeepCopy(t *testing.T) {
 	original := &Dictionary{
-		Root: map[string]interface{}{
-			"color": map[string]interface{}{
-				"primary": map[string]interface{}{
+		Root: map[string]any{
+			"color": map[string]any{
+				"primary": map[string]any{
 					"$value": "#fff",
 				},
 			},
-			"array": []interface{}{"a", "b", "c"},
+			"array": []any{"a", "b", "c"},
 		},
 	}
 
 	copy := original.DeepCopy()
 
 	// Modify copy
-	color := copy.Root["color"].(map[string]interface{})
-	primary := color["primary"].(map[string]interface{})
+	color := copy.Root["color"].(map[string]any)
+	primary := color["primary"].(map[string]any)
 	primary["$value"] = "#000"
 
-	arr := copy.Root["array"].([]interface{})
+	arr := copy.Root["array"].([]any)
 	arr[0] = "modified"
 
 	// Verify original is unchanged
-	origColor := original.Root["color"].(map[string]interface{})
-	origPrimary := origColor["primary"].(map[string]interface{})
+	origColor := original.Root["color"].(map[string]any)
+	origPrimary := origColor["primary"].(map[string]any)
 	if origPrimary["$value"] != "#fff" {
 		t.Error("Deep copy modified original map")
 	}
 
-	origArr := original.Root["array"].([]interface{})
+	origArr := original.Root["array"].([]any)
 	if origArr[0] != "a" {
 		t.Error("Deep copy modified original array")
 	}

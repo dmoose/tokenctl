@@ -7,14 +7,14 @@ import (
 func TestResolveValue(t *testing.T) {
 	tests := []struct {
 		name      string
-		tokens    map[string]interface{}
+		tokens    map[string]any
 		input     string
-		expected  interface{}
+		expected  any
 		expectErr bool
 	}{
 		{
 			name: "Simple Resolution",
-			tokens: map[string]interface{}{
+			tokens: map[string]any{
 				"color.red": "#f00",
 			},
 			input:    "{color.red}",
@@ -22,7 +22,7 @@ func TestResolveValue(t *testing.T) {
 		},
 		{
 			name: "Interpolation",
-			tokens: map[string]interface{}{
+			tokens: map[string]any{
 				"color.red": "#f00",
 			},
 			input:    "1px solid {color.red}",
@@ -30,7 +30,7 @@ func TestResolveValue(t *testing.T) {
 		},
 		{
 			name: "Deep Resolution",
-			tokens: map[string]interface{}{
+			tokens: map[string]any{
 				"a": "{b}",
 				"b": "{c}",
 				"c": "val",
@@ -40,7 +40,7 @@ func TestResolveValue(t *testing.T) {
 		},
 		{
 			name: "Missing Reference",
-			tokens: map[string]interface{}{
+			tokens: map[string]any{
 				"a": "val",
 			},
 			input:     "{missing}",
@@ -48,7 +48,7 @@ func TestResolveValue(t *testing.T) {
 		},
 		{
 			name: "Direct Cycle",
-			tokens: map[string]interface{}{
+			tokens: map[string]any{
 				"a": "{b}",
 				"b": "{a}",
 			},
@@ -57,7 +57,7 @@ func TestResolveValue(t *testing.T) {
 		},
 		{
 			name: "Indirect Cycle",
-			tokens: map[string]interface{}{
+			tokens: map[string]any{
 				"a": "{b}",
 				"b": "{c}",
 				"c": "{a}",
@@ -72,7 +72,7 @@ func TestResolveValue(t *testing.T) {
 			// Manually construct flat tokens for resolver since we are testing core logic
 			r := &Resolver{
 				flatTokens: tt.tokens,
-				cache:      make(map[string]interface{}),
+				cache:      make(map[string]any),
 				stack:      []string{},
 			}
 

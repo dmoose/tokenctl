@@ -11,9 +11,9 @@ import (
 
 // serializeValueForCSS converts any value to a proper CSS string
 // Handles arrays by joining with appropriate separator based on value type
-func serializeValueForCSS(val interface{}) string {
+func serializeValueForCSS(val any) string {
 	switch v := val.(type) {
-	case []interface{}:
+	case []any:
 		// Arrays are comma-separated for CSS custom properties
 		parts := make([]string, len(v))
 		for i, item := range v {
@@ -44,7 +44,7 @@ func serializeValueForCSS(val interface{}) string {
 // GenerationContext provides all necessary data for generation
 type GenerationContext struct {
 	BaseDict         *tokens.Dictionary                    // Original base dictionary (unresolved)
-	ResolvedTokens   map[string]interface{}                // Flattened, resolved atomic tokens
+	ResolvedTokens   map[string]any                // Flattened, resolved atomic tokens
 	Components       map[string]tokens.ComponentDefinition // Extracted components
 	Themes           map[string]ThemeContext               // Theme-specific contexts
 	PropertyTokens   []tokens.PropertyToken                // Tokens with $property for @property declarations
@@ -55,8 +55,8 @@ type GenerationContext struct {
 // ThemeContext provides theme-specific generation data
 type ThemeContext struct {
 	Dict           *tokens.Dictionary     // Full theme dictionary
-	ResolvedTokens map[string]interface{} // Resolved tokens for this theme
-	DiffTokens     map[string]interface{} // Only tokens that differ from base
+	ResolvedTokens map[string]any // Resolved tokens for this theme
+	DiffTokens     map[string]any // Only tokens that differ from base
 }
 
 // TailwindGenerator generates Tailwind 4 CSS
@@ -141,7 +141,7 @@ func (g *TailwindGenerator) generatePropertyDeclarations(properties []tokens.Pro
 }
 
 // generateBaseTheme creates the root @theme block with base tokens
-func (g *TailwindGenerator) generateBaseTheme(resolvedTokens map[string]interface{}) (string, error) {
+func (g *TailwindGenerator) generateBaseTheme(resolvedTokens map[string]any) (string, error) {
 	var sb strings.Builder
 	sb.WriteString("@import \"tailwindcss\";\n\n")
 	sb.WriteString("@theme {\n")
@@ -156,7 +156,7 @@ func (g *TailwindGenerator) generateBaseTheme(resolvedTokens map[string]interfac
 	for _, path := range keys {
 		value := resolvedTokens[path]
 		// Skip non-primitive values (shouldn't happen in resolved tokens, but defensive)
-		if _, ok := value.(map[string]interface{}); ok {
+		if _, ok := value.(map[string]any); ok {
 			continue
 		}
 
@@ -300,7 +300,7 @@ func (g *TailwindGenerator) buildStateSelector(className, stateKey string) strin
 }
 
 // writeProperties writes CSS properties with proper indentation and serialization
-func (g *TailwindGenerator) writeProperties(sb *strings.Builder, props map[string]interface{}, indent int) {
+func (g *TailwindGenerator) writeProperties(sb *strings.Builder, props map[string]any, indent int) {
 	if len(props) == 0 {
 		return
 	}
@@ -328,7 +328,7 @@ func (g *TailwindGenerator) writeProperties(sb *strings.Builder, props map[strin
 		// Resolve all token references to var(--token)
 		val := resolveTokenReferences(valStr)
 
-		sb.WriteString(fmt.Sprintf("%s%s: %s;\n", padding, k, val))
+		fmt.Fprintf(sb, "%s%s: %s;\n", padding, k, val)
 	}
 }
 
@@ -336,7 +336,7 @@ func (g *TailwindGenerator) writeProperties(sb *strings.Builder, props map[strin
 
 // GenerateFromResolved is deprecated - use Generate with GenerationContext
 // Kept for backwards compatibility with existing tests
-func (g *TailwindGenerator) GenerateFromResolved(tokens map[string]interface{}) (string, error) {
+func (g *TailwindGenerator) GenerateFromResolved(tokens map[string]any) (string, error) {
 	return g.generateBaseTheme(tokens)
 }
 

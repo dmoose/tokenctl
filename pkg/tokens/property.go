@@ -10,7 +10,7 @@ import (
 // PropertyToken represents a token that should generate a CSS @property declaration
 type PropertyToken struct {
 	Path         string      // Token path (e.g., "color.primary")
-	Value        interface{} // Resolved value
+	Value        any // Resolved value
 	Type         string      // Token type (color, dimension, number, etc.)
 	Inherits     bool        // CSS @property inherits value
 	CSSName      string      // CSS variable name (e.g., "--color-primary")
@@ -39,13 +39,13 @@ func CSSPropertySyntax(tokenType string) string {
 
 // ExtractPropertyTokens scans the dictionary for tokens with $property field
 // and returns PropertyToken entries for each one found
-func ExtractPropertyTokens(dict *Dictionary, resolvedTokens map[string]interface{}) []PropertyToken {
+func ExtractPropertyTokens(dict *Dictionary, resolvedTokens map[string]any) []PropertyToken {
 	var properties []PropertyToken
 	extractPropertyTokensRecursive(dict.Root, "", resolvedTokens, &properties, "")
 	return properties
 }
 
-func extractPropertyTokensRecursive(node map[string]interface{}, currentPath string, resolvedTokens map[string]interface{}, properties *[]PropertyToken, inheritedType string) {
+func extractPropertyTokensRecursive(node map[string]any, currentPath string, resolvedTokens map[string]any, properties *[]PropertyToken, inheritedType string) {
 	// Check for $type at this level to pass to children
 	currentType := inheritedType
 	if t, ok := node["$type"].(string); ok {
@@ -83,7 +83,7 @@ func extractPropertyTokensRecursive(node map[string]interface{}, currentPath str
 			if !v {
 				return // $property: false means skip
 			}
-		case map[string]interface{}:
+		case map[string]any:
 			// $property: { inherits: false }
 			if inh, ok := v["inherits"].(bool); ok {
 				inherits = inh
@@ -120,7 +120,7 @@ func extractPropertyTokensRecursive(node map[string]interface{}, currentPath str
 			continue
 		}
 
-		childMap, ok := val.(map[string]interface{})
+		childMap, ok := val.(map[string]any)
 		if !ok {
 			continue
 		}
@@ -135,9 +135,9 @@ func extractPropertyTokensRecursive(node map[string]interface{}, currentPath str
 }
 
 // formatInitialValue converts a resolved value to a CSS initial-value string
-func formatInitialValue(val interface{}) string {
+func formatInitialValue(val any) string {
 	switch v := val.(type) {
-	case []interface{}:
+	case []any:
 		// Arrays are comma-separated
 		parts := make([]string, len(v))
 		for i, item := range v {

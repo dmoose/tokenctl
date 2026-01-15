@@ -30,7 +30,7 @@ func ExpandScales(d *Dictionary) error {
 	return expandScalesRecursive(d, d.Root, "")
 }
 
-func expandScalesRecursive(d *Dictionary, node map[string]interface{}, currentPath string) error {
+func expandScalesRecursive(d *Dictionary, node map[string]any, currentPath string) error {
 	// Collect keys to avoid modifying map during iteration
 	keys := make([]string, 0, len(node))
 	for k := range node {
@@ -42,7 +42,7 @@ func expandScalesRecursive(d *Dictionary, node map[string]interface{}, currentPa
 			continue
 		}
 
-		val, ok := node[key].(map[string]interface{})
+		val, ok := node[key].(map[string]any)
 		if !ok {
 			continue
 		}
@@ -55,7 +55,7 @@ func expandScalesRecursive(d *Dictionary, node map[string]interface{}, currentPa
 		// Check if this is a token with $scale
 		if IsToken(val) {
 			if scaleVal, hasScale := val["$scale"]; hasScale {
-				scaleMap, ok := scaleVal.(map[string]interface{})
+				scaleMap, ok := scaleVal.(map[string]any)
 				if !ok {
 					return fmt.Errorf("%s: $scale must be an object", childPath)
 				}
@@ -77,7 +77,7 @@ func expandScalesRecursive(d *Dictionary, node map[string]interface{}, currentPa
 }
 
 // expandScaleToken creates new tokens for each scale factor
-func expandScaleToken(d *Dictionary, parent map[string]interface{}, baseKey, basePath string, baseToken map[string]interface{}, scale map[string]interface{}) error {
+func expandScaleToken(d *Dictionary, parent map[string]any, baseKey, basePath string, baseToken map[string]any, scale map[string]any) error {
 	// Get the base token's type and description for inheritance
 	baseType, _ := baseToken["$type"].(string)
 	baseDesc, _ := baseToken["$description"].(string)
@@ -102,7 +102,7 @@ func expandScaleToken(d *Dictionary, parent map[string]interface{}, baseKey, bas
 			newValue = fmt.Sprintf("calc({%s} * %g)", basePath, factor)
 		}
 
-		newToken := map[string]interface{}{
+		newToken := map[string]any{
 			"$value": newValue,
 		}
 
@@ -134,7 +134,7 @@ func expandScaleToken(d *Dictionary, parent map[string]interface{}, baseKey, bas
 }
 
 // toFloat64 converts various numeric types to float64
-func toFloat64(v interface{}) (float64, bool) {
+func toFloat64(v any) (float64, bool) {
 	switch n := v.(type) {
 	case float64:
 		return n, true
@@ -152,8 +152,8 @@ func toFloat64(v interface{}) (float64, bool) {
 }
 
 // StandardScale returns the DaisyUI-style size scale factors
-func StandardScale() map[string]interface{} {
-	return map[string]interface{}{
+func StandardScale() map[string]any {
+	return map[string]any{
 		"xs": 0.6,
 		"sm": 0.8,
 		"md": 1.0,
@@ -163,8 +163,8 @@ func StandardScale() map[string]interface{} {
 }
 
 // TypographyScale returns a typographic scale (based on major third)
-func TypographyScale() map[string]interface{} {
-	return map[string]interface{}{
+func TypographyScale() map[string]any {
+	return map[string]any{
 		"xs":  0.64,  // 1 / 1.25^2
 		"sm":  0.8,   // 1 / 1.25
 		"md":  1.0,   // base

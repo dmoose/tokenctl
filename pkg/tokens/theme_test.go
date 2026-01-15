@@ -8,33 +8,33 @@ import (
 func TestInherit(t *testing.T) {
 	tests := []struct {
 		name     string
-		base     map[string]interface{}
-		theme    map[string]interface{}
-		expected map[string]interface{}
+		base     map[string]any
+		theme    map[string]any
+		expected map[string]any
 	}{
 		{
 			name: "Simple Override",
-			base: map[string]interface{}{
+			base: map[string]any{
 				"color.primary":   "#000",
 				"color.secondary": "#111",
 			},
-			theme: map[string]interface{}{
+			theme: map[string]any{
 				"color.primary": "#fff",
 			},
-			expected: map[string]interface{}{
+			expected: map[string]any{
 				"color.primary":   "#fff",
 				"color.secondary": "#111",
 			},
 		},
 		{
 			name: "Add New Token",
-			base: map[string]interface{}{
+			base: map[string]any{
 				"a": 1,
 			},
-			theme: map[string]interface{}{
+			theme: map[string]any{
 				"b": 2,
 			},
-			expected: map[string]interface{}{
+			expected: map[string]any{
 				"a": 1,
 				"b": 2,
 			},
@@ -61,48 +61,48 @@ func TestInherit(t *testing.T) {
 func TestResolveThemeInheritance(t *testing.T) {
 	tests := []struct {
 		name      string
-		base      map[string]interface{}
-		themes    map[string]map[string]interface{}
-		expected  map[string]map[string]interface{}
+		base      map[string]any
+		themes    map[string]map[string]any
+		expected  map[string]map[string]any
 		expectErr bool
 		errMsg    string
 	}{
 		{
 			name: "No Inheritance - Simple Themes",
-			base: map[string]interface{}{
-				"color": map[string]interface{}{
-					"primary": map[string]interface{}{
+			base: map[string]any{
+				"color": map[string]any{
+					"primary": map[string]any{
 						"$value": "#000",
 					},
 				},
 			},
-			themes: map[string]map[string]interface{}{
+			themes: map[string]map[string]any{
 				"light": {
-					"color": map[string]interface{}{
-						"primary": map[string]interface{}{
+					"color": map[string]any{
+						"primary": map[string]any{
 							"$value": "#fff",
 						},
 					},
 				},
 				"dark": {
-					"color": map[string]interface{}{
-						"primary": map[string]interface{}{
+					"color": map[string]any{
+						"primary": map[string]any{
 							"$value": "#111",
 						},
 					},
 				},
 			},
-			expected: map[string]map[string]interface{}{
+			expected: map[string]map[string]any{
 				"light": {
-					"color": map[string]interface{}{
-						"primary": map[string]interface{}{
+					"color": map[string]any{
+						"primary": map[string]any{
 							"$value": "#fff",
 						},
 					},
 				},
 				"dark": {
-					"color": map[string]interface{}{
-						"primary": map[string]interface{}{
+					"color": map[string]any{
+						"primary": map[string]any{
 							"$value": "#111",
 						},
 					},
@@ -111,50 +111,50 @@ func TestResolveThemeInheritance(t *testing.T) {
 		},
 		{
 			name: "Single Level Inheritance",
-			base: map[string]interface{}{
-				"color": map[string]interface{}{
-					"primary": map[string]interface{}{
+			base: map[string]any{
+				"color": map[string]any{
+					"primary": map[string]any{
 						"$value": "#000",
 					},
-					"secondary": map[string]interface{}{
+					"secondary": map[string]any{
 						"$value": "#666",
 					},
 				},
 			},
-			themes: map[string]map[string]interface{}{
+			themes: map[string]map[string]any{
 				"light": {
-					"color": map[string]interface{}{
-						"primary": map[string]interface{}{
+					"color": map[string]any{
+						"primary": map[string]any{
 							"$value": "#fff",
 						},
 					},
 				},
 				"dark": {
 					"$extends": "light",
-					"color": map[string]interface{}{
-						"primary": map[string]interface{}{
+					"color": map[string]any{
+						"primary": map[string]any{
 							"$value": "#111",
 						},
 					},
 				},
 			},
-			expected: map[string]map[string]interface{}{
+			expected: map[string]map[string]any{
 				"light": {
-					"color": map[string]interface{}{
-						"primary": map[string]interface{}{
+					"color": map[string]any{
+						"primary": map[string]any{
 							"$value": "#fff",
 						},
-						"secondary": map[string]interface{}{
+						"secondary": map[string]any{
 							"$value": "#666",
 						},
 					},
 				},
 				"dark": {
-					"color": map[string]interface{}{
-						"primary": map[string]interface{}{
+					"color": map[string]any{
+						"primary": map[string]any{
 							"$value": "#111",
 						},
-						"secondary": map[string]interface{}{
+						"secondary": map[string]any{
 							"$value": "#666",
 						},
 					},
@@ -163,56 +163,56 @@ func TestResolveThemeInheritance(t *testing.T) {
 		},
 		{
 			name: "Multi-Level Inheritance Chain",
-			base: map[string]interface{}{
-				"spacing": map[string]interface{}{
-					"base": map[string]interface{}{
+			base: map[string]any{
+				"spacing": map[string]any{
+					"base": map[string]any{
 						"$value": "1rem",
 					},
 				},
 			},
-			themes: map[string]map[string]interface{}{
+			themes: map[string]map[string]any{
 				"compact": {
-					"spacing": map[string]interface{}{
-						"base": map[string]interface{}{
+					"spacing": map[string]any{
+						"base": map[string]any{
 							"$value": "0.5rem",
 						},
 					},
 				},
 				"comfortable": {
 					"$extends": "compact",
-					"spacing": map[string]interface{}{
-						"base": map[string]interface{}{
+					"spacing": map[string]any{
+						"base": map[string]any{
 							"$value": "1.5rem",
 						},
 					},
 				},
 				"spacious": {
 					"$extends": "comfortable",
-					"spacing": map[string]interface{}{
-						"base": map[string]interface{}{
+					"spacing": map[string]any{
+						"base": map[string]any{
 							"$value": "2rem",
 						},
 					},
 				},
 			},
-			expected: map[string]map[string]interface{}{
+			expected: map[string]map[string]any{
 				"compact": {
-					"spacing": map[string]interface{}{
-						"base": map[string]interface{}{
+					"spacing": map[string]any{
+						"base": map[string]any{
 							"$value": "0.5rem",
 						},
 					},
 				},
 				"comfortable": {
-					"spacing": map[string]interface{}{
-						"base": map[string]interface{}{
+					"spacing": map[string]any{
+						"base": map[string]any{
 							"$value": "1.5rem",
 						},
 					},
 				},
 				"spacious": {
-					"spacing": map[string]interface{}{
-						"base": map[string]interface{}{
+					"spacing": map[string]any{
+						"base": map[string]any{
 							"$value": "2rem",
 						},
 					},
@@ -221,14 +221,14 @@ func TestResolveThemeInheritance(t *testing.T) {
 		},
 		{
 			name: "Direct Circular Dependency",
-			base: map[string]interface{}{
-				"color": map[string]interface{}{
-					"primary": map[string]interface{}{
+			base: map[string]any{
+				"color": map[string]any{
+					"primary": map[string]any{
 						"$value": "#000",
 					},
 				},
 			},
-			themes: map[string]map[string]interface{}{
+			themes: map[string]map[string]any{
 				"theme-a": {
 					"$extends": "theme-a",
 				},
@@ -238,14 +238,14 @@ func TestResolveThemeInheritance(t *testing.T) {
 		},
 		{
 			name: "Indirect Circular Dependency",
-			base: map[string]interface{}{
-				"color": map[string]interface{}{
-					"primary": map[string]interface{}{
+			base: map[string]any{
+				"color": map[string]any{
+					"primary": map[string]any{
 						"$value": "#000",
 					},
 				},
 			},
-			themes: map[string]map[string]interface{}{
+			themes: map[string]map[string]any{
 				"theme-a": {
 					"$extends": "theme-b",
 				},
@@ -261,14 +261,14 @@ func TestResolveThemeInheritance(t *testing.T) {
 		},
 		{
 			name: "Missing Parent Theme",
-			base: map[string]interface{}{
-				"color": map[string]interface{}{
-					"primary": map[string]interface{}{
+			base: map[string]any{
+				"color": map[string]any{
+					"primary": map[string]any{
 						"$value": "#000",
 					},
 				},
 			},
-			themes: map[string]map[string]interface{}{
+			themes: map[string]map[string]any{
 				"child": {
 					"$extends": "nonexistent",
 				},
@@ -278,14 +278,14 @@ func TestResolveThemeInheritance(t *testing.T) {
 		},
 		{
 			name: "Invalid $extends Type",
-			base: map[string]interface{}{
-				"color": map[string]interface{}{
-					"primary": map[string]interface{}{
+			base: map[string]any{
+				"color": map[string]any{
+					"primary": map[string]any{
 						"$value": "#000",
 					},
 				},
 			},
-			themes: map[string]map[string]interface{}{
+			themes: map[string]map[string]any{
 				"invalid": {
 					"$extends": 123, // Should be string
 				},
@@ -295,17 +295,17 @@ func TestResolveThemeInheritance(t *testing.T) {
 		},
 		{
 			name: "$extends Metadata is Cleaned",
-			base: map[string]interface{}{
-				"color": map[string]interface{}{
-					"primary": map[string]interface{}{
+			base: map[string]any{
+				"color": map[string]any{
+					"primary": map[string]any{
 						"$value": "#000",
 					},
 				},
 			},
-			themes: map[string]map[string]interface{}{
+			themes: map[string]map[string]any{
 				"parent": {
-					"color": map[string]interface{}{
-						"primary": map[string]interface{}{
+					"color": map[string]any{
+						"primary": map[string]any{
 							"$value": "#fff",
 						},
 					},
@@ -315,17 +315,17 @@ func TestResolveThemeInheritance(t *testing.T) {
 					"$schema":  "should-be-removed",
 				},
 			},
-			expected: map[string]map[string]interface{}{
+			expected: map[string]map[string]any{
 				"parent": {
-					"color": map[string]interface{}{
-						"primary": map[string]interface{}{
+					"color": map[string]any{
+						"primary": map[string]any{
 							"$value": "#fff",
 						},
 					},
 				},
 				"child": {
-					"color": map[string]interface{}{
-						"primary": map[string]interface{}{
+					"color": map[string]any{
+						"primary": map[string]any{
 							"$value": "#fff",
 						},
 					},
@@ -399,46 +399,46 @@ func contains(s, substr string) bool {
 func TestDiff(t *testing.T) {
 	tests := []struct {
 		name     string
-		target   map[string]interface{}
-		base     map[string]interface{}
-		expected map[string]interface{}
+		target   map[string]any
+		base     map[string]any
+		expected map[string]any
 	}{
 		{
 			name: "No Changes",
-			target: map[string]interface{}{
+			target: map[string]any{
 				"a": 1,
 				"b": 2,
 			},
-			base: map[string]interface{}{
+			base: map[string]any{
 				"a": 1,
 				"b": 2,
 			},
-			expected: map[string]interface{}{},
+			expected: map[string]any{},
 		},
 		{
 			name: "One Change",
-			target: map[string]interface{}{
+			target: map[string]any{
 				"a": 1,
 				"b": 3, // Changed from 2
 			},
-			base: map[string]interface{}{
+			base: map[string]any{
 				"a": 1,
 				"b": 2,
 			},
-			expected: map[string]interface{}{
+			expected: map[string]any{
 				"b": 3,
 			},
 		},
 		{
 			name: "New Key",
-			target: map[string]interface{}{
+			target: map[string]any{
 				"a": 1,
 				"c": 4, // New
 			},
-			base: map[string]interface{}{
+			base: map[string]any{
 				"a": 1,
 			},
-			expected: map[string]interface{}{
+			expected: map[string]any{
 				"c": 4,
 			},
 		},
@@ -447,14 +447,14 @@ func TestDiff(t *testing.T) {
 			// If target doesn't have it, it's not in the diff (inheritance implies target is a superset)
 			// But Diff function logic is: keys FROM target that differ.
 			// So if base has 'a' but target doesn't, 'a' is not in output.
-			target: map[string]interface{}{
+			target: map[string]any{
 				"b": 2,
 			},
-			base: map[string]interface{}{
+			base: map[string]any{
 				"a": 1,
 				"b": 2,
 			},
-			expected: map[string]interface{}{},
+			expected: map[string]any{},
 		},
 	}
 

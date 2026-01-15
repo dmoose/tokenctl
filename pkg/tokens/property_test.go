@@ -33,14 +33,14 @@ func TestCSSPropertySyntax(t *testing.T) {
 
 func TestExtractPropertyTokens_Basic(t *testing.T) {
 	dict := &Dictionary{
-		Root: map[string]interface{}{
-			"color": map[string]interface{}{
+		Root: map[string]any{
+			"color": map[string]any{
 				"$type": "color",
-				"primary": map[string]interface{}{
+				"primary": map[string]any{
 					"$value":    "oklch(50% 0.2 250)",
 					"$property": true,
 				},
-				"secondary": map[string]interface{}{
+				"secondary": map[string]any{
 					"$value": "#8b5cf6",
 					// No $property - should not be included
 				},
@@ -48,7 +48,7 @@ func TestExtractPropertyTokens_Basic(t *testing.T) {
 		},
 	}
 
-	resolved := map[string]interface{}{
+	resolved := map[string]any{
 		"color.primary":   "oklch(50% 0.2 250)",
 		"color.secondary": "#8b5cf6",
 	}
@@ -80,14 +80,14 @@ func TestExtractPropertyTokens_Basic(t *testing.T) {
 
 func TestExtractPropertyTokens_InheritsFromParentType(t *testing.T) {
 	dict := &Dictionary{
-		Root: map[string]interface{}{
-			"spacing": map[string]interface{}{
+		Root: map[string]any{
+			"spacing": map[string]any{
 				"$type": "dimension",
-				"sm": map[string]interface{}{
+				"sm": map[string]any{
 					"$value":    "0.5rem",
 					"$property": true,
 				},
-				"md": map[string]interface{}{
+				"md": map[string]any{
 					"$value":    "1rem",
 					"$property": true,
 				},
@@ -95,7 +95,7 @@ func TestExtractPropertyTokens_InheritsFromParentType(t *testing.T) {
 		},
 	}
 
-	resolved := map[string]interface{}{
+	resolved := map[string]any{
 		"spacing.sm": "0.5rem",
 		"spacing.md": "1rem",
 	}
@@ -115,12 +115,12 @@ func TestExtractPropertyTokens_InheritsFromParentType(t *testing.T) {
 
 func TestExtractPropertyTokens_CustomInherits(t *testing.T) {
 	dict := &Dictionary{
-		Root: map[string]interface{}{
-			"timing": map[string]interface{}{
-				"fast": map[string]interface{}{
+		Root: map[string]any{
+			"timing": map[string]any{
+				"fast": map[string]any{
 					"$value": "150ms",
 					"$type":  "duration",
-					"$property": map[string]interface{}{
+					"$property": map[string]any{
 						"inherits": false,
 					},
 				},
@@ -128,7 +128,7 @@ func TestExtractPropertyTokens_CustomInherits(t *testing.T) {
 		},
 	}
 
-	resolved := map[string]interface{}{
+	resolved := map[string]any{
 		"timing.fast": "150ms",
 	}
 
@@ -145,9 +145,9 @@ func TestExtractPropertyTokens_CustomInherits(t *testing.T) {
 
 func TestExtractPropertyTokens_PropertyFalse(t *testing.T) {
 	dict := &Dictionary{
-		Root: map[string]interface{}{
-			"color": map[string]interface{}{
-				"primary": map[string]interface{}{
+		Root: map[string]any{
+			"color": map[string]any{
+				"primary": map[string]any{
 					"$value":    "#3b82f6",
 					"$type":     "color",
 					"$property": false,
@@ -156,7 +156,7 @@ func TestExtractPropertyTokens_PropertyFalse(t *testing.T) {
 		},
 	}
 
-	resolved := map[string]interface{}{
+	resolved := map[string]any{
 		"color.primary": "#3b82f6",
 	}
 
@@ -169,10 +169,10 @@ func TestExtractPropertyTokens_PropertyFalse(t *testing.T) {
 
 func TestExtractPropertyTokens_SkipsUnmappableTypes(t *testing.T) {
 	dict := &Dictionary{
-		Root: map[string]interface{}{
-			"font": map[string]interface{}{
-				"family": map[string]interface{}{
-					"$value":    []interface{}{"Inter", "sans-serif"},
+		Root: map[string]any{
+			"font": map[string]any{
+				"family": map[string]any{
+					"$value":    []any{"Inter", "sans-serif"},
 					"$type":     "fontFamily",
 					"$property": true,
 				},
@@ -180,8 +180,8 @@ func TestExtractPropertyTokens_SkipsUnmappableTypes(t *testing.T) {
 		},
 	}
 
-	resolved := map[string]interface{}{
-		"font.family": []interface{}{"Inter", "sans-serif"},
+	resolved := map[string]any{
+		"font.family": []any{"Inter", "sans-serif"},
 	}
 
 	properties := ExtractPropertyTokens(dict, resolved)
@@ -193,9 +193,9 @@ func TestExtractPropertyTokens_SkipsUnmappableTypes(t *testing.T) {
 
 func TestExtractPropertyTokens_NoTypeSkipped(t *testing.T) {
 	dict := &Dictionary{
-		Root: map[string]interface{}{
-			"custom": map[string]interface{}{
-				"value": map[string]interface{}{
+		Root: map[string]any{
+			"custom": map[string]any{
+				"value": map[string]any{
 					"$value":    "something",
 					"$property": true,
 					// No $type - should be skipped
@@ -204,7 +204,7 @@ func TestExtractPropertyTokens_NoTypeSkipped(t *testing.T) {
 		},
 	}
 
-	resolved := map[string]interface{}{
+	resolved := map[string]any{
 		"custom.value": "something",
 	}
 
@@ -217,21 +217,21 @@ func TestExtractPropertyTokens_NoTypeSkipped(t *testing.T) {
 
 func TestExtractPropertyTokens_NumericValues(t *testing.T) {
 	dict := &Dictionary{
-		Root: map[string]interface{}{
-			"opacity": map[string]interface{}{
+		Root: map[string]any{
+			"opacity": map[string]any{
 				"$type": "number",
-				"half": map[string]interface{}{
+				"half": map[string]any{
 					"$value":    0.5,
 					"$property": true,
 				},
-				"full": map[string]interface{}{
+				"full": map[string]any{
 					"$value":    1.0,
 					"$property": true,
 				},
 			},
-			"effect": map[string]interface{}{
+			"effect": map[string]any{
 				"$type": "effect",
-				"depth": map[string]interface{}{
+				"depth": map[string]any{
 					"$value":    1,
 					"$property": true,
 				},
@@ -239,7 +239,7 @@ func TestExtractPropertyTokens_NumericValues(t *testing.T) {
 		},
 	}
 
-	resolved := map[string]interface{}{
+	resolved := map[string]any{
 		"opacity.half": 0.5,
 		"opacity.full": 1.0,
 		"effect.depth": 1,
@@ -279,15 +279,15 @@ func TestExtractPropertyTokens_NumericValues(t *testing.T) {
 func TestFormatInitialValue(t *testing.T) {
 	tests := []struct {
 		name  string
-		value interface{}
+		value any
 		want  string
 	}{
 		{"string", "oklch(50% 0.2 250)", "oklch(50% 0.2 250)"},
 		{"integer", 42, "42"},
 		{"float whole", 1.0, "1"},
 		{"float decimal", 0.5, "0.5"},
-		{"array string", []interface{}{"a", "b", "c"}, "a, b, c"},
-		{"array mixed", []interface{}{"Inter", "sans-serif"}, "Inter, sans-serif"},
+		{"array string", []any{"a", "b", "c"}, "a, b, c"},
+		{"array mixed", []any{"Inter", "sans-serif"}, "Inter, sans-serif"},
 	}
 
 	for _, tt := range tests {

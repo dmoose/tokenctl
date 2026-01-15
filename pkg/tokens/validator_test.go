@@ -8,18 +8,18 @@ import (
 func TestValidator_BrokenReferences(t *testing.T) {
 	tests := []struct {
 		name           string
-		tokens         map[string]interface{}
+		tokens         map[string]any
 		expectErrors   bool
 		expectedErrMsg string
 	}{
 		{
 			name: "Valid References",
-			tokens: map[string]interface{}{
-				"color": map[string]interface{}{
-					"primary": map[string]interface{}{
+			tokens: map[string]any{
+				"color": map[string]any{
+					"primary": map[string]any{
 						"$value": "#3b82f6",
 					},
-					"secondary": map[string]interface{}{
+					"secondary": map[string]any{
 						"$value": "{color.primary}",
 					},
 				},
@@ -28,9 +28,9 @@ func TestValidator_BrokenReferences(t *testing.T) {
 		},
 		{
 			name: "Missing Reference",
-			tokens: map[string]interface{}{
-				"color": map[string]interface{}{
-					"primary": map[string]interface{}{
+			tokens: map[string]any{
+				"color": map[string]any{
+					"primary": map[string]any{
 						"$value": "{color.nonexistent}",
 					},
 				},
@@ -40,14 +40,14 @@ func TestValidator_BrokenReferences(t *testing.T) {
 		},
 		{
 			name: "Deep Chain Valid",
-			tokens: map[string]interface{}{
-				"a": map[string]interface{}{
+			tokens: map[string]any{
+				"a": map[string]any{
 					"$value": "{b}",
 				},
-				"b": map[string]interface{}{
+				"b": map[string]any{
 					"$value": "{c}",
 				},
-				"c": map[string]interface{}{
+				"c": map[string]any{
 					"$value": "final-value",
 				},
 			},
@@ -55,14 +55,14 @@ func TestValidator_BrokenReferences(t *testing.T) {
 		},
 		{
 			name: "Deep Chain Broken",
-			tokens: map[string]interface{}{
-				"a": map[string]interface{}{
+			tokens: map[string]any{
+				"a": map[string]any{
 					"$value": "{b}",
 				},
-				"b": map[string]interface{}{
+				"b": map[string]any{
 					"$value": "{c}",
 				},
-				"c": map[string]interface{}{
+				"c": map[string]any{
 					"$value": "{missing}",
 				},
 			},
@@ -71,11 +71,11 @@ func TestValidator_BrokenReferences(t *testing.T) {
 		},
 		{
 			name: "Multiple Broken References",
-			tokens: map[string]interface{}{
-				"a": map[string]interface{}{
+			tokens: map[string]any{
+				"a": map[string]any{
 					"$value": "{missing1}",
 				},
-				"b": map[string]interface{}{
+				"b": map[string]any{
 					"$value": "{missing2}",
 				},
 			},
@@ -122,13 +122,13 @@ func TestValidator_BrokenReferences(t *testing.T) {
 func TestValidator_CircularDependencies(t *testing.T) {
 	tests := []struct {
 		name           string
-		tokens         map[string]interface{}
+		tokens         map[string]any
 		expectedErrMsg string
 	}{
 		{
 			name: "Direct Cycle",
-			tokens: map[string]interface{}{
-				"a": map[string]interface{}{
+			tokens: map[string]any{
+				"a": map[string]any{
 					"$value": "{a}",
 				},
 			},
@@ -136,11 +136,11 @@ func TestValidator_CircularDependencies(t *testing.T) {
 		},
 		{
 			name: "Two-Node Cycle",
-			tokens: map[string]interface{}{
-				"a": map[string]interface{}{
+			tokens: map[string]any{
+				"a": map[string]any{
 					"$value": "{b}",
 				},
-				"b": map[string]interface{}{
+				"b": map[string]any{
 					"$value": "{a}",
 				},
 			},
@@ -148,14 +148,14 @@ func TestValidator_CircularDependencies(t *testing.T) {
 		},
 		{
 			name: "Three-Node Cycle",
-			tokens: map[string]interface{}{
-				"a": map[string]interface{}{
+			tokens: map[string]any{
+				"a": map[string]any{
 					"$value": "{b}",
 				},
-				"b": map[string]interface{}{
+				"b": map[string]any{
 					"$value": "{c}",
 				},
-				"c": map[string]interface{}{
+				"c": map[string]any{
 					"$value": "{a}",
 				},
 			},
@@ -163,12 +163,12 @@ func TestValidator_CircularDependencies(t *testing.T) {
 		},
 		{
 			name: "Nested Path Cycle",
-			tokens: map[string]interface{}{
-				"color": map[string]interface{}{
-					"primary": map[string]interface{}{
+			tokens: map[string]any{
+				"color": map[string]any{
+					"primary": map[string]any{
 						"$value": "{color.secondary}",
 					},
-					"secondary": map[string]interface{}{
+					"secondary": map[string]any{
 						"$value": "{color.primary}",
 					},
 				},
@@ -209,15 +209,15 @@ func TestValidator_CircularDependencies(t *testing.T) {
 func TestValidator_SchemaValidation(t *testing.T) {
 	tests := []struct {
 		name         string
-		tokens       map[string]interface{}
+		tokens       map[string]any
 		expectErrors bool
 		errPath      string
 	}{
 		{
 			name: "Valid Schema",
-			tokens: map[string]interface{}{
-				"color": map[string]interface{}{
-					"primary": map[string]interface{}{
+			tokens: map[string]any{
+				"color": map[string]any{
+					"primary": map[string]any{
 						"$value": "#3b82f6",
 						"$type":  "color",
 					},
@@ -227,8 +227,8 @@ func TestValidator_SchemaValidation(t *testing.T) {
 		},
 		{
 			name: "Invalid Child - Primitive Value",
-			tokens: map[string]interface{}{
-				"color": map[string]interface{}{
+			tokens: map[string]any{
+				"color": map[string]any{
 					"invalid": "should-be-object",
 				},
 			},
@@ -237,9 +237,9 @@ func TestValidator_SchemaValidation(t *testing.T) {
 		},
 		{
 			name: "Invalid Child - Array",
-			tokens: map[string]interface{}{
-				"spacing": map[string]interface{}{
-					"values": []interface{}{1, 2, 3},
+			tokens: map[string]any{
+				"spacing": map[string]any{
+					"values": []any{1, 2, 3},
 				},
 			},
 			expectErrors: true,
@@ -247,9 +247,9 @@ func TestValidator_SchemaValidation(t *testing.T) {
 		},
 		{
 			name: "Mixed Valid and Invalid",
-			tokens: map[string]interface{}{
-				"tokens": map[string]interface{}{
-					"valid": map[string]interface{}{
+			tokens: map[string]any{
+				"tokens": map[string]any{
+					"valid": map[string]any{
 						"$value": "ok",
 					},
 					"invalid": 123,
@@ -260,10 +260,10 @@ func TestValidator_SchemaValidation(t *testing.T) {
 		},
 		{
 			name: "Deeply Nested Invalid",
-			tokens: map[string]interface{}{
-				"level1": map[string]interface{}{
-					"level2": map[string]interface{}{
-						"level3": map[string]interface{}{
+			tokens: map[string]any{
+				"level1": map[string]any{
+					"level2": map[string]any{
+						"level3": map[string]any{
 							"bad": []string{"array", "not", "allowed"},
 						},
 					},
@@ -274,11 +274,11 @@ func TestValidator_SchemaValidation(t *testing.T) {
 		},
 		{
 			name: "Metadata Keys Ignored",
-			tokens: map[string]interface{}{
+			tokens: map[string]any{
 				"$schema":  "https://example.com/schema",
 				"$version": "1.0.0",
-				"color": map[string]interface{}{
-					"primary": map[string]interface{}{
+				"color": map[string]any{
+					"primary": map[string]any{
 						"$value":       "#fff",
 						"$type":        "color",
 						"$description": "Primary color",
@@ -327,18 +327,18 @@ func TestValidator_SchemaValidation(t *testing.T) {
 
 func TestValidator_MultipleErrors(t *testing.T) {
 	// Test that validator collects ALL errors, not just the first one
-	tokens := map[string]interface{}{
-		"broken1": map[string]interface{}{
+	tokens := map[string]any{
+		"broken1": map[string]any{
 			"$value": "{missing1}",
 		},
-		"broken2": map[string]interface{}{
+		"broken2": map[string]any{
 			"$value": "{missing2}",
 		},
 		"invalid": 123, // Schema error
-		"cycle1": map[string]interface{}{
+		"cycle1": map[string]any{
 			"$value": "{cycle2}",
 		},
-		"cycle2": map[string]interface{}{
+		"cycle2": map[string]any{
 			"$value": "{cycle1}",
 		},
 	}
@@ -425,7 +425,7 @@ func TestValidationError_WithSourceFile(t *testing.T) {
 func TestValidator_TypeValidation_Color(t *testing.T) {
 	tests := []struct {
 		name         string
-		value        interface{}
+		value        any
 		expectErrors bool
 	}{
 		{"valid hex", "#3b82f6", false},
@@ -443,13 +443,13 @@ func TestValidator_TypeValidation_Color(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			dict := &Dictionary{
-				Root: map[string]interface{}{
-					"color": map[string]interface{}{
-						"base": map[string]interface{}{
+				Root: map[string]any{
+					"color": map[string]any{
+						"base": map[string]any{
 							"$value": "#3b82f6",
 							"$type":  "color",
 						},
-						"test": map[string]interface{}{
+						"test": map[string]any{
 							"$value": tt.value,
 							"$type":  "color",
 						},
@@ -477,7 +477,7 @@ func TestValidator_TypeValidation_Color(t *testing.T) {
 func TestValidator_TypeValidation_Dimension(t *testing.T) {
 	tests := []struct {
 		name         string
-		value        interface{}
+		value        any
 		expectErrors bool
 	}{
 		{"valid px", "10px", false},
@@ -494,13 +494,13 @@ func TestValidator_TypeValidation_Dimension(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			dict := &Dictionary{
-				Root: map[string]interface{}{
-					"size": map[string]interface{}{
-						"base": map[string]interface{}{
+				Root: map[string]any{
+					"size": map[string]any{
+						"base": map[string]any{
 							"$value": "1rem",
 							"$type":  "dimension",
 						},
-						"test": map[string]interface{}{
+						"test": map[string]any{
 							"$value": tt.value,
 							"$type":  "dimension",
 						},
@@ -528,7 +528,7 @@ func TestValidator_TypeValidation_Dimension(t *testing.T) {
 func TestValidator_TypeValidation_Number(t *testing.T) {
 	tests := []struct {
 		name         string
-		value        interface{}
+		value        any
 		expectErrors bool
 	}{
 		{"valid float", 0.5, false},
@@ -541,13 +541,13 @@ func TestValidator_TypeValidation_Number(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			dict := &Dictionary{
-				Root: map[string]interface{}{
-					"opacity": map[string]interface{}{
-						"base": map[string]interface{}{
+				Root: map[string]any{
+					"opacity": map[string]any{
+						"base": map[string]any{
 							"$value": 1.0,
 							"$type":  "number",
 						},
-						"test": map[string]interface{}{
+						"test": map[string]any{
 							"$value": tt.value,
 							"$type":  "number",
 						},
@@ -575,24 +575,24 @@ func TestValidator_TypeValidation_Number(t *testing.T) {
 func TestValidator_TypeValidation_FontFamily(t *testing.T) {
 	tests := []struct {
 		name         string
-		value        interface{}
+		value        any
 		expectErrors bool
 	}{
 		{"valid string", "Arial, sans-serif", false},
-		{"valid array", []interface{}{"Arial", "Helvetica", "sans-serif"}, false},
+		{"valid array", []any{"Arial", "Helvetica", "sans-serif"}, false},
 		{"empty string", "", true},
-		{"empty array", []interface{}{}, true},
-		{"array with empty string", []interface{}{"Arial", ""}, true},
-		{"array with non-string", []interface{}{"Arial", 123}, true},
+		{"empty array", []any{}, true},
+		{"array with empty string", []any{"Arial", ""}, true},
+		{"array with non-string", []any{"Arial", 123}, true},
 		{"invalid type", 123, true},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			dict := &Dictionary{
-				Root: map[string]interface{}{
-					"font": map[string]interface{}{
-						"test": map[string]interface{}{
+				Root: map[string]any{
+					"font": map[string]any{
+						"test": map[string]any{
 							"$value": tt.value,
 							"$type":  "fontFamily",
 						},
@@ -620,7 +620,7 @@ func TestValidator_TypeValidation_FontFamily(t *testing.T) {
 func TestValidator_TypeValidation_Effect(t *testing.T) {
 	tests := []struct {
 		name         string
-		value        interface{}
+		value        any
 		expectErrors bool
 	}{
 		{"valid 0", 0, false},
@@ -638,13 +638,13 @@ func TestValidator_TypeValidation_Effect(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			dict := &Dictionary{
-				Root: map[string]interface{}{
-					"effect": map[string]interface{}{
-						"base": map[string]interface{}{
+				Root: map[string]any{
+					"effect": map[string]any{
+						"base": map[string]any{
 							"$value": 1,
 							"$type":  "effect",
 						},
-						"test": map[string]interface{}{
+						"test": map[string]any{
 							"$value": tt.value,
 							"$type":  "effect",
 						},
@@ -672,13 +672,13 @@ func TestValidator_TypeValidation_Effect(t *testing.T) {
 func TestValidator_ConstraintValidation(t *testing.T) {
 	tests := []struct {
 		name         string
-		token        map[string]interface{}
+		token        map[string]any
 		expectErrors bool
 		errContains  string
 	}{
 		{
 			name: "dimension in range",
-			token: map[string]interface{}{
+			token: map[string]any{
 				"$value": "2.5rem",
 				"$type":  "dimension",
 				"$min":   "1rem",
@@ -688,7 +688,7 @@ func TestValidator_ConstraintValidation(t *testing.T) {
 		},
 		{
 			name: "dimension below min",
-			token: map[string]interface{}{
+			token: map[string]any{
 				"$value": "0.5rem",
 				"$type":  "dimension",
 				"$min":   "1rem",
@@ -699,7 +699,7 @@ func TestValidator_ConstraintValidation(t *testing.T) {
 		},
 		{
 			name: "dimension above max",
-			token: map[string]interface{}{
+			token: map[string]any{
 				"$value": "10rem",
 				"$type":  "dimension",
 				"$min":   "1rem",
@@ -710,7 +710,7 @@ func TestValidator_ConstraintValidation(t *testing.T) {
 		},
 		{
 			name: "number in range",
-			token: map[string]interface{}{
+			token: map[string]any{
 				"$value": 0.5,
 				"$type":  "number",
 				"$min":   0.0,
@@ -720,7 +720,7 @@ func TestValidator_ConstraintValidation(t *testing.T) {
 		},
 		{
 			name: "number below min",
-			token: map[string]interface{}{
+			token: map[string]any{
 				"$value": -0.5,
 				"$type":  "number",
 				"$min":   0.0,
@@ -731,7 +731,7 @@ func TestValidator_ConstraintValidation(t *testing.T) {
 		},
 		{
 			name: "invalid constraint definition",
-			token: map[string]interface{}{
+			token: map[string]any{
 				"$value": "10px",
 				"$min":   "20px",
 				"$max":   "10px",
@@ -744,8 +744,8 @@ func TestValidator_ConstraintValidation(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			dict := &Dictionary{
-				Root: map[string]interface{}{
-					"test": map[string]interface{}{
+				Root: map[string]any{
+					"test": map[string]any{
 						"token": tt.token,
 					},
 				},
@@ -784,12 +784,12 @@ func TestValidator_ConstraintValidation(t *testing.T) {
 func TestValidator_SourceFileTracking(t *testing.T) {
 	// Create a dictionary with source file annotations
 	dict := &Dictionary{
-		Root: map[string]interface{}{
-			"color": map[string]interface{}{
-				"primary": map[string]interface{}{
+		Root: map[string]any{
+			"color": map[string]any{
+				"primary": map[string]any{
 					"$value": "{color.nonexistent}",
 				},
-				"secondary": map[string]interface{}{
+				"secondary": map[string]any{
 					"$value": "#fff",
 				},
 			},

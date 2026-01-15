@@ -71,7 +71,7 @@ func runSearch(cmd *cobra.Command, args []string) error {
 	// Filter and collect results
 	type searchResult struct {
 		Path        string
-		Value       interface{}
+		Value       any
 		Type        string
 		Description string
 	}
@@ -80,7 +80,7 @@ func runSearch(cmd *cobra.Command, args []string) error {
 
 	for path, value := range resolved {
 		// Skip non-atomic values
-		if _, ok := value.(map[string]interface{}); ok {
+		if _, ok := value.(map[string]any); ok {
 			continue
 		}
 
@@ -137,7 +137,7 @@ func runSearch(cmd *cobra.Command, args []string) error {
 }
 
 // matchesSearch checks if a token matches the search criteria
-func matchesSearch(path string, value interface{}, meta *tokens.TokenMetadata, query, filterType, filterCategory string) bool {
+func matchesSearch(path string, value any, meta *tokens.TokenMetadata, query, filterType, filterCategory string) bool {
 	pathLower := strings.ToLower(path)
 
 	// Query filter (matches path or description)
@@ -169,8 +169,8 @@ func matchesSearch(path string, value interface{}, meta *tokens.TokenMetadata, q
 
 // getCategory extracts the first segment of a token path
 func getCategory(path string) string {
-	if idx := strings.Index(path, "."); idx != -1 {
-		return path[:idx]
+	if category, _, found := strings.Cut(path, "."); found {
+		return category
 	}
 	return path
 }
@@ -199,9 +199,9 @@ func matchesCategory(category, filter string) bool {
 }
 
 // formatValue converts a value to a display string
-func formatValue(value interface{}) string {
+func formatValue(value any) string {
 	switch v := value.(type) {
-	case []interface{}:
+	case []any:
 		parts := make([]string, len(v))
 		for i, item := range v {
 			parts[i] = fmt.Sprintf("%v", item)

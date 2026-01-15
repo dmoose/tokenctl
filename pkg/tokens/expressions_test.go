@@ -39,7 +39,7 @@ func TestIsExpression(t *testing.T) {
 }
 
 // Helper to create a resolver with test tokens
-func createTestResolver(tokens map[string]interface{}) *Resolver {
+func createTestResolver(tokens map[string]any) *Resolver {
 	dict := NewDictionary()
 
 	// Build nested structure from flat tokens
@@ -50,15 +50,15 @@ func createTestResolver(tokens map[string]interface{}) *Resolver {
 		for i, part := range parts {
 			if i == len(parts)-1 {
 				// Last part - create token
-				current[part] = map[string]interface{}{
+				current[part] = map[string]any{
 					"$value": value,
 				}
 			} else {
 				// Intermediate part - create/get group
 				if _, ok := current[part]; !ok {
-					current[part] = make(map[string]interface{})
+					current[part] = make(map[string]any)
 				}
-				current = current[part].(map[string]interface{})
+				current = current[part].(map[string]any)
 			}
 		}
 	}
@@ -70,56 +70,56 @@ func createTestResolver(tokens map[string]interface{}) *Resolver {
 func TestExpressionEvaluator_Calc(t *testing.T) {
 	tests := []struct {
 		name    string
-		tokens  map[string]interface{}
+		tokens  map[string]any
 		expr    string
 		want    string
 		wantErr bool
 	}{
 		{
 			name:   "multiply dimension by number",
-			tokens: map[string]interface{}{"size.base": "2.5rem"},
+			tokens: map[string]any{"size.base": "2.5rem"},
 			expr:   "calc({size.base} * 0.6)",
 			want:   "1.5rem",
 		},
 		{
 			name:   "multiply by 1.0 (no change)",
-			tokens: map[string]interface{}{"size.base": "2.5rem"},
+			tokens: map[string]any{"size.base": "2.5rem"},
 			expr:   "calc({size.base} * 1)",
 			want:   "2.5rem",
 		},
 		{
 			name:   "multiply pixel value",
-			tokens: map[string]interface{}{"size.field": "40px"},
+			tokens: map[string]any{"size.field": "40px"},
 			expr:   "calc({size.field} * 0.8)",
 			want:   "32px",
 		},
 		{
 			name:   "divide dimension",
-			tokens: map[string]interface{}{"size.large": "24px"},
+			tokens: map[string]any{"size.large": "24px"},
 			expr:   "calc({size.large} / 2)",
 			want:   "12px",
 		},
 		{
 			name:   "add dimensions",
-			tokens: map[string]interface{}{"spacing.sm": "0.5rem", "spacing.md": "1rem"},
+			tokens: map[string]any{"spacing.sm": "0.5rem", "spacing.md": "1rem"},
 			expr:   "calc({spacing.sm} + {spacing.md})",
 			want:   "1.5rem",
 		},
 		{
 			name:    "missing token reference",
-			tokens:  map[string]interface{}{},
+			tokens:  map[string]any{},
 			expr:    "calc({missing.token} * 2)",
 			wantErr: true,
 		},
 		{
 			name:    "incompatible units for add",
-			tokens:  map[string]interface{}{"a": "10px", "b": "1rem"},
+			tokens:  map[string]any{"a": "10px", "b": "1rem"},
 			expr:    "calc({a} + {b})",
 			wantErr: true,
 		},
 		{
 			name:    "divide by zero",
-			tokens:  map[string]interface{}{"size": "10px"},
+			tokens:  map[string]any{"size": "10px"},
 			expr:    "calc({size} / 0)",
 			wantErr: true,
 		},
@@ -153,34 +153,34 @@ func TestExpressionEvaluator_Calc(t *testing.T) {
 func TestExpressionEvaluator_Contrast(t *testing.T) {
 	tests := []struct {
 		name    string
-		tokens  map[string]interface{}
+		tokens  map[string]any
 		expr    string
 		wantErr bool
 	}{
 		{
 			name:   "contrast for dark color returns light",
-			tokens: map[string]interface{}{"color.primary": "#1e3a5f"},
+			tokens: map[string]any{"color.primary": "#1e3a5f"},
 			expr:   "contrast({color.primary})",
 		},
 		{
 			name:   "contrast for light color returns dark",
-			tokens: map[string]interface{}{"color.background": "#ffffff"},
+			tokens: map[string]any{"color.background": "#ffffff"},
 			expr:   "contrast({color.background})",
 		},
 		{
 			name:   "contrast for oklch color",
-			tokens: map[string]interface{}{"color.brand": "oklch(49.12% 0.309 275.75)"},
+			tokens: map[string]any{"color.brand": "oklch(49.12% 0.309 275.75)"},
 			expr:   "contrast({color.brand})",
 		},
 		{
 			name:    "contrast with missing token",
-			tokens:  map[string]interface{}{},
+			tokens:  map[string]any{},
 			expr:    "contrast({color.missing})",
 			wantErr: true,
 		},
 		{
 			name:    "contrast with invalid color",
-			tokens:  map[string]interface{}{"color.bad": "not-a-color"},
+			tokens:  map[string]any{"color.bad": "not-a-color"},
 			expr:    "contrast({color.bad})",
 			wantErr: true,
 		},
@@ -222,29 +222,29 @@ func TestExpressionEvaluator_Contrast(t *testing.T) {
 func TestExpressionEvaluator_Darken(t *testing.T) {
 	tests := []struct {
 		name    string
-		tokens  map[string]interface{}
+		tokens  map[string]any
 		expr    string
 		wantErr bool
 	}{
 		{
 			name:   "darken hex color",
-			tokens: map[string]interface{}{"color.primary": "#3b82f6"},
+			tokens: map[string]any{"color.primary": "#3b82f6"},
 			expr:   "darken({color.primary}, 20%)",
 		},
 		{
 			name:   "darken oklch color",
-			tokens: map[string]interface{}{"color.primary": "oklch(60% 0.2 250)"},
+			tokens: map[string]any{"color.primary": "oklch(60% 0.2 250)"},
 			expr:   "darken({color.primary}, 30%)",
 		},
 		{
 			name:    "darken missing token",
-			tokens:  map[string]interface{}{},
+			tokens:  map[string]any{},
 			expr:    "darken({color.missing}, 10%)",
 			wantErr: true,
 		},
 		{
 			name:    "darken invalid color",
-			tokens:  map[string]interface{}{"color.bad": "invalid"},
+			tokens:  map[string]any{"color.bad": "invalid"},
 			expr:    "darken({color.bad}, 10%)",
 			wantErr: true,
 		},
@@ -284,23 +284,23 @@ func TestExpressionEvaluator_Darken(t *testing.T) {
 func TestExpressionEvaluator_Lighten(t *testing.T) {
 	tests := []struct {
 		name    string
-		tokens  map[string]interface{}
+		tokens  map[string]any
 		expr    string
 		wantErr bool
 	}{
 		{
 			name:   "lighten hex color",
-			tokens: map[string]interface{}{"color.primary": "#1e3a5f"},
+			tokens: map[string]any{"color.primary": "#1e3a5f"},
 			expr:   "lighten({color.primary}, 20%)",
 		},
 		{
 			name:   "lighten oklch color",
-			tokens: map[string]interface{}{"color.primary": "oklch(40% 0.2 250)"},
+			tokens: map[string]any{"color.primary": "oklch(40% 0.2 250)"},
 			expr:   "lighten({color.primary}, 30%)",
 		},
 		{
 			name:    "lighten missing token",
-			tokens:  map[string]interface{}{},
+			tokens:  map[string]any{},
 			expr:    "lighten({color.missing}, 10%)",
 			wantErr: true,
 		},
@@ -340,38 +340,38 @@ func TestExpressionEvaluator_Lighten(t *testing.T) {
 func TestExpressionEvaluator_Scale(t *testing.T) {
 	tests := []struct {
 		name    string
-		tokens  map[string]interface{}
+		tokens  map[string]any
 		expr    string
 		want    string
 		wantErr bool
 	}{
 		{
 			name:   "scale up",
-			tokens: map[string]interface{}{"size.base": "2.5rem"},
+			tokens: map[string]any{"size.base": "2.5rem"},
 			expr:   "scale({size.base}, 1.2)",
 			want:   "3rem",
 		},
 		{
 			name:   "scale down",
-			tokens: map[string]interface{}{"size.base": "2.5rem"},
+			tokens: map[string]any{"size.base": "2.5rem"},
 			expr:   "scale({size.base}, 0.6)",
 			want:   "1.5rem",
 		},
 		{
 			name:   "scale pixels",
-			tokens: map[string]interface{}{"size.field": "40px"},
+			tokens: map[string]any{"size.field": "40px"},
 			expr:   "scale({size.field}, 0.5)",
 			want:   "20px",
 		},
 		{
 			name:    "scale missing token",
-			tokens:  map[string]interface{}{},
+			tokens:  map[string]any{},
 			expr:    "scale({size.missing}, 1.5)",
 			wantErr: true,
 		},
 		{
 			name:    "scale invalid dimension",
-			tokens:  map[string]interface{}{"size.bad": "not-a-dimension"},
+			tokens:  map[string]any{"size.bad": "not-a-dimension"},
 			expr:    "scale({size.bad}, 1.5)",
 			wantErr: true,
 		},
@@ -403,7 +403,7 @@ func TestExpressionEvaluator_Scale(t *testing.T) {
 }
 
 func TestExpressionEvaluator_UnrecognizedExpression(t *testing.T) {
-	resolver := createTestResolver(map[string]interface{}{})
+	resolver := createTestResolver(map[string]any{})
 	eval := NewExpressionEvaluator(resolver)
 
 	_, err := eval.Evaluate("unknown({something})")
@@ -419,20 +419,20 @@ func TestExpressionEvaluator_UnrecognizedExpression(t *testing.T) {
 func TestResolverWithExpressions(t *testing.T) {
 	// Test that expressions are evaluated during resolution
 	dict := NewDictionary()
-	dict.Root = map[string]interface{}{
-		"size": map[string]interface{}{
-			"base": map[string]interface{}{
+	dict.Root = map[string]any{
+		"size": map[string]any{
+			"base": map[string]any{
 				"$value": "2.5rem",
 			},
-			"small": map[string]interface{}{
+			"small": map[string]any{
 				"$value": "calc({size.base} * 0.8)",
 			},
 		},
-		"color": map[string]interface{}{
-			"primary": map[string]interface{}{
+		"color": map[string]any{
+			"primary": map[string]any{
 				"$value": "#3b82f6",
 			},
-			"primary-content": map[string]interface{}{
+			"primary-content": map[string]any{
 				"$value": "contrast({color.primary})",
 			},
 		},
@@ -471,34 +471,34 @@ func TestResolverWithExpressions(t *testing.T) {
 func TestExpressionEvaluator_Shade(t *testing.T) {
 	tests := []struct {
 		name    string
-		tokens  map[string]interface{}
+		tokens  map[string]any
 		expr    string
 		wantErr bool
 	}{
 		{
 			name:   "shade level 1 from white",
-			tokens: map[string]interface{}{"color.base": "oklch(100% 0 0)"},
+			tokens: map[string]any{"color.base": "oklch(100% 0 0)"},
 			expr:   "shade({color.base}, 1)",
 		},
 		{
 			name:   "shade level 2 from white",
-			tokens: map[string]interface{}{"color.base": "oklch(100% 0 0)"},
+			tokens: map[string]any{"color.base": "oklch(100% 0 0)"},
 			expr:   "shade({color.base}, 2)",
 		},
 		{
 			name:   "shade hex color",
-			tokens: map[string]interface{}{"color.base": "#ffffff"},
+			tokens: map[string]any{"color.base": "#ffffff"},
 			expr:   "shade({color.base}, 1)",
 		},
 		{
 			name:    "shade missing token",
-			tokens:  map[string]interface{}{},
+			tokens:  map[string]any{},
 			expr:    "shade({color.missing}, 1)",
 			wantErr: true,
 		},
 		{
 			name:    "shade invalid color",
-			tokens:  map[string]interface{}{"color.bad": "not-a-color"},
+			tokens:  map[string]any{"color.bad": "not-a-color"},
 			expr:    "shade({color.bad}, 1)",
 			wantErr: true,
 		},

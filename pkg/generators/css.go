@@ -97,7 +97,7 @@ func (g *CSSGenerator) generatePropertyDeclarations(properties []tokens.Property
 }
 
 // generateRootVariables creates :root block with base tokens in @layer tokens
-func (g *CSSGenerator) generateRootVariables(resolvedTokens map[string]interface{}) (string, error) {
+func (g *CSSGenerator) generateRootVariables(resolvedTokens map[string]any) (string, error) {
 	var sb strings.Builder
 	sb.WriteString("@layer tokens {\n")
 	sb.WriteString("  :root {\n")
@@ -112,7 +112,7 @@ func (g *CSSGenerator) generateRootVariables(resolvedTokens map[string]interface
 	for _, path := range keys {
 		value := resolvedTokens[path]
 		// Skip non-primitive values
-		if _, ok := value.(map[string]interface{}); ok {
+		if _, ok := value.(map[string]any); ok {
 			continue
 		}
 
@@ -193,13 +193,13 @@ func (g *CSSGenerator) generateComponents(components map[string]tokens.Component
 		// Base class
 		if comp.Class != "" {
 			// Separate base properties from nested pseudo-selectors
-			baseProps := make(map[string]interface{})
-			nestedSelectors := make(map[string]map[string]interface{})
+			baseProps := make(map[string]any)
+			nestedSelectors := make(map[string]map[string]any)
 
 			for k, v := range comp.Base {
 				if strings.HasPrefix(k, "&") || strings.HasPrefix(k, ":") {
 					// This is a nested pseudo-selector
-					if nested, ok := v.(map[string]interface{}); ok {
+					if nested, ok := v.(map[string]any); ok {
 						nestedSelectors[k] = nested
 					}
 				} else {
@@ -305,7 +305,7 @@ func (g *CSSGenerator) buildStateSelector(className, stateKey string) string {
 }
 
 // writeProperties writes CSS properties with proper indentation
-func (g *CSSGenerator) writeProperties(sb *strings.Builder, props map[string]interface{}, indent int) {
+func (g *CSSGenerator) writeProperties(sb *strings.Builder, props map[string]any, indent int) {
 	if len(props) == 0 {
 		return
 	}
@@ -328,6 +328,6 @@ func (g *CSSGenerator) writeProperties(sb *strings.Builder, props map[string]int
 		valStr := SerializeValueForProperty(k, v)
 		val := resolveTokenReferences(valStr)
 
-		sb.WriteString(fmt.Sprintf("%s%s: %s;\n", padding, k, val))
+		fmt.Fprintf(sb, "%s%s: %s;\n", padding, k, val)
 	}
 }

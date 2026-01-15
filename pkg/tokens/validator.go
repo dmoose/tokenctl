@@ -84,7 +84,7 @@ func (v *Validator) Validate(d *Dictionary) ([]ValidationError, error) {
 	return errors, nil
 }
 
-func (v *Validator) validateSchema(dict *Dictionary, node map[string]interface{}, currentPath string) []ValidationError {
+func (v *Validator) validateSchema(dict *Dictionary, node map[string]any, currentPath string) []ValidationError {
 	var errors []ValidationError
 
 	if IsToken(node) {
@@ -99,7 +99,7 @@ func (v *Validator) validateSchema(dict *Dictionary, node map[string]interface{}
 			continue
 		}
 
-		childMap, ok := val.(map[string]interface{})
+		childMap, ok := val.(map[string]any)
 		if !ok {
 			childPath := key
 			if currentPath != "" {
@@ -131,12 +131,12 @@ func (v *Validator) validateSchema(dict *Dictionary, node map[string]interface{}
 
 // validateTypes performs type-specific validation including constraints
 // inheritedType is the $type inherited from parent groups
-func (v *Validator) validateTypes(dict *Dictionary, node map[string]interface{}, currentPath string) []ValidationError {
+func (v *Validator) validateTypes(dict *Dictionary, node map[string]any, currentPath string) []ValidationError {
 	return v.validateTypesWithInheritance(dict, node, currentPath, "")
 }
 
 // validateTypesWithInheritance performs type validation with $type inheritance from parent groups
-func (v *Validator) validateTypesWithInheritance(dict *Dictionary, node map[string]interface{}, currentPath string, inheritedType string) []ValidationError {
+func (v *Validator) validateTypesWithInheritance(dict *Dictionary, node map[string]any, currentPath string, inheritedType string) []ValidationError {
 	var errors []ValidationError
 
 	// Check for $type at this level to pass to children
@@ -226,7 +226,7 @@ func (v *Validator) validateTypesWithInheritance(dict *Dictionary, node map[stri
 			continue
 		}
 
-		childMap, ok := val.(map[string]interface{})
+		childMap, ok := val.(map[string]any)
 		if !ok {
 			continue
 		}
@@ -243,16 +243,8 @@ func (v *Validator) validateTypesWithInheritance(dict *Dictionary, node map[stri
 	return errors
 }
 
-// getTokenType extracts the $type from a token (without inheritance - use getTokenTypeWithInheritance)
-func (v *Validator) getTokenType(token map[string]interface{}, path string) string {
-	if t, ok := token["$type"].(string); ok {
-		return t
-	}
-	return ""
-}
-
 // getTokenTypeWithInheritance extracts the $type from a token, using inherited type if not set
-func (v *Validator) getTokenTypeWithInheritance(token map[string]interface{}, path string, inheritedType string) string {
+func (v *Validator) getTokenTypeWithInheritance(token map[string]any, _ string, inheritedType string) string {
 	if t, ok := token["$type"].(string); ok {
 		return t
 	}
@@ -260,7 +252,7 @@ func (v *Validator) getTokenTypeWithInheritance(token map[string]interface{}, pa
 }
 
 // validateConstraints checks $min/$max constraints on a token value
-func (v *Validator) validateConstraints(dict *Dictionary, path string, token map[string]interface{}, value interface{}) []ValidationError {
+func (v *Validator) validateConstraints(dict *Dictionary, path string, token map[string]any, value any) []ValidationError {
 	var errors []ValidationError
 
 	constraint, err := ParseConstraints(token)
@@ -302,7 +294,7 @@ func (v *Validator) validateConstraints(dict *Dictionary, path string, token map
 }
 
 // validateColorFormat ensures a color value is a valid CSS color
-func (v *Validator) validateColorFormat(value interface{}) error {
+func (v *Validator) validateColorFormat(value any) error {
 	strVal, ok := value.(string)
 	if !ok {
 		return fmt.Errorf("expected string, got %T", value)
@@ -325,7 +317,7 @@ func (v *Validator) validateColorFormat(value interface{}) error {
 }
 
 // validateDimension ensures a dimension value has valid format and units
-func (v *Validator) validateDimension(value interface{}) error {
+func (v *Validator) validateDimension(value any) error {
 	strVal, ok := value.(string)
 	if !ok {
 		// Allow numeric zero
@@ -353,7 +345,7 @@ func (v *Validator) validateDimension(value interface{}) error {
 }
 
 // validateNumber ensures a value is numeric
-func (v *Validator) validateNumber(value interface{}) error {
+func (v *Validator) validateNumber(value any) error {
 	switch val := value.(type) {
 	case float64:
 		return nil
@@ -375,14 +367,14 @@ func (v *Validator) validateNumber(value interface{}) error {
 }
 
 // validateFontFamily ensures a font family value is valid
-func (v *Validator) validateFontFamily(value interface{}) error {
+func (v *Validator) validateFontFamily(value any) error {
 	switch val := value.(type) {
 	case string:
 		if strings.TrimSpace(val) == "" {
 			return fmt.Errorf("fontFamily cannot be empty")
 		}
 		return nil
-	case []interface{}:
+	case []any:
 		if len(val) == 0 {
 			return fmt.Errorf("fontFamily array cannot be empty")
 		}
@@ -402,7 +394,7 @@ func (v *Validator) validateFontFamily(value interface{}) error {
 }
 
 // validateEffect ensures an effect value is 0 or 1
-func (v *Validator) validateEffect(value interface{}) error {
+func (v *Validator) validateEffect(value any) error {
 	switch val := value.(type) {
 	case float64:
 		if val != 0 && val != 1 {

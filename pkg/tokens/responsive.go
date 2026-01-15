@@ -3,6 +3,7 @@ package tokens
 
 import (
 	"fmt"
+	"maps"
 	"sort"
 	"strings"
 )
@@ -18,8 +19,8 @@ var DefaultBreakpoints = map[string]string{
 // ResponsiveToken represents a token with breakpoint-specific overrides
 type ResponsiveToken struct {
 	Path       string
-	BaseValue  interface{}
-	Overrides  map[string]interface{} // breakpoint name -> value
+	BaseValue  any
+	Overrides  map[string]any // breakpoint name -> value
 	Type       string
 	SourceFile string
 }
@@ -29,7 +30,7 @@ type ResponsiveToken struct {
 func ExtractBreakpoints(d *Dictionary) map[string]string {
 	breakpoints := make(map[string]string)
 
-	if bp, ok := d.Root["$breakpoints"].(map[string]interface{}); ok {
+	if bp, ok := d.Root["$breakpoints"].(map[string]any); ok {
 		for name, value := range bp {
 			if strVal, ok := value.(string); ok {
 				breakpoints[name] = strVal
@@ -39,9 +40,7 @@ func ExtractBreakpoints(d *Dictionary) map[string]string {
 
 	// If no breakpoints defined, use defaults
 	if len(breakpoints) == 0 {
-		for k, v := range DefaultBreakpoints {
-			breakpoints[k] = v
-		}
+		maps.Copy(breakpoints, DefaultBreakpoints)
 	}
 
 	return breakpoints
@@ -55,7 +54,7 @@ func ExtractResponsiveTokens(d *Dictionary) []ResponsiveToken {
 }
 
 // extractResponsiveRecursive walks the tree looking for $responsive fields
-func extractResponsiveRecursive(d *Dictionary, node map[string]interface{}, currentPath string, inheritedType string, results *[]ResponsiveToken) {
+func extractResponsiveRecursive(d *Dictionary, node map[string]any, currentPath string, inheritedType string, results *[]ResponsiveToken) {
 	// Check for $type at this level
 	currentType := inheritedType
 	if t, ok := node["$type"].(string); ok {
@@ -69,7 +68,7 @@ func extractResponsiveRecursive(d *Dictionary, node map[string]interface{}, curr
 			return
 		}
 
-		responsive, ok := responsiveRaw.(map[string]interface{})
+		responsive, ok := responsiveRaw.(map[string]any)
 		if !ok {
 			return
 		}
@@ -78,12 +77,10 @@ func extractResponsiveRecursive(d *Dictionary, node map[string]interface{}, curr
 			Path:      currentPath,
 			BaseValue: node["$value"],
 			Type:      currentType,
-			Overrides: make(map[string]interface{}),
+			Overrides: make(map[string]any),
 		}
 
-		for breakpoint, value := range responsive {
-			rt.Overrides[breakpoint] = value
-		}
+		maps.Copy(rt.Overrides, responsive)
 
 		if sourceFile, ok := d.SourceFiles[currentPath]; ok {
 			rt.SourceFile = sourceFile
@@ -99,7 +96,7 @@ func extractResponsiveRecursive(d *Dictionary, node map[string]interface{}, curr
 			continue
 		}
 
-		childMap, ok := val.(map[string]interface{})
+		childMap, ok := val.(map[string]any)
 		if !ok {
 			continue
 		}
@@ -177,7 +174,7 @@ func sortBreakpointsBySize(breakpoints map[string]string) []string {
 	for name, value := range breakpoints {
 		// Parse pixel value (assumes format like "640px")
 		var px int
-		fmt.Sscanf(value, "%dpx", &px)
+		_, _ = fmt.Sscanf(value, "%dpx", &px)
 		entries = append(entries, bpEntry{name: name, value: px})
 	}
 

@@ -22,7 +22,7 @@ const (
 // where R, G, B are linearized sRGB values
 func RelativeLuminance(c Color) float64 {
 	// Get linear RGB values (go-colorful provides this)
-	r, g, b := c.Color.LinearRgb()
+	r, g, b := c.LinearRgb()
 
 	// WCAG luminance formula
 	return 0.2126*r + 0.7152*g + 0.0722*b
@@ -137,7 +137,7 @@ func AdjustLightnessForContrast(c Color, reference Color, targetRatio float64, d
 	}
 
 	// Iterate to find optimal lightness
-	for i := 0; i < 20; i++ {
+	for range 20 {
 		testL := (minL + maxL) / 2
 		testColor := FromOkLch(testL, ch, h)
 

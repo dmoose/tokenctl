@@ -11,7 +11,7 @@ import (
 func TestCatalogGenerator_Generate_BasicTokens(t *testing.T) {
 	gen := NewCatalogGenerator()
 
-	resolvedTokens := map[string]interface{}{
+	resolvedTokens := map[string]any{
 		"color.primary":   "#3b82f6",
 		"color.secondary": "#8b5cf6",
 		"spacing.sm":      "0.5rem",
@@ -57,23 +57,23 @@ func TestCatalogGenerator_Generate_BasicTokens(t *testing.T) {
 func TestCatalogGenerator_Generate_WithComponents(t *testing.T) {
 	gen := NewCatalogGenerator()
 
-	resolvedTokens := map[string]interface{}{
+	resolvedTokens := map[string]any{
 		"color.primary": "#3b82f6",
 	}
 
 	components := map[string]tokens.ComponentDefinition{
 		"button": {
 			Class: "btn",
-			Base: map[string]interface{}{
+			Base: map[string]any{
 				"display": "inline-flex",
 			},
 			Variants: map[string]tokens.VariantDef{
-				"primary":   {Class: "btn-primary", Properties: map[string]interface{}{"background": "var(--color-primary)"}},
-				"secondary": {Class: "btn-secondary", Properties: map[string]interface{}{"background": "var(--color-secondary)"}},
+				"primary":   {Class: "btn-primary", Properties: map[string]any{"background": "var(--color-primary)"}},
+				"secondary": {Class: "btn-secondary", Properties: map[string]any{"background": "var(--color-secondary)"}},
 			},
 			Sizes: map[string]tokens.VariantDef{
-				"sm": {Class: "btn-sm", Properties: map[string]interface{}{"padding": "0.25rem 0.5rem"}},
-				"lg": {Class: "btn-lg", Properties: map[string]interface{}{"padding": "0.75rem 1.5rem"}},
+				"sm": {Class: "btn-sm", Properties: map[string]any{"padding": "0.25rem 0.5rem"}},
+				"lg": {Class: "btn-lg", Properties: map[string]any{"padding": "0.75rem 1.5rem"}},
 			},
 		},
 	}
@@ -111,7 +111,7 @@ func TestCatalogGenerator_Generate_WithComponents(t *testing.T) {
 func TestCatalogGenerator_Generate_WithThemes(t *testing.T) {
 	gen := NewCatalogGenerator()
 
-	resolvedTokens := map[string]interface{}{
+	resolvedTokens := map[string]any{
 		"color.primary": "#3b82f6",
 	}
 
@@ -124,20 +124,20 @@ func TestCatalogGenerator_Generate_WithThemes(t *testing.T) {
 		"light": {
 			Extends:     nil, // extends base
 			Description: "Default light theme",
-			ResolvedTokens: map[string]interface{}{
+			ResolvedTokens: map[string]any{
 				"color.primary": "#60a5fa",
 			},
-			DiffTokens: map[string]interface{}{
+			DiffTokens: map[string]any{
 				"color.primary": "#60a5fa",
 			},
 		},
 		"dark": {
 			Extends:     &darkExtends,
 			Description: "Dark theme extends light theme",
-			ResolvedTokens: map[string]interface{}{
+			ResolvedTokens: map[string]any{
 				"color.primary": "#1e40af",
 			},
-			DiffTokens: map[string]interface{}{
+			DiffTokens: map[string]any{
 				"color.primary": "#1e40af",
 			},
 		},
@@ -206,9 +206,9 @@ func TestCatalogGenerator_Generate_FiltersNestedMaps(t *testing.T) {
 	gen := NewCatalogGenerator()
 
 	// Include a nested map that should be filtered out
-	resolvedTokens := map[string]interface{}{
+	resolvedTokens := map[string]any{
 		"color.primary": "#3b82f6",
-		"nested.group": map[string]interface{}{
+		"nested.group": map[string]any{
 			"should": "be filtered",
 		},
 	}
@@ -237,7 +237,7 @@ func TestCatalogGenerator_Generate_FiltersNestedMaps(t *testing.T) {
 func TestCatalogGenerator_Generate_ThemeFiltersNestedMaps(t *testing.T) {
 	gen := NewCatalogGenerator()
 
-	resolvedTokens := map[string]interface{}{
+	resolvedTokens := map[string]any{
 		"color.primary": "#3b82f6",
 	}
 
@@ -246,13 +246,13 @@ func TestCatalogGenerator_Generate_ThemeFiltersNestedMaps(t *testing.T) {
 	themes := map[string]CatalogThemeInput{
 		"light": {
 			Extends: nil,
-			ResolvedTokens: map[string]interface{}{
+			ResolvedTokens: map[string]any{
 				"color.primary": "#60a5fa",
-				"nested.group": map[string]interface{}{
+				"nested.group": map[string]any{
 					"should": "be filtered",
 				},
 			},
-			DiffTokens: map[string]interface{}{
+			DiffTokens: map[string]any{
 				"color.primary": "#60a5fa",
 			},
 		},
@@ -277,7 +277,7 @@ func TestCatalogGenerator_Generate_ThemeFiltersNestedMaps(t *testing.T) {
 func TestCatalogGenerator_Generate_EmptyThemesOmitted(t *testing.T) {
 	gen := NewCatalogGenerator()
 
-	resolvedTokens := map[string]interface{}{
+	resolvedTokens := map[string]any{
 		"color.primary": "#3b82f6",
 	}
 
@@ -302,7 +302,7 @@ func TestCatalogGenerator_Generate_EmptyThemesOmitted(t *testing.T) {
 	}
 
 	// Verify JSON doesn't contain "themes" key
-	var rawCatalog map[string]interface{}
+	var rawCatalog map[string]any
 	if err := json.Unmarshal([]byte(result), &rawCatalog); err != nil {
 		t.Fatalf("Failed to parse raw catalog JSON: %v", err)
 	}
@@ -315,7 +315,7 @@ func TestCatalogGenerator_CategoryFilter_Colors(t *testing.T) {
 	opts := CatalogOptions{Category: "color"}
 	gen := NewCatalogGeneratorWithOptions(opts)
 
-	resolvedTokens := map[string]interface{}{
+	resolvedTokens := map[string]any{
 		"color.primary":   "#3b82f6",
 		"color.secondary": "#8b5cf6",
 		"spacing.sm":      "0.5rem",
@@ -326,7 +326,7 @@ func TestCatalogGenerator_CategoryFilter_Colors(t *testing.T) {
 	components := map[string]tokens.ComponentDefinition{
 		"button": {
 			Class: "btn",
-			Base:  map[string]interface{}{"display": "inline-flex"},
+			Base:  map[string]any{"display": "inline-flex"},
 		},
 	}
 
@@ -366,7 +366,7 @@ func TestCatalogGenerator_CategoryFilter_Components(t *testing.T) {
 	opts := CatalogOptions{Category: "components"}
 	gen := NewCatalogGeneratorWithOptions(opts)
 
-	resolvedTokens := map[string]interface{}{
+	resolvedTokens := map[string]any{
 		"color.primary": "#3b82f6",
 		"spacing.sm":    "0.5rem",
 	}
@@ -374,9 +374,9 @@ func TestCatalogGenerator_CategoryFilter_Components(t *testing.T) {
 	components := map[string]tokens.ComponentDefinition{
 		"button": {
 			Class: "btn",
-			Base:  map[string]interface{}{"display": "inline-flex"},
+			Base:  map[string]any{"display": "inline-flex"},
 			Variants: map[string]tokens.VariantDef{
-				"primary": {Class: "btn-primary", Properties: map[string]interface{}{}},
+				"primary": {Class: "btn-primary", Properties: map[string]any{}},
 			},
 		},
 	}
@@ -406,7 +406,7 @@ func TestCatalogGenerator_CategoryFilter_WithThemes(t *testing.T) {
 	opts := CatalogOptions{Category: "color"}
 	gen := NewCatalogGeneratorWithOptions(opts)
 
-	resolvedTokens := map[string]interface{}{
+	resolvedTokens := map[string]any{
 		"color.primary": "#3b82f6",
 		"spacing.sm":    "0.5rem",
 	}
@@ -416,11 +416,11 @@ func TestCatalogGenerator_CategoryFilter_WithThemes(t *testing.T) {
 	themes := map[string]CatalogThemeInput{
 		"dark": {
 			Extends: nil,
-			ResolvedTokens: map[string]interface{}{
+			ResolvedTokens: map[string]any{
 				"color.primary": "#1e40af",
 				"spacing.sm":    "0.75rem",
 			},
-			DiffTokens: map[string]interface{}{
+			DiffTokens: map[string]any{
 				"color.primary": "#1e40af",
 				"spacing.sm":    "0.75rem",
 			},
@@ -481,8 +481,8 @@ func TestCatalogGenerator_CategoryFilter_PluralSingular(t *testing.T) {
 func TestFilterAtomicTokens(t *testing.T) {
 	tests := []struct {
 		name     string
-		input    map[string]interface{}
-		expected map[string]interface{}
+		input    map[string]any
+		expected map[string]any
 	}{
 		{
 			name:     "nil input",
@@ -491,17 +491,17 @@ func TestFilterAtomicTokens(t *testing.T) {
 		},
 		{
 			name:     "empty map",
-			input:    map[string]interface{}{},
-			expected: map[string]interface{}{},
+			input:    map[string]any{},
+			expected: map[string]any{},
 		},
 		{
 			name: "only atomic values",
-			input: map[string]interface{}{
+			input: map[string]any{
 				"color.primary": "#3b82f6",
 				"spacing.sm":    "0.5rem",
 				"opacity.half":  0.5,
 			},
-			expected: map[string]interface{}{
+			expected: map[string]any{
 				"color.primary": "#3b82f6",
 				"spacing.sm":    "0.5rem",
 				"opacity.half":  0.5,
@@ -509,25 +509,25 @@ func TestFilterAtomicTokens(t *testing.T) {
 		},
 		{
 			name: "mixed atomic and nested",
-			input: map[string]interface{}{
+			input: map[string]any{
 				"color.primary": "#3b82f6",
-				"nested.group": map[string]interface{}{
+				"nested.group": map[string]any{
 					"child": "value",
 				},
 				"spacing.sm": "0.5rem",
 			},
-			expected: map[string]interface{}{
+			expected: map[string]any{
 				"color.primary": "#3b82f6",
 				"spacing.sm":    "0.5rem",
 			},
 		},
 		{
 			name: "only nested maps",
-			input: map[string]interface{}{
-				"group1": map[string]interface{}{"a": "b"},
-				"group2": map[string]interface{}{"c": "d"},
+			input: map[string]any{
+				"group1": map[string]any{"a": "b"},
+				"group2": map[string]any{"c": "d"},
 			},
-			expected: map[string]interface{}{},
+			expected: map[string]any{},
 		},
 	}
 

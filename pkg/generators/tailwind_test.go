@@ -9,7 +9,7 @@ import (
 func TestTailwindGenerator(t *testing.T) {
 	tests := []struct {
 		name        string
-		tokens      map[string]interface{}
+		tokens      map[string]any
 		components  map[string]tokens.ComponentDefinition
 		expected    []string
 		notExpected []string
@@ -19,7 +19,7 @@ func TestTailwindGenerator(t *testing.T) {
 			components: map[string]tokens.ComponentDefinition{
 				"button": {
 					Class: "btn",
-					Base: map[string]interface{}{
+					Base: map[string]any{
 						"display": "block",
 						"$desc":   "should be skipped",
 					},
@@ -39,8 +39,8 @@ func TestTailwindGenerator(t *testing.T) {
 			components: map[string]tokens.ComponentDefinition{
 				"card": {
 					Class: "card",
-					Base: map[string]interface{}{
-						"box-shadow": []interface{}{
+					Base: map[string]any{
+						"box-shadow": []any{
 							"0 1px 2px rgba(0,0,0,0.1)",
 							"0 2px 4px rgba(0,0,0,0.1)",
 						},
@@ -56,7 +56,7 @@ func TestTailwindGenerator(t *testing.T) {
 			components: map[string]tokens.ComponentDefinition{
 				"alert": {
 					Class: "alert",
-					Base: map[string]interface{}{
+					Base: map[string]any{
 						"color": "{color.primary}",
 					},
 				},
@@ -70,7 +70,7 @@ func TestTailwindGenerator(t *testing.T) {
 			components: map[string]tokens.ComponentDefinition{
 				"button": {
 					Class: "btn",
-					Base: map[string]interface{}{
+					Base: map[string]any{
 						"padding": "{spacing.sm} {spacing.md}",
 						"margin":  "{spacing.xs} {spacing.sm} {spacing.md}",
 					},
@@ -90,7 +90,7 @@ func TestTailwindGenerator(t *testing.T) {
 			components: map[string]tokens.ComponentDefinition{
 				"button": {
 					Class: "btn",
-					Base: map[string]interface{}{
+					Base: map[string]any{
 						"border": "1px solid {color.border}",
 					},
 				},
@@ -107,7 +107,7 @@ func TestTailwindGenerator(t *testing.T) {
 			components: map[string]tokens.ComponentDefinition{
 				"button": {
 					Class: "btn",
-					Base: map[string]interface{}{
+					Base: map[string]any{
 						"display": "flex",
 						"padding": "0.5rem 1rem",
 					},
@@ -155,8 +155,8 @@ func TestTailwindGenerator_ArraySerialization(t *testing.T) {
 			components: map[string]tokens.ComponentDefinition{
 				"card": {
 					Class: "card",
-					Base: map[string]interface{}{
-						"margin": []interface{}{"10px", "20px", "10px", "20px"},
+					Base: map[string]any{
+						"margin": []any{"10px", "20px", "10px", "20px"},
 					},
 				},
 			},
@@ -170,8 +170,8 @@ func TestTailwindGenerator_ArraySerialization(t *testing.T) {
 			components: map[string]tokens.ComponentDefinition{
 				"button": {
 					Class: "btn",
-					Base: map[string]interface{}{
-						"padding": []interface{}{"0.5rem", "1rem"},
+					Base: map[string]any{
+						"padding": []any{"0.5rem", "1rem"},
 					},
 				},
 			},
@@ -185,8 +185,8 @@ func TestTailwindGenerator_ArraySerialization(t *testing.T) {
 			components: map[string]tokens.ComponentDefinition{
 				"card": {
 					Class: "card",
-					Base: map[string]interface{}{
-						"box-shadow": []interface{}{
+					Base: map[string]any{
+						"box-shadow": []any{
 							"0 1px 2px rgba(0,0,0,0.1)",
 							"0 2px 4px rgba(0,0,0,0.2)",
 						},
@@ -203,8 +203,8 @@ func TestTailwindGenerator_ArraySerialization(t *testing.T) {
 			components: map[string]tokens.ComponentDefinition{
 				"text": {
 					Class: "text",
-					Base: map[string]interface{}{
-						"font-family": []interface{}{"Inter", "Arial", "sans-serif"},
+					Base: map[string]any{
+						"font-family": []any{"Inter", "Arial", "sans-serif"},
 					},
 				},
 			},
@@ -218,8 +218,8 @@ func TestTailwindGenerator_ArraySerialization(t *testing.T) {
 			components: map[string]tokens.ComponentDefinition{
 				"box": {
 					Class: "box",
-					Base: map[string]interface{}{
-						"border-radius": []interface{}{"4px", "4px", "0", "0"},
+					Base: map[string]any{
+						"border-radius": []any{"4px", "4px", "0", "0"},
 					},
 				},
 			},
@@ -233,8 +233,8 @@ func TestTailwindGenerator_ArraySerialization(t *testing.T) {
 			components: map[string]tokens.ComponentDefinition{
 				"animated": {
 					Class: "animated",
-					Base: map[string]interface{}{
-						"transform": []interface{}{"rotate(45deg)", "scale(1.5)"},
+					Base: map[string]any{
+						"transform": []any{"rotate(45deg)", "scale(1.5)"},
 					},
 				},
 			},
@@ -248,11 +248,11 @@ func TestTailwindGenerator_ArraySerialization(t *testing.T) {
 			components: map[string]tokens.ComponentDefinition{
 				"complex": {
 					Class: "complex",
-					Base: map[string]interface{}{
-						"margin":      []interface{}{"1rem", "2rem"},
-						"padding":     []interface{}{"0.5rem", "1rem"},
-						"box-shadow":  []interface{}{"0 1px 2px black", "0 2px 4px red"},
-						"font-family": []interface{}{"Arial", "sans-serif"},
+					Base: map[string]any{
+						"margin":      []any{"1rem", "2rem"},
+						"padding":     []any{"0.5rem", "1rem"},
+						"box-shadow":  []any{"0 1px 2px black", "0 2px 4px red"},
+						"font-family": []any{"Arial", "sans-serif"},
 					},
 				},
 			},
@@ -419,7 +419,7 @@ func TestTailwindGenerator_PropertyDeclarations(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			ctx := &GenerationContext{
-				ResolvedTokens: map[string]interface{}{},
+				ResolvedTokens: map[string]any{},
 				PropertyTokens: tt.properties,
 			}
 
@@ -440,12 +440,12 @@ func TestTailwindGenerator_PropertyDeclarations(t *testing.T) {
 func TestTailwindGenerator_EffectTokens(t *testing.T) {
 	tests := []struct {
 		name     string
-		tokens   map[string]interface{}
+		tokens   map[string]any
 		expected []string
 	}{
 		{
 			name: "Effect tokens with value 0 and 1",
-			tokens: map[string]interface{}{
+			tokens: map[string]any{
 				"effect.depth": 1,
 				"effect.noise": 0,
 			},
@@ -456,7 +456,7 @@ func TestTailwindGenerator_EffectTokens(t *testing.T) {
 		},
 		{
 			name: "Effect tokens mixed with other tokens",
-			tokens: map[string]interface{}{
+			tokens: map[string]any{
 				"color.primary": "#3b82f6",
 				"effect.depth":  1,
 				"size.field":    "2.5rem",

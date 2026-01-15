@@ -17,7 +17,7 @@ func TestNewCSSGenerator(t *testing.T) {
 func TestCSSGenerator_Generate_Basic(t *testing.T) {
 	g := NewCSSGenerator()
 	ctx := &GenerationContext{
-		ResolvedTokens: map[string]interface{}{
+		ResolvedTokens: map[string]any{
 			"color.primary": "#3b82f6",
 			"spacing.md":    "1rem",
 		},
@@ -55,12 +55,12 @@ func TestCSSGenerator_Generate_Basic(t *testing.T) {
 func TestCSSGenerator_Generate_WithThemes(t *testing.T) {
 	g := NewCSSGenerator()
 	ctx := &GenerationContext{
-		ResolvedTokens: map[string]interface{}{
+		ResolvedTokens: map[string]any{
 			"color.primary": "#3b82f6",
 		},
 		Themes: map[string]ThemeContext{
 			"dark": {
-				DiffTokens: map[string]interface{}{
+				DiffTokens: map[string]any{
 					"color.primary": "#60a5fa",
 				},
 			},
@@ -86,10 +86,10 @@ func TestCSSGenerator_Generate_WithThemes(t *testing.T) {
 func TestCSSGenerator_Generate_WithLightTheme(t *testing.T) {
 	g := NewCSSGenerator()
 	ctx := &GenerationContext{
-		ResolvedTokens: map[string]interface{}{},
+		ResolvedTokens: map[string]any{},
 		Themes: map[string]ThemeContext{
 			"light": {
-				DiffTokens: map[string]interface{}{
+				DiffTokens: map[string]any{
 					"color.surface": "#ffffff",
 				},
 			},
@@ -110,18 +110,18 @@ func TestCSSGenerator_Generate_WithLightTheme(t *testing.T) {
 func TestCSSGenerator_Generate_WithComponents(t *testing.T) {
 	g := NewCSSGenerator()
 	ctx := &GenerationContext{
-		ResolvedTokens: map[string]interface{}{},
+		ResolvedTokens: map[string]any{},
 		Components: map[string]tokens.ComponentDefinition{
 			"btn": {
 				Class: "btn",
-				Base: map[string]interface{}{
+				Base: map[string]any{
 					"padding":    "0.5rem 1rem",
 					"background": "var(--color-primary)",
 				},
 				Variants: map[string]tokens.VariantDef{
 					"primary": {
 						Class: "btn-primary",
-						Properties: map[string]interface{}{
+						Properties: map[string]any{
 							"background-color": "var(--color-primary)",
 						},
 					},
@@ -129,7 +129,7 @@ func TestCSSGenerator_Generate_WithComponents(t *testing.T) {
 				Sizes: map[string]tokens.VariantDef{
 					"sm": {
 						Class: "btn-sm",
-						Properties: map[string]interface{}{
+						Properties: map[string]any{
 							"padding": "0.25rem 0.5rem",
 						},
 					},
@@ -167,16 +167,16 @@ func TestCSSGenerator_Generate_WithComponents(t *testing.T) {
 func TestCSSGenerator_Generate_WithNestedPseudoSelectors(t *testing.T) {
 	g := NewCSSGenerator()
 	ctx := &GenerationContext{
-		ResolvedTokens: map[string]interface{}{},
+		ResolvedTokens: map[string]any{},
 		Components: map[string]tokens.ComponentDefinition{
 			"link": {
 				Class: "link",
-				Base: map[string]interface{}{
+				Base: map[string]any{
 					"color": "var(--color-link)",
-					"&:hover": map[string]interface{}{
+					"&:hover": map[string]any{
 						"color": "var(--color-link-hover)",
 					},
-					":visited": map[string]interface{}{
+					":visited": map[string]any{
 						"color": "var(--color-link-visited)",
 					},
 				},
@@ -208,7 +208,7 @@ func TestCSSGenerator_Generate_WithNestedPseudoSelectors(t *testing.T) {
 func TestCSSGenerator_Generate_WithPropertyDeclarations(t *testing.T) {
 	g := NewCSSGenerator()
 	ctx := &GenerationContext{
-		ResolvedTokens: map[string]interface{}{
+		ResolvedTokens: map[string]any{
 			"color.primary": "#3b82f6",
 		},
 		PropertyTokens: []tokens.PropertyToken{
@@ -279,9 +279,9 @@ func TestBuildStateSelector(t *testing.T) {
 func TestCSSGenerator_SkipsMapValues(t *testing.T) {
 	g := NewCSSGenerator()
 	ctx := &GenerationContext{
-		ResolvedTokens: map[string]interface{}{
+		ResolvedTokens: map[string]any{
 			"color.primary": "#3b82f6",
-			"color.nested":  map[string]interface{}{"should": "skip"},
+			"color.nested":  map[string]any{"should": "skip"},
 		},
 	}
 
@@ -301,7 +301,7 @@ func TestCSSGenerator_SkipsMapValues(t *testing.T) {
 func TestCSSGenerator_DeterministicOutput(t *testing.T) {
 	g := NewCSSGenerator()
 	ctx := &GenerationContext{
-		ResolvedTokens: map[string]interface{}{
+		ResolvedTokens: map[string]any{
 			"z.last":   "3",
 			"a.first":  "1",
 			"m.middle": "2",
