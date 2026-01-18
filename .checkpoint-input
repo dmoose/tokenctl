@@ -1,0 +1,61 @@
+schema_version: "1"
+timestamp: "2026-01-18T13:28:55-08:00"
+commit_hash: ""
+
+git_status: |
+  M pkg/generators/css.go
+  M pkg/tokens/components.go
+  ?? .checkpoint-lock
+  ?? PLAN.md
+
+diff_file: ".checkpoint-diff"
+files_changed:
+  - path: "pkg/generators/css.go"
+    additions: 31
+    deletions: 0
+  - path: "pkg/tokens/components.go"
+    additions: 2
+    deletions: 2
+
+changes:
+  - summary: "Add CSS generation for component-level states"
+    details: "States like 'error', 'active', 'has-toggle' can now be defined in component token files and will generate corresponding CSS classes. Previously the 'states' field was reserved but not processed."
+    change_type: "feature"
+    scope: "pkg/generators"
+
+  - summary: "Change States field type to support CSS generation"
+    details: "Changed States from map[string]any to map[string]VariantDef to enable proper parsing of $class and CSS properties, matching how variants and sizes work."
+    change_type: "feature"
+    scope: "pkg/tokens"
+
+context:
+  problem_statement: "Component tokens support 'base', 'variants', and 'sizes' sections that generate CSS, but the 'states' section was marked 'reserved for future' and ignored. This forced users to define state classes as separate top-level components instead of logically grouping them with their parent component."
+
+  key_insights:
+    - insight: "States follow the same pattern as variants - they have a $class and CSS properties"
+      impact: "Reusing VariantDef type means states automatically get pseudo-selector support too"
+      scope: "project"
+
+    - insight: "The existing VariantDef UnmarshalJSON handles the $class extraction cleanly"
+      impact: "No new parsing code needed, just type change and generation loop"
+      scope: "checkpoint"
+
+  decisions_made:
+    - decision: "Reuse VariantDef type for States instead of creating a new StateDef type"
+      rationale: "States have identical structure to variants - a class name and CSS properties. Adding pseudo-selector support for free is a bonus."
+      alternatives_considered:
+        - "Create separate StateDef type - rejected as it would duplicate VariantDef"
+        - "Keep map[string]any and parse manually - rejected as VariantDef already does this"
+      scope: "project"
+
+  established_patterns:
+    - pattern: "Component sections (variants, sizes, states) all use VariantDef structure"
+      rationale: "Consistency makes the token format predictable and the generator code uniform"
+      examples: "variants, sizes, and now states all support $class, properties, and nested pseudo-selectors"
+      scope: "project"
+
+next_steps:
+  - summary: "Document states section in token format documentation"
+    details: "Update TOKENS.md to show states alongside variants and sizes"
+    priority: "med"
+    scope: "docs"

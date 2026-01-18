@@ -1,0 +1,24 @@
+---
+schema_version: "1"
+timestamp: "2026-01-18T13:28:55-08:00"
+context:
+    problem_statement: Component tokens support 'base', 'variants', and 'sizes' sections that generate CSS, but the 'states' section was marked 'reserved for future' and ignored. This forced users to define state classes as separate top-level components instead of logically grouping them with their parent component.
+    key_insights:
+        - insight: States follow the same pattern as variants - they have a $class and CSS properties
+          impact: Reusing VariantDef type means states automatically get pseudo-selector support too
+          scope: project
+        - insight: The existing VariantDef UnmarshalJSON handles the $class extraction cleanly
+          impact: No new parsing code needed, just type change and generation loop
+          scope: checkpoint
+    decisions_made:
+        - decision: Reuse VariantDef type for States instead of creating a new StateDef type
+          rationale: States have identical structure to variants - a class name and CSS properties. Adding pseudo-selector support for free is a bonus.
+          alternatives_considered:
+            - Create separate StateDef type - rejected as it would duplicate VariantDef
+            - Keep map[string]any and parse manually - rejected as VariantDef already does this
+          scope: project
+    established_patterns:
+        - pattern: Component sections (variants, sizes, states) all use VariantDef structure
+          rationale: Consistency makes the token format predictable and the generator code uniform
+          examples: variants, sizes, and now states all support $class, properties, and nested pseudo-selectors
+          scope: project

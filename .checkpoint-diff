@@ -1,0 +1,61 @@
+## Unstaged changes (git diff)
+diff --git a/pkg/generators/css.go b/pkg/generators/css.go
+index 04eae7b..13155b7 100644
+--- a/pkg/generators/css.go
++++ b/pkg/generators/css.go
+@@ -273,6 +273,37 @@ func (g *CSSGenerator) generateComponents(components map[string]tokens.Component
+ 				sb.WriteString("  }\n\n")
+ 			}
+ 		}
++
++		// States (error, active, disabled, etc.)
++		stateNames := make([]string, 0, len(comp.States))
++		for sname := range comp.States {
++			stateNames = append(stateNames, sname)
++		}
++		sort.Strings(stateNames)
++
++		for _, sname := range stateNames {
++			state := comp.States[sname]
++			if state.Class != "" {
++				sb.WriteString(fmt.Sprintf("  .%s {\n", state.Class))
++				g.writeProperties(&sb, state.Properties, 4)
++				sb.WriteString("  }\n\n")
++
++				// States can also have pseudo-selectors
++				stateKeys := make([]string, 0, len(state.States))
++				for skey := range state.States {
++					stateKeys = append(stateKeys, skey)
++				}
++				sort.Strings(stateKeys)
++
++				for _, stateKey := range stateKeys {
++					pseudoState := state.States[stateKey]
++					selector := g.buildStateSelector(state.Class, stateKey)
++					sb.WriteString(fmt.Sprintf("  %s {\n", selector))
++					g.writeProperties(&sb, pseudoState.Properties, 4)
++					sb.WriteString("  }\n\n")
++				}
++			}
++		}
+ 	}
+ 
+ 	sb.WriteString("}\n")
+diff --git a/pkg/tokens/components.go b/pkg/tokens/components.go
+index 131f257..be4af1c 100644
+--- a/pkg/tokens/components.go
++++ b/pkg/tokens/components.go
+@@ -12,10 +12,10 @@ type ComponentDefinition struct {
+ 	Description string                 `json:"$description,omitempty"`
+ 	Contains    []string               `json:"$contains,omitempty"` // Child components this can contain
+ 	Requires    string                 `json:"$requires,omitempty"` // Parent component this must be inside
+-	Base        map[string]any `json:"base"`
++	Base        map[string]any         `json:"base"`
+ 	Variants    map[string]VariantDef  `json:"variants"`
+ 	Sizes       map[string]VariantDef  `json:"sizes"`
+-	States      map[string]any `json:"states"` // Reserved for future state enforcement
++	States      map[string]VariantDef  `json:"states"` // Component states (error, active, etc.)
+ }
+ 
+ // VariantDef represents a specific variant (primary, outline) or size (sm, lg)
+

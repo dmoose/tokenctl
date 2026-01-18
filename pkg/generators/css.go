@@ -273,6 +273,37 @@ func (g *CSSGenerator) generateComponents(components map[string]tokens.Component
 				sb.WriteString("  }\n\n")
 			}
 		}
+
+		// States (error, active, disabled, etc.)
+		stateNames := make([]string, 0, len(comp.States))
+		for sname := range comp.States {
+			stateNames = append(stateNames, sname)
+		}
+		sort.Strings(stateNames)
+
+		for _, sname := range stateNames {
+			state := comp.States[sname]
+			if state.Class != "" {
+				sb.WriteString(fmt.Sprintf("  .%s {\n", state.Class))
+				g.writeProperties(&sb, state.Properties, 4)
+				sb.WriteString("  }\n\n")
+
+				// States can also have pseudo-selectors
+				stateKeys := make([]string, 0, len(state.States))
+				for skey := range state.States {
+					stateKeys = append(stateKeys, skey)
+				}
+				sort.Strings(stateKeys)
+
+				for _, stateKey := range stateKeys {
+					pseudoState := state.States[stateKey]
+					selector := g.buildStateSelector(state.Class, stateKey)
+					sb.WriteString(fmt.Sprintf("  %s {\n", selector))
+					g.writeProperties(&sb, pseudoState.Properties, 4)
+					sb.WriteString("  }\n\n")
+				}
+			}
+		}
 	}
 
 	sb.WriteString("}\n")

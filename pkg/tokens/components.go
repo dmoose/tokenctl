@@ -12,10 +12,10 @@ type ComponentDefinition struct {
 	Description string                 `json:"$description,omitempty"`
 	Contains    []string               `json:"$contains,omitempty"` // Child components this can contain
 	Requires    string                 `json:"$requires,omitempty"` // Parent component this must be inside
-	Base        map[string]any `json:"base"`
+	Base        map[string]any         `json:"base"`
 	Variants    map[string]VariantDef  `json:"variants"`
 	Sizes       map[string]VariantDef  `json:"sizes"`
-	States      map[string]any `json:"states"` // Reserved for future state enforcement
+	States      map[string]VariantDef  `json:"states"` // Component states (error, active, etc.)
 }
 
 // VariantDef represents a specific variant (primary, outline) or size (sm, lg)
