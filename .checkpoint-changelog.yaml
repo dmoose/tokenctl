@@ -1,0 +1,37 @@
+---
+schema_version: "1"
+document_type: meta
+project_id: 01KF9GDH0ZCA6HSJHEX7VWF3SN
+path_hash: 7e3588ce5e77a23a
+created_at: "2026-01-18T13:33:14-08:00"
+tool_version: 0.1.0
+languages:
+    - name: Go
+      indicators:
+        - go.mod
+        - go.sum
+---
+schema_version: "1"
+timestamp: "2026-01-18T13:28:55-08:00"
+commit_hash: ""
+files_changed:
+    - path: pkg/generators/css.go
+      additions: 31
+      deletions: 0
+    - path: pkg/tokens/components.go
+      additions: 2
+      deletions: 2
+changes:
+    - summary: Add CSS generation for component-level states
+      details: States like 'error', 'active', 'has-toggle' can now be defined in component token files and will generate corresponding CSS classes. Previously the 'states' field was reserved but not processed.
+      change_type: feature
+      scope: pkg/generators
+    - summary: Change States field type to support CSS generation
+      details: Changed States from map[string]any to map[string]VariantDef to enable proper parsing of $class and CSS properties, matching how variants and sizes work.
+      change_type: feature
+      scope: pkg/tokens
+next_steps:
+    - summary: Document states section in token format documentation
+      details: Update TOKENS.md to show states alongside variants and sizes
+      priority: med
+      scope: docs
