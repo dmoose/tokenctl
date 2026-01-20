@@ -230,9 +230,39 @@ func (g *TailwindGenerator) generateComponents(components map[string]tokens.Comp
 
 		// Base class
 		if comp.Class != "" {
+			// Separate base properties from nested pseudo-selectors
+			baseProps := make(map[string]any)
+			nestedSelectors := make(map[string]map[string]any)
+
+			for k, v := range comp.Base {
+				if strings.HasPrefix(k, "&") || strings.HasPrefix(k, ":") {
+					// This is a nested pseudo-selector
+					if nested, ok := v.(map[string]any); ok {
+						nestedSelectors[k] = nested
+					}
+				} else {
+					baseProps[k] = v
+				}
+			}
+
 			sb.WriteString(fmt.Sprintf("  .%s {\n", comp.Class))
-			g.writeProperties(&sb, comp.Base, 4)
+			g.writeProperties(&sb, baseProps, 4)
 			sb.WriteString("  }\n")
+
+			// Write nested pseudo-selectors as separate rules
+			nestedKeys := make([]string, 0, len(nestedSelectors))
+			for k := range nestedSelectors {
+				nestedKeys = append(nestedKeys, k)
+			}
+			sort.Strings(nestedKeys)
+
+			for _, selectorKey := range nestedKeys {
+				props := nestedSelectors[selectorKey]
+				selector := g.buildStateSelector(comp.Class, selectorKey)
+				sb.WriteString(fmt.Sprintf("  %s {\n", selector))
+				g.writeProperties(&sb, props, 4)
+				sb.WriteString("  }\n")
+			}
 		}
 
 		// Variants
