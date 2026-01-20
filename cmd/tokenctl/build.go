@@ -139,6 +139,9 @@ func runBuild(cmd *cobra.Command, args []string) error {
 		// Extract tokens with $property for @property declarations
 		propertyTokens := tokens.ExtractPropertyTokens(baseDict, resolvedBase)
 
+		// Extract @keyframes definitions
+		keyframes := tokens.ExtractKeyframes(baseDict)
+
 		// Extract breakpoints and responsive tokens
 		breakpoints := tokens.ExtractBreakpoints(baseDict)
 		responsiveTokens := tokens.ExtractResponsiveTokens(baseDict)
@@ -150,6 +153,7 @@ func runBuild(cmd *cobra.Command, args []string) error {
 			Components:       components,
 			Themes:           themeContexts,
 			PropertyTokens:   propertyTokens,
+			Keyframes:        keyframes,
 			Breakpoints:      breakpoints,
 			ResponsiveTokens: responsiveTokens,
 		}

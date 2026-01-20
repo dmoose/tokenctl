@@ -44,10 +44,11 @@ func serializeValueForCSS(val any) string {
 // GenerationContext provides all necessary data for generation
 type GenerationContext struct {
 	BaseDict         *tokens.Dictionary                    // Original base dictionary (unresolved)
-	ResolvedTokens   map[string]any                // Flattened, resolved atomic tokens
+	ResolvedTokens   map[string]any                        // Flattened, resolved atomic tokens
 	Components       map[string]tokens.ComponentDefinition // Extracted components
 	Themes           map[string]ThemeContext               // Theme-specific contexts
 	PropertyTokens   []tokens.PropertyToken                // Tokens with $property for @property declarations
+	Keyframes        []tokens.KeyframeDefinition           // CSS @keyframes animations
 	Breakpoints      map[string]string                     // Breakpoint definitions (name -> min-width)
 	ResponsiveTokens []tokens.ResponsiveToken              // Tokens with responsive overrides
 }
@@ -77,14 +78,20 @@ func (g *TailwindGenerator) Generate(ctx *GenerationContext) (string, error) {
 		sb.WriteString(propertyDecls)
 	}
 
-	// 2. Import and base @theme block
+	// 2. @keyframes declarations (global animations)
+	if len(ctx.Keyframes) > 0 {
+		keyframesCSS := tokens.GenerateKeyframesCSS(ctx.Keyframes)
+		sb.WriteString(keyframesCSS)
+	}
+
+	// 3. Import and base @theme block
 	baseTheme, err := g.generateBaseTheme(ctx.ResolvedTokens)
 	if err != nil {
 		return "", fmt.Errorf("failed to generate base theme: %w", err)
 	}
 	sb.WriteString(baseTheme)
 
-	// 3. Theme variations in @layer base
+	// 4. Theme variations in @layer base
 	if len(ctx.Themes) > 0 {
 		themeVariations, err := g.generateThemeVariations(ctx.Themes)
 		if err != nil {
@@ -94,7 +101,7 @@ func (g *TailwindGenerator) Generate(ctx *GenerationContext) (string, error) {
 		sb.WriteString(themeVariations)
 	}
 
-	// 4. Components in @layer components (always output for consistency)
+	// 5. Components in @layer components (always output for consistency)
 	components, err := g.generateComponents(ctx.Components)
 	if err != nil {
 		return "", fmt.Errorf("failed to generate components: %w", err)
@@ -102,7 +109,7 @@ func (g *TailwindGenerator) Generate(ctx *GenerationContext) (string, error) {
 	sb.WriteString("\n")
 	sb.WriteString(components)
 
-	// 5. Responsive overrides via media queries
+	// 6. Responsive overrides via media queries
 	if len(ctx.ResponsiveTokens) > 0 {
 		responsiveCSS := tokens.GenerateResponsiveCSS(ctx.Breakpoints, ctx.ResponsiveTokens)
 		if responsiveCSS != "" {

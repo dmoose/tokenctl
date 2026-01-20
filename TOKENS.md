@@ -13,10 +13,11 @@ This guide covers token-based design system concepts and how tokenctl implements
 6. [Scale Expansion](#scale-expansion)
 7. [Constraints](#constraints)
 8. [CSS @property Declarations](#css-property-declarations)
-9. [Theme System](#theme-system)
-10. [Components](#components)
-11. [Best Practices](#best-practices)
-12. [Troubleshooting](#troubleshooting)
+9. [CSS @keyframes Animations](#css-keyframes-animations)
+10. [Theme System](#theme-system)
+11. [Components](#components)
+12. [Best Practices](#best-practices)
+13. [Troubleshooting](#troubleshooting)
 
 ---
 
@@ -544,6 +545,103 @@ With `@property` declarations, theme switches can animate:
 ```
 
 Without `@property`, custom properties change instantly. With it, they transition.
+
+---
+
+## CSS @keyframes Animations
+
+Define CSS animations as tokens in a `keyframes` section at the root level of any token file.
+
+### Basic Keyframes
+
+```json
+{
+  "keyframes": {
+    "skeleton-pulse": {
+      "0%, 100%": { "opacity": "1" },
+      "50%": { "opacity": "0.5" }
+    }
+  }
+}
+```
+
+**Generated CSS:**
+```css
+@keyframes skeleton-pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+```
+
+### Using from/to Keywords
+
+```json
+{
+  "keyframes": {
+    "slide-in": {
+      "from": { "transform": "translateX(-100%)" },
+      "to": { "transform": "translateX(0)" }
+    },
+    "fade-in": {
+      "from": { "opacity": "0" },
+      "to": { "opacity": "1" }
+    }
+  }
+}
+```
+
+### Complex Animations
+
+```json
+{
+  "keyframes": {
+    "bounce": {
+      "0%, 100%": {
+        "transform": "translateY(0)",
+        "animation-timing-function": "ease-out"
+      },
+      "50%": {
+        "transform": "translateY(-25%)",
+        "animation-timing-function": "ease-in"
+      }
+    }
+  }
+}
+```
+
+### Referencing in Components
+
+Keyframes are referenced by name in component animation properties:
+
+```json
+{
+  "components": {
+    "skeleton": {
+      "$class": "skeleton",
+      "base": {
+        "animation": "skeleton-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite"
+      }
+    }
+  },
+  "keyframes": {
+    "skeleton-pulse": {
+      "0%, 100%": { "opacity": "1" },
+      "50%": { "opacity": "0.5" }
+    }
+  }
+}
+```
+
+### Keyframe Ordering
+
+Frames are automatically sorted by percentage in the generated CSS:
+- `from` is treated as 0%
+- `to` is treated as 100%
+- Percentage values are sorted numerically
 
 ---
 

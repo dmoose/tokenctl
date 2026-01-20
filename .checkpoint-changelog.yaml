@@ -13,7 +13,7 @@ languages:
 ---
 schema_version: "1"
 timestamp: "2026-01-18T13:28:55-08:00"
-commit_hash: ""
+commit_hash: 561b68fa2a274b19d322b217ca62285c2d1c8898
 files_changed:
     - path: pkg/generators/css.go
       additions: 31
@@ -35,3 +35,37 @@ next_steps:
       details: Update TOKENS.md to show states alongside variants and sizes
       priority: med
       scope: docs
+---
+schema_version: "1"
+timestamp: "2026-01-20T08:37:31-08:00"
+commit_hash: ""
+changes:
+    - summary: Add @keyframes support for CSS animations
+      details: Parse 'keyframes' sections from token JSON files and generate CSS @keyframes blocks. Added KeyframeDefinition type with Name and Frames fields, ExtractKeyframes function to scan dictionaries, and GenerateKeyframesCSS to output formatted CSS. Frames are automatically sorted by percentage (from=0%, to=100%).
+      change_type: feature
+      scope: pkg/tokens
+    - summary: Integrate keyframes into CSS and Tailwind generators
+      details: Added Keyframes field to GenerationContext. Both CSSGenerator and TailwindGenerator now call tokens.GenerateKeyframesCSS after @property declarations. Keyframes are output before @layer reset as global definitions.
+      change_type: feature
+      scope: pkg/generators
+    - summary: Extract and pass keyframes in build command
+      details: Call tokens.ExtractKeyframes(baseDict) in build.go and include in GenerationContext for CSS/Tailwind generation.
+      change_type: feature
+      scope: cmd/tokenctl
+    - summary: Add keyframes unit tests
+      details: Added TestExtractKeyframes_Basic, TestExtractKeyframes_Multiple, TestExtractKeyframes_Empty, TestGenerateKeyframesCSS, TestGenerateKeyframesCSS_FrameOrder, TestGenerateKeyframesCSS_FromTo in keyframes_test.go. Added TestCSSGenerator_Generate_WithKeyframes in css_test.go.
+      change_type: feature
+      scope: pkg/tokens,pkg/generators
+    - summary: Document @keyframes in README and TOKENS.md
+      details: Added 'CSS @keyframes' to README features list. Added comprehensive 'CSS @keyframes Animations' section to TOKENS.md with examples for basic keyframes, from/to keywords, complex animations, and component references.
+      change_type: docs
+      scope: docs
+next_steps:
+    - summary: Document states section in token format documentation
+      details: Update TOKENS.md to show states alongside variants and sizes
+      priority: med
+      scope: docs
+    - summary: Consider adding keyframe validation
+      details: Validate frame selectors are valid CSS (percentages, from/to keywords)
+      priority: low
+      scope: pkg/tokens

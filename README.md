@@ -17,6 +17,7 @@ A W3C Design Tokens CLI that generates CSS from JSON token definitions. Define y
 - **Computed Values**: `contrast()`, `darken()`, `lighten()`, `shade()`, `calc()` expressions
 - **Scale Expansion**: `$scale` generates size variants automatically (xs, sm, md, lg, xl)
 - **CSS @property**: `$property` field generates typed CSS custom properties for animations
+- **CSS @keyframes**: Define animations in tokens, output to CSS `@keyframes` blocks
 - **Responsive Tokens**: `$breakpoints` and `$responsive` for media query generation
 - **Layer Validation**: `--strict-layers` enforces brand → semantic → component architecture
 - **Token Search**: CLI search by name, type, or category

@@ -1,61 +1,82 @@
 schema_version: "1"
-timestamp: "2026-01-18T13:28:55-08:00"
+timestamp: "2026-01-20T08:37:31-08:00"
 commit_hash: ""
 
-git_status: |
-  M pkg/generators/css.go
-  M pkg/tokens/components.go
-  ?? .checkpoint-lock
-  ?? PLAN.md
-
-diff_file: ".checkpoint-diff"
-files_changed:
-  - path: "pkg/generators/css.go"
-    additions: 31
-    deletions: 0
-  - path: "pkg/tokens/components.go"
-    additions: 2
-    deletions: 2
-
 changes:
-  - summary: "Add CSS generation for component-level states"
-    details: "States like 'error', 'active', 'has-toggle' can now be defined in component token files and will generate corresponding CSS classes. Previously the 'states' field was reserved but not processed."
-    change_type: "feature"
-    scope: "pkg/generators"
-
-  - summary: "Change States field type to support CSS generation"
-    details: "Changed States from map[string]any to map[string]VariantDef to enable proper parsing of $class and CSS properties, matching how variants and sizes work."
+  - summary: "Add @keyframes support for CSS animations"
+    details: "Parse 'keyframes' sections from token JSON files and generate CSS @keyframes blocks. Added KeyframeDefinition type with Name and Frames fields, ExtractKeyframes function to scan dictionaries, and GenerateKeyframesCSS to output formatted CSS. Frames are automatically sorted by percentage (from=0%, to=100%)."
     change_type: "feature"
     scope: "pkg/tokens"
 
+  - summary: "Integrate keyframes into CSS and Tailwind generators"
+    details: "Added Keyframes field to GenerationContext. Both CSSGenerator and TailwindGenerator now call tokens.GenerateKeyframesCSS after @property declarations. Keyframes are output before @layer reset as global definitions."
+    change_type: "feature"
+    scope: "pkg/generators"
+
+  - summary: "Extract and pass keyframes in build command"
+    details: "Call tokens.ExtractKeyframes(baseDict) in build.go and include in GenerationContext for CSS/Tailwind generation."
+    change_type: "feature"
+    scope: "cmd/tokenctl"
+
+  - summary: "Add keyframes unit tests"
+    details: "Added TestExtractKeyframes_Basic, TestExtractKeyframes_Multiple, TestExtractKeyframes_Empty, TestGenerateKeyframesCSS, TestGenerateKeyframesCSS_FrameOrder, TestGenerateKeyframesCSS_FromTo in keyframes_test.go. Added TestCSSGenerator_Generate_WithKeyframes in css_test.go."
+    change_type: "feature"
+    scope: "pkg/tokens,pkg/generators"
+
+  - summary: "Document @keyframes in README and TOKENS.md"
+    details: "Added 'CSS @keyframes' to README features list. Added comprehensive 'CSS @keyframes Animations' section to TOKENS.md with examples for basic keyframes, from/to keywords, complex animations, and component references."
+    change_type: "docs"
+    scope: "docs"
+
 context:
-  problem_statement: "Component tokens support 'base', 'variants', and 'sizes' sections that generate CSS, but the 'states' section was marked 'reserved for future' and ignored. This forced users to define state classes as separate top-level components instead of logically grouping them with their parent component."
+  problem_statement: "Components like skeleton loaders need CSS animations that run autonomously (without triggers). CSS transitions require state changes to activate, so @keyframes are necessary for looping animations. tokenctl needed native support to keep all styling in the token system."
 
   key_insights:
-    - insight: "States follow the same pattern as variants - they have a $class and CSS properties"
-      impact: "Reusing VariantDef type means states automatically get pseudo-selector support too"
+    - insight: "Keyframes are structurally similar to @property - global definitions parsed from a root-level section"
+      impact: "Following the @property implementation pattern (ExtractX function, add to GenerationContext, generate in both generators) made implementation straightforward"
       scope: "project"
 
-    - insight: "The existing VariantDef UnmarshalJSON handles the $class extraction cleanly"
-      impact: "No new parsing code needed, just type change and generation loop"
+    - insight: "CSS transitions vs keyframes serve different purposes and both are needed"
+      impact: "Transitions require triggers (hover, class change); keyframes run autonomously. Design systems need both."
+      scope: "project"
+
+    - insight: "Frame selectors need deterministic ordering for consistent output"
+      impact: "Implemented keyframeSelectorOrder to sort from < 0% < 50% < 100% < to"
       scope: "checkpoint"
 
   decisions_made:
-    - decision: "Reuse VariantDef type for States instead of creating a new StateDef type"
-      rationale: "States have identical structure to variants - a class name and CSS properties. Adding pseudo-selector support for free is a bonus."
+    - decision: "Place keyframes at root level of token files alongside components section"
+      rationale: "Keyframes are global definitions like @property, not component-specific. Allows sharing across components."
       alternatives_considered:
-        - "Create separate StateDef type - rejected as it would duplicate VariantDef"
-        - "Keep map[string]any and parse manually - rejected as VariantDef already does this"
+        - "Nest keyframes inside component definitions (limits reuse)"
+        - "Separate keyframes.json file (fragments related definitions)"
       scope: "project"
 
-  established_patterns:
-    - pattern: "Component sections (variants, sizes, states) all use VariantDef structure"
-      rationale: "Consistency makes the token format predictable and the generator code uniform"
-      examples: "variants, sizes, and now states all support $class, properties, and nested pseudo-selectors"
+    - decision: "Output keyframes after @property but before @layer reset"
+      rationale: "Follows natural CSS order: type definitions (@property), animation definitions (@keyframes), then layered rules. Consistent with existing @property placement."
       scope: "project"
+
+    - decision: "Store frame properties as map[string]map[string]string in KeyframeDefinition"
+      rationale: "Simple structure that maps directly to CSS output. Frame selector -> property name -> value."
+      scope: "checkpoint"
+
+  established_patterns:
+    - pattern: "New CSS at-rules follow ExtractX -> GenerationContext field -> generateX method pattern"
+      rationale: "Consistent with @property implementation. Keeps extraction in tokens package, generation in generators package."
+      examples: "ExtractPropertyTokens/PropertyTokens, ExtractKeyframes/Keyframes"
+      scope: "project"
+
+  conversation_context:
+    - exchange: "Discussed whether property-based CSS animations could replace keyframes"
+      outcome: "Confirmed both are needed: transitions for triggered state changes, keyframes for autonomous loops"
 
 next_steps:
   - summary: "Document states section in token format documentation"
     details: "Update TOKENS.md to show states alongside variants and sizes"
     priority: "med"
     scope: "docs"
+
+  - summary: "Consider adding keyframe validation"
+    details: "Validate frame selectors are valid CSS (percentages, from/to keywords)"
+    priority: "low"
+    scope: "pkg/tokens"
