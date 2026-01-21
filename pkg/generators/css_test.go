@@ -325,3 +325,63 @@ func TestCSSGenerator_DeterministicOutput(t *testing.T) {
 		t.Error("Variables should be sorted alphabetically")
 	}
 }
+
+func TestCSSGenerator_Generate_WithKeyframes(t *testing.T) {
+	g := NewCSSGenerator()
+	ctx := &GenerationContext{
+		ResolvedTokens: map[string]any{},
+		Keyframes: []tokens.KeyframeDefinition{
+			{
+				Name: "pulse",
+				Frames: map[string]map[string]string{
+					"0%, 100%": {"opacity": "1"},
+					"50%":      {"opacity": "0.5"},
+				},
+			},
+			{
+				Name: "slide-in",
+				Frames: map[string]map[string]string{
+					"from": {"transform": "translateX(-100%)"},
+					"to":   {"transform": "translateX(0)"},
+				},
+			},
+		},
+	}
+
+	output, err := g.Generate(ctx)
+	if err != nil {
+		t.Fatalf("Generate failed: %v", err)
+	}
+
+	// Check @keyframes declarations
+	if !strings.Contains(output, "@keyframes pulse {") {
+		t.Error("Missing @keyframes pulse declaration")
+	}
+	if !strings.Contains(output, "@keyframes slide-in {") {
+		t.Error("Missing @keyframes slide-in declaration")
+	}
+
+	// Check frame selectors
+	if !strings.Contains(output, "0%, 100% {") {
+		t.Error("Missing 0%, 100% frame selector")
+	}
+	if !strings.Contains(output, "50% {") {
+		t.Error("Missing 50% frame selector")
+	}
+
+	// Check properties
+	if !strings.Contains(output, "opacity: 1;") {
+		t.Error("Missing opacity: 1 property")
+	}
+	if !strings.Contains(output, "opacity: 0.5;") {
+		t.Error("Missing opacity: 0.5 property")
+	}
+
+	// Check from/to keywords
+	if !strings.Contains(output, "from {") {
+		t.Error("Missing from frame selector")
+	}
+	if !strings.Contains(output, "to {") {
+		t.Error("Missing to frame selector")
+	}
+}

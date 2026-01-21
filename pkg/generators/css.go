@@ -30,17 +30,23 @@ func (g *CSSGenerator) Generate(ctx *GenerationContext) (string, error) {
 		sb.WriteString(propertyDecls)
 	}
 
-	// 3. Reset layer
+	// 3. @keyframes declarations (global animations)
+	if len(ctx.Keyframes) > 0 {
+		keyframesCSS := tokens.GenerateKeyframesCSS(ctx.Keyframes)
+		sb.WriteString(keyframesCSS)
+	}
+
+	// 4. Reset layer
 	sb.WriteString(generateReset())
 
-	// 4. Root variables (in tokens layer)
+	// 5. Root variables (in tokens layer)
 	rootVars, err := g.generateRootVariables(ctx.ResolvedTokens)
 	if err != nil {
 		return "", fmt.Errorf("failed to generate root variables: %w", err)
 	}
 	sb.WriteString(rootVars)
 
-	// 5. Theme variations
+	// 6. Theme variations
 	if len(ctx.Themes) > 0 {
 		themeVariations, err := g.generateThemeVariations(ctx.Themes)
 		if err != nil {
@@ -49,7 +55,7 @@ func (g *CSSGenerator) Generate(ctx *GenerationContext) (string, error) {
 		sb.WriteString(themeVariations)
 	}
 
-	// 6. Components
+	// 7. Components
 	if len(ctx.Components) > 0 {
 		components, err := g.generateComponents(ctx.Components)
 		if err != nil {
@@ -58,7 +64,7 @@ func (g *CSSGenerator) Generate(ctx *GenerationContext) (string, error) {
 		sb.WriteString(components)
 	}
 
-	// 7. Responsive overrides via media queries
+	// 8. Responsive overrides via media queries
 	if len(ctx.ResponsiveTokens) > 0 {
 		responsiveCSS := tokens.GenerateResponsiveCSS(ctx.Breakpoints, ctx.ResponsiveTokens)
 		if responsiveCSS != "" {

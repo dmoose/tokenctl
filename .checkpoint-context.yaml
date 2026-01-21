@@ -22,3 +22,39 @@ context:
           rationale: Consistency makes the token format predictable and the generator code uniform
           examples: variants, sizes, and now states all support $class, properties, and nested pseudo-selectors
           scope: project
+---
+schema_version: "1"
+timestamp: "2026-01-20T08:37:31-08:00"
+context:
+    problem_statement: Components like skeleton loaders need CSS animations that run autonomously (without triggers). CSS transitions require state changes to activate, so @keyframes are necessary for looping animations. tokenctl needed native support to keep all styling in the token system.
+    key_insights:
+        - insight: Keyframes are structurally similar to @property - global definitions parsed from a root-level section
+          impact: Following the @property implementation pattern (ExtractX function, add to GenerationContext, generate in both generators) made implementation straightforward
+          scope: project
+        - insight: CSS transitions vs keyframes serve different purposes and both are needed
+          impact: Transitions require triggers (hover, class change); keyframes run autonomously. Design systems need both.
+          scope: project
+        - insight: Frame selectors need deterministic ordering for consistent output
+          impact: Implemented keyframeSelectorOrder to sort from < 0% < 50% < 100% < to
+          scope: checkpoint
+    decisions_made:
+        - decision: Place keyframes at root level of token files alongside components section
+          rationale: Keyframes are global definitions like @property, not component-specific. Allows sharing across components.
+          alternatives_considered:
+            - Nest keyframes inside component definitions (limits reuse)
+            - Separate keyframes.json file (fragments related definitions)
+          scope: project
+        - decision: Output keyframes after @property but before @layer reset
+          rationale: 'Follows natural CSS order: type definitions (@property), animation definitions (@keyframes), then layered rules. Consistent with existing @property placement.'
+          scope: project
+        - decision: Store frame properties as map[string]map[string]string in KeyframeDefinition
+          rationale: Simple structure that maps directly to CSS output. Frame selector -> property name -> value.
+          scope: checkpoint
+    established_patterns:
+        - pattern: New CSS at-rules follow ExtractX -> GenerationContext field -> generateX method pattern
+          rationale: Consistent with @property implementation. Keeps extraction in tokens package, generation in generators package.
+          examples: ExtractPropertyTokens/PropertyTokens, ExtractKeyframes/Keyframes
+          scope: project
+    conversation_context:
+        - exchange: Discussed whether property-based CSS animations could replace keyframes
+          outcome: 'Confirmed both are needed: transitions for triggered state changes, keyframes for autonomous loops'
