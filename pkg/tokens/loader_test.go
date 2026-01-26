@@ -2,13 +2,14 @@ package tokens
 
 import (
 	"bytes"
-	"log"
+	"io"
 	"os"
 	"strings"
 	"testing"
 )
 
 func TestLoader_LoadBase(t *testing.T) {
+	t.Parallel()
 	// Create a temporary directory structure for testing
 	tmpDir := t.TempDir()
 
@@ -69,6 +70,7 @@ func TestLoader_LoadBase(t *testing.T) {
 }
 
 func TestLoader_LoadThemes(t *testing.T) {
+	t.Parallel()
 	tmpDir := t.TempDir()
 
 	// Create themes directory
@@ -157,10 +159,13 @@ func TestLoader_LoadThemes(t *testing.T) {
 }
 
 func TestLoader_MergeConflictWarnings(t *testing.T) {
-	// Capture log output
-	var buf bytes.Buffer
-	log.SetOutput(&buf)
-	defer log.SetOutput(os.Stderr)
+	// Capture stderr output
+	r, w, err := os.Pipe()
+	if err != nil {
+		t.Fatalf("Failed to create pipe: %v", err)
+	}
+	oldStderr := os.Stderr
+	os.Stderr = w
 
 	dict1 := &Dictionary{
 		Root: map[string]any{
@@ -183,12 +188,17 @@ func TestLoader_MergeConflictWarnings(t *testing.T) {
 	}
 
 	// Merge with warnings enabled
-	if err := dict1.MergeWithPath(dict2, true, "test-file-2.json"); err != nil {
+	if err := dict1.MergeWithPath(dict2, true); err != nil {
+		w.Close()
+		os.Stderr = oldStderr
 		t.Fatalf("Merge failed: %v", err)
 	}
 
-	// Check that warning was logged
-	output := buf.String()
+	w.Close()
+	os.Stderr = oldStderr
+	captured, _ := io.ReadAll(r)
+	output := string(captured)
+
 	if !strings.Contains(output, "Warning: Token 'spacing.base' redefined") {
 		t.Errorf("Expected conflict warning, got: %s", output)
 	}
@@ -202,10 +212,13 @@ func TestLoader_MergeConflictWarnings(t *testing.T) {
 }
 
 func TestLoader_MergeNoWarnings(t *testing.T) {
-	// Capture log output
-	var buf bytes.Buffer
-	log.SetOutput(&buf)
-	defer log.SetOutput(os.Stderr)
+	// Capture stderr output
+	r, w, err := os.Pipe()
+	if err != nil {
+		t.Fatalf("Failed to create pipe: %v", err)
+	}
+	oldStderr := os.Stderr
+	os.Stderr = w
 
 	dict1 := &Dictionary{
 		Root: map[string]any{
@@ -228,22 +241,30 @@ func TestLoader_MergeNoWarnings(t *testing.T) {
 	}
 
 	// Merge with warnings disabled
-	if err := dict1.MergeWithPath(dict2, false, "test-file-2.json"); err != nil {
+	if err := dict1.MergeWithPath(dict2, false); err != nil {
+		w.Close()
+		os.Stderr = oldStderr
 		t.Fatalf("Merge failed: %v", err)
 	}
 
-	// Check that NO warning was logged
-	output := buf.String()
+	w.Close()
+	os.Stderr = oldStderr
+	captured, _ := io.ReadAll(r)
+	output := string(captured)
+
 	if strings.Contains(output, "Warning") {
 		t.Errorf("Expected no warnings, got: %s", output)
 	}
 }
 
 func TestLoader_TypeMismatchWarning(t *testing.T) {
-	// Capture log output
-	var buf bytes.Buffer
-	log.SetOutput(&buf)
-	defer log.SetOutput(os.Stderr)
+	// Capture stderr output
+	r, w, err := os.Pipe()
+	if err != nil {
+		t.Fatalf("Failed to create pipe: %v", err)
+	}
+	oldStderr := os.Stderr
+	os.Stderr = w
 
 	dict1 := &Dictionary{
 		Root: map[string]any{
@@ -262,12 +283,17 @@ func TestLoader_TypeMismatchWarning(t *testing.T) {
 	}
 
 	// Merge with warnings enabled
-	if err := dict1.MergeWithPath(dict2, true, "test-file-2.json"); err != nil {
+	if err := dict1.MergeWithPath(dict2, true); err != nil {
+		w.Close()
+		os.Stderr = oldStderr
 		t.Fatalf("Merge failed: %v", err)
 	}
 
-	// Check that warning was logged with type information
-	output := buf.String()
+	w.Close()
+	os.Stderr = oldStderr
+	captured, _ := io.ReadAll(r)
+	output := string(captured)
+
 	if !strings.Contains(output, "Warning: Token 'value' redefined") {
 		t.Errorf("Expected type mismatch warning, got: %s", output)
 	}
@@ -277,6 +303,7 @@ func TestLoader_TypeMismatchWarning(t *testing.T) {
 }
 
 func TestParseJSON(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name      string
 		input     string
@@ -307,6 +334,7 @@ func TestParseJSON(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			dict, err := ParseJSON(strings.NewReader(tt.input))
 
 			if tt.expectErr {
@@ -326,6 +354,7 @@ func TestParseJSON(t *testing.T) {
 }
 
 func TestDictionary_WriteJSON(t *testing.T) {
+	t.Parallel()
 	dict := &Dictionary{
 		Root: map[string]any{
 			"color": map[string]any{
@@ -358,6 +387,7 @@ func TestDictionary_WriteJSON(t *testing.T) {
 }
 
 func TestLoader_NonExistentDirectory(t *testing.T) {
+	t.Parallel()
 	loader := NewLoader()
 
 	_, err := loader.LoadBase("/nonexistent/path/that/should/not/exist")
@@ -367,6 +397,7 @@ func TestLoader_NonExistentDirectory(t *testing.T) {
 }
 
 func TestLoader_InvalidJSON(t *testing.T) {
+	t.Parallel()
 	tmpDir := t.TempDir()
 
 	tokensDir := tmpDir + "/tokens"
@@ -388,6 +419,7 @@ func TestLoader_InvalidJSON(t *testing.T) {
 }
 
 func TestDeepCopy(t *testing.T) {
+	t.Parallel()
 	original := &Dictionary{
 		Root: map[string]any{
 			"color": map[string]any{

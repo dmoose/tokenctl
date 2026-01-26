@@ -2,10 +2,12 @@ package tokens
 
 import (
 	"reflect"
+	"strings"
 	"testing"
 )
 
 func TestInherit(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name     string
 		base     map[string]any
@@ -43,6 +45,7 @@ func TestInherit(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			baseDict := &Dictionary{Root: tt.base}
 			themeDict := &Dictionary{Root: tt.theme}
 
@@ -59,6 +62,7 @@ func TestInherit(t *testing.T) {
 }
 
 func TestResolveThemeInheritance(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name      string
 		base      map[string]any
@@ -336,6 +340,7 @@ func TestResolveThemeInheritance(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			baseDict := &Dictionary{Root: tt.base}
 			themeDicts := make(map[string]*Dictionary)
 			for name, root := range tt.themes {
@@ -348,7 +353,7 @@ func TestResolveThemeInheritance(t *testing.T) {
 				if err == nil {
 					t.Fatalf("Expected error containing '%s', got nil", tt.errMsg)
 				}
-				if tt.errMsg != "" && !contains(err.Error(), tt.errMsg) {
+				if tt.errMsg != "" && !strings.Contains(err.Error(), tt.errMsg) {
 					t.Errorf("Expected error containing '%s', got '%s'", tt.errMsg, err.Error())
 				}
 				return
@@ -385,18 +390,8 @@ func TestResolveThemeInheritance(t *testing.T) {
 	}
 }
 
-func contains(s, substr string) bool {
-	return len(s) >= len(substr) && len(substr) > 0 && func() bool {
-		for i := 0; i <= len(s)-len(substr); i++ {
-			if s[i:i+len(substr)] == substr {
-				return true
-			}
-		}
-		return false
-	}()
-}
-
 func TestDiff(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name     string
 		target   map[string]any
@@ -460,6 +455,7 @@ func TestDiff(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			result := Diff(tt.target, tt.base)
 			if !reflect.DeepEqual(result, tt.expected) {
 				t.Errorf("Expected %v, got %v", tt.expected, result)

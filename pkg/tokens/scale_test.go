@@ -8,6 +8,7 @@ import (
 )
 
 func TestExpandScales(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name          string
 		input         map[string]any
@@ -153,6 +154,7 @@ func TestExpandScales(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			dict := &Dictionary{
 				Root:        tt.input,
 				SourceFiles: make(map[string]string),
@@ -197,6 +199,7 @@ func TestExpandScales(t *testing.T) {
 }
 
 func TestExpandScales_ScaleRemovedFromBaseToken(t *testing.T) {
+	t.Parallel()
 	dict := &Dictionary{
 		Root: map[string]any{
 			"size": map[string]any{
@@ -229,6 +232,7 @@ func TestExpandScales_ScaleRemovedFromBaseToken(t *testing.T) {
 }
 
 func TestExpandScales_SourceFileTracking(t *testing.T) {
+	t.Parallel()
 	dict := &Dictionary{
 		Root: map[string]any{
 			"size": map[string]any{
@@ -264,6 +268,7 @@ func TestExpandScales_SourceFileTracking(t *testing.T) {
 }
 
 func TestExpandScales_DescriptionInheritance(t *testing.T) {
+	t.Parallel()
 	dict := &Dictionary{
 		Root: map[string]any{
 			"size": map[string]any{
@@ -298,6 +303,7 @@ func TestExpandScales_DescriptionInheritance(t *testing.T) {
 }
 
 func TestStandardScale(t *testing.T) {
+	t.Parallel()
 	scale := StandardScale()
 
 	expectedKeys := []string{"xs", "sm", "md", "lg", "xl"}
@@ -325,6 +331,7 @@ func TestStandardScale(t *testing.T) {
 }
 
 func TestTypographyScale(t *testing.T) {
+	t.Parallel()
 	scale := TypographyScale()
 
 	expectedKeys := []string{"xs", "sm", "md", "lg", "xl", "2xl", "3xl"}
@@ -341,6 +348,7 @@ func TestTypographyScale(t *testing.T) {
 }
 
 func TestToFloat64(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name   string
 		input  any
@@ -359,6 +367,7 @@ func TestToFloat64(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			got, ok := toFloat64(tt.input)
 			if ok != tt.wantOk {
 				t.Errorf("toFloat64(%v) ok = %v, want %v", tt.input, ok, tt.wantOk)

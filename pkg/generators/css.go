@@ -26,8 +26,7 @@ func (g *CSSGenerator) Generate(ctx *GenerationContext) (string, error) {
 
 	// 2. @property declarations (if any)
 	if len(ctx.PropertyTokens) > 0 {
-		propertyDecls := g.generatePropertyDeclarations(ctx.PropertyTokens)
-		sb.WriteString(propertyDecls)
+		sb.WriteString(generatePropertyDeclarations(ctx.PropertyTokens))
 	}
 
 	// 3. @keyframes declarations (global animations)
@@ -74,32 +73,6 @@ func (g *CSSGenerator) Generate(ctx *GenerationContext) (string, error) {
 	}
 
 	return sb.String(), nil
-}
-
-// generatePropertyDeclarations creates @property declarations
-func (g *CSSGenerator) generatePropertyDeclarations(properties []tokens.PropertyToken) string {
-	var sb strings.Builder
-
-	// Sort by path for deterministic output
-	sorted := make([]tokens.PropertyToken, len(properties))
-	copy(sorted, properties)
-	sort.Slice(sorted, func(i, j int) bool {
-		return sorted[i].Path < sorted[j].Path
-	})
-
-	for _, prop := range sorted {
-		sb.WriteString(fmt.Sprintf("@property %s {\n", prop.CSSName))
-		sb.WriteString(fmt.Sprintf("  syntax: '%s';\n", prop.CSSSyntax))
-		if prop.Inherits {
-			sb.WriteString("  inherits: true;\n")
-		} else {
-			sb.WriteString("  inherits: false;\n")
-		}
-		sb.WriteString(fmt.Sprintf("  initial-value: %s;\n", prop.InitialValue))
-		sb.WriteString("}\n\n")
-	}
-
-	return sb.String()
 }
 
 // generateRootVariables creates :root block with base tokens in @layer tokens
@@ -154,7 +127,7 @@ func (g *CSSGenerator) generateThemeVariations(themes map[string]ThemeContext) (
 
 		// Determine selector
 		selector := fmt.Sprintf(`[data-theme="%s"]`, themeName)
-		if themeName == "light" {
+		if themeName == DefaultThemeName {
 			selector = fmt.Sprintf(`:root, [data-theme="%s"]`, themeName)
 		}
 
@@ -214,7 +187,7 @@ func (g *CSSGenerator) generateComponents(components map[string]tokens.Component
 			}
 
 			sb.WriteString(fmt.Sprintf("  .%s {\n", comp.Class))
-			g.writeProperties(&sb, baseProps, 4)
+			writeProperties(&sb, baseProps, 4)
 			sb.WriteString("  }\n\n")
 
 			// Write nested pseudo-selectors
@@ -226,9 +199,9 @@ func (g *CSSGenerator) generateComponents(components map[string]tokens.Component
 
 			for _, selectorKey := range nestedKeys {
 				props := nestedSelectors[selectorKey]
-				selector := g.buildStateSelector(comp.Class, selectorKey)
+				selector := buildStateSelector(comp.Class, selectorKey)
 				sb.WriteString(fmt.Sprintf("  %s {\n", selector))
-				g.writeProperties(&sb, props, 4)
+				writeProperties(&sb, props, 4)
 				sb.WriteString("  }\n\n")
 			}
 		}
@@ -244,7 +217,7 @@ func (g *CSSGenerator) generateComponents(components map[string]tokens.Component
 			variant := comp.Variants[vname]
 			if variant.Class != "" {
 				sb.WriteString(fmt.Sprintf("  .%s {\n", variant.Class))
-				g.writeProperties(&sb, variant.Properties, 4)
+				writeProperties(&sb, variant.Properties, 4)
 				sb.WriteString("  }\n\n")
 
 				// States
@@ -256,9 +229,9 @@ func (g *CSSGenerator) generateComponents(components map[string]tokens.Component
 
 				for _, stateKey := range stateKeys {
 					state := variant.States[stateKey]
-					selector := g.buildStateSelector(variant.Class, stateKey)
+					selector := buildStateSelector(variant.Class, stateKey)
 					sb.WriteString(fmt.Sprintf("  %s {\n", selector))
-					g.writeProperties(&sb, state.Properties, 4)
+					writeProperties(&sb, state.Properties, 4)
 					sb.WriteString("  }\n\n")
 				}
 			}
@@ -275,7 +248,7 @@ func (g *CSSGenerator) generateComponents(components map[string]tokens.Component
 			size := comp.Sizes[sname]
 			if size.Class != "" {
 				sb.WriteString(fmt.Sprintf("  .%s {\n", size.Class))
-				g.writeProperties(&sb, size.Properties, 4)
+				writeProperties(&sb, size.Properties, 4)
 				sb.WriteString("  }\n\n")
 			}
 		}
@@ -291,7 +264,7 @@ func (g *CSSGenerator) generateComponents(components map[string]tokens.Component
 			state := comp.States[sname]
 			if state.Class != "" {
 				sb.WriteString(fmt.Sprintf("  .%s {\n", state.Class))
-				g.writeProperties(&sb, state.Properties, 4)
+				writeProperties(&sb, state.Properties, 4)
 				sb.WriteString("  }\n\n")
 
 				// States can also have pseudo-selectors
@@ -303,9 +276,9 @@ func (g *CSSGenerator) generateComponents(components map[string]tokens.Component
 
 				for _, stateKey := range stateKeys {
 					pseudoState := state.States[stateKey]
-					selector := g.buildStateSelector(state.Class, stateKey)
+					selector := buildStateSelector(state.Class, stateKey)
 					sb.WriteString(fmt.Sprintf("  %s {\n", selector))
-					g.writeProperties(&sb, pseudoState.Properties, 4)
+					writeProperties(&sb, pseudoState.Properties, 4)
 					sb.WriteString("  }\n\n")
 				}
 			}
@@ -331,40 +304,3 @@ func generateReset() string {
 `
 }
 
-// buildStateSelector converts state key to CSS selector
-func (g *CSSGenerator) buildStateSelector(className, stateKey string) string {
-	if strings.HasPrefix(stateKey, "&") {
-		return fmt.Sprintf(".%s%s", className, stateKey[1:])
-	} else if strings.HasPrefix(stateKey, ":") {
-		return fmt.Sprintf(".%s%s", className, stateKey)
-	}
-	return fmt.Sprintf(".%s %s", className, stateKey)
-}
-
-// writeProperties writes CSS properties with proper indentation
-func (g *CSSGenerator) writeProperties(sb *strings.Builder, props map[string]any, indent int) {
-	if len(props) == 0 {
-		return
-	}
-
-	padding := strings.Repeat(" ", indent)
-
-	propNames := make([]string, 0, len(props))
-	for k := range props {
-		propNames = append(propNames, k)
-	}
-	sort.Strings(propNames)
-
-	for _, k := range propNames {
-		v := props[k]
-
-		if strings.HasPrefix(k, "$") {
-			continue
-		}
-
-		valStr := SerializeValueForProperty(k, v)
-		val := resolveTokenReferences(valStr)
-
-		fmt.Fprintf(sb, "%s%s: %s;\n", padding, k, val)
-	}
-}

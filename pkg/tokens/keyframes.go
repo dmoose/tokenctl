@@ -5,6 +5,7 @@ package tokens
 import (
 	"fmt"
 	"sort"
+	"strconv"
 	"strings"
 )
 
@@ -133,9 +134,8 @@ func keyframeSelectorOrder(selector string) int {
 		selector = strings.TrimSpace(selector[:idx])
 	}
 
-	// Parse percentage
+	// Parse percentage; unparseable selectors default to 0
 	selector = strings.TrimSuffix(selector, "%")
-	var pct int
-	fmt.Sscanf(selector, "%d", &pct)
+	pct, _ := strconv.Atoi(selector)
 	return pct
 }

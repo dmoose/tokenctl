@@ -8,6 +8,8 @@ import (
 )
 
 func TestNewCSSGenerator(t *testing.T) {
+	t.Parallel()
+
 	g := NewCSSGenerator()
 	if g == nil {
 		t.Error("NewCSSGenerator returned nil")
@@ -15,6 +17,8 @@ func TestNewCSSGenerator(t *testing.T) {
 }
 
 func TestCSSGenerator_Generate_Basic(t *testing.T) {
+	t.Parallel()
+
 	g := NewCSSGenerator()
 	ctx := &GenerationContext{
 		ResolvedTokens: map[string]any{
@@ -53,6 +57,8 @@ func TestCSSGenerator_Generate_Basic(t *testing.T) {
 }
 
 func TestCSSGenerator_Generate_WithThemes(t *testing.T) {
+	t.Parallel()
+
 	g := NewCSSGenerator()
 	ctx := &GenerationContext{
 		ResolvedTokens: map[string]any{
@@ -84,6 +90,8 @@ func TestCSSGenerator_Generate_WithThemes(t *testing.T) {
 }
 
 func TestCSSGenerator_Generate_WithLightTheme(t *testing.T) {
+	t.Parallel()
+
 	g := NewCSSGenerator()
 	ctx := &GenerationContext{
 		ResolvedTokens: map[string]any{},
@@ -108,6 +116,8 @@ func TestCSSGenerator_Generate_WithLightTheme(t *testing.T) {
 }
 
 func TestCSSGenerator_Generate_WithComponents(t *testing.T) {
+	t.Parallel()
+
 	g := NewCSSGenerator()
 	ctx := &GenerationContext{
 		ResolvedTokens: map[string]any{},
@@ -165,6 +175,8 @@ func TestCSSGenerator_Generate_WithComponents(t *testing.T) {
 }
 
 func TestCSSGenerator_Generate_WithNestedPseudoSelectors(t *testing.T) {
+	t.Parallel()
+
 	g := NewCSSGenerator()
 	ctx := &GenerationContext{
 		ResolvedTokens: map[string]any{},
@@ -206,6 +218,8 @@ func TestCSSGenerator_Generate_WithNestedPseudoSelectors(t *testing.T) {
 }
 
 func TestCSSGenerator_Generate_WithPropertyDeclarations(t *testing.T) {
+	t.Parallel()
+
 	g := NewCSSGenerator()
 	ctx := &GenerationContext{
 		ResolvedTokens: map[string]any{
@@ -240,6 +254,8 @@ func TestCSSGenerator_Generate_WithPropertyDeclarations(t *testing.T) {
 }
 
 func TestGenerateReset(t *testing.T) {
+	t.Parallel()
+
 	reset := generateReset()
 
 	if !strings.Contains(reset, "@layer reset {") {
@@ -254,7 +270,7 @@ func TestGenerateReset(t *testing.T) {
 }
 
 func TestBuildStateSelector(t *testing.T) {
-	g := NewCSSGenerator()
+	t.Parallel()
 
 	tests := []struct {
 		className string
@@ -268,7 +284,7 @@ func TestBuildStateSelector(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		result := g.buildStateSelector(tt.className, tt.stateKey)
+		result := buildStateSelector(tt.className, tt.stateKey)
 		if result != tt.expected {
 			t.Errorf("buildStateSelector(%q, %q) = %q, want %q",
 				tt.className, tt.stateKey, result, tt.expected)
@@ -277,6 +293,8 @@ func TestBuildStateSelector(t *testing.T) {
 }
 
 func TestCSSGenerator_SkipsMapValues(t *testing.T) {
+	t.Parallel()
+
 	g := NewCSSGenerator()
 	ctx := &GenerationContext{
 		ResolvedTokens: map[string]any{
@@ -299,6 +317,8 @@ func TestCSSGenerator_SkipsMapValues(t *testing.T) {
 }
 
 func TestCSSGenerator_DeterministicOutput(t *testing.T) {
+	t.Parallel()
+
 	g := NewCSSGenerator()
 	ctx := &GenerationContext{
 		ResolvedTokens: map[string]any{
@@ -327,6 +347,8 @@ func TestCSSGenerator_DeterministicOutput(t *testing.T) {
 }
 
 func TestCSSGenerator_Generate_WithKeyframes(t *testing.T) {
+	t.Parallel()
+
 	g := NewCSSGenerator()
 	ctx := &GenerationContext{
 		ResolvedTokens: map[string]any{},

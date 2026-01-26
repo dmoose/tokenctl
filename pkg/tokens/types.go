@@ -4,17 +4,7 @@ import "maps"
 
 // W3C Design Tokens 2025.10 Specification Types
 
-// Token represents a single design token
-type Token struct {
-	Value       any            `json:"$value"`
-	Type        string                 `json:"$type,omitempty"`
-	Description string                 `json:"$description,omitempty"`
-	Extensions  map[string]any `json:"$extensions,omitempty"`
-	// Additional metadata
-	Deprecated any `json:"$deprecated,omitempty"` // bool or string reason
-}
-
-// TokenGroup represents a collection of tokens or nested groups
+// Dictionary represents a collection of tokens or nested groups.
 // W3C spec allows mixed content (groups and tokens in the same object)
 // but defines tokens by the presence of "$value".
 // We use map[string]any to represent the raw structure

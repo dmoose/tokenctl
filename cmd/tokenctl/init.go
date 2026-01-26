@@ -95,20 +95,28 @@ func runInit(cmd *cobra.Command, args []string) error {
 
 	for path, content := range defaults {
 		fullPath := filepath.Join(dir, path)
-		f, err := os.Create(fullPath)
-		if err != nil {
-			return fmt.Errorf("failed to create file %s: %w", fullPath, err)
-		}
-		defer func() { _ = f.Close() }()
-
-		enc := json.NewEncoder(f)
-		enc.SetIndent("", "  ")
-		if err := enc.Encode(content); err != nil {
-			return fmt.Errorf("failed to write file %s: %w", fullPath, err)
+		if err := writeTokenFile(fullPath, content); err != nil {
+			return err
 		}
 		fmt.Printf("Created %s\n", fullPath)
 	}
 
 	fmt.Println("Done! You can now run 'tokenctl validate' to check your tokens.")
+	return nil
+}
+
+func writeTokenFile(path string, content any) error {
+	f, err := os.Create(path)
+	if err != nil {
+		return fmt.Errorf("failed to create file %s: %w", path, err)
+	}
+	defer f.Close()
+
+	enc := json.NewEncoder(f)
+	enc.SetIndent("", "  ")
+	if err := enc.Encode(content); err != nil {
+		_ = f.Close()
+		return fmt.Errorf("failed to write file %s: %w", path, err)
+	}
 	return nil
 }

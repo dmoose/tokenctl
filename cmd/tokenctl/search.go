@@ -58,14 +58,9 @@ func runSearch(cmd *cobra.Command, args []string) error {
 	metadata := tokens.ExtractMetadata(baseDict)
 
 	// Resolve values
-	resolver, err := tokens.NewResolver(baseDict)
+	resolved, err := resolveTokens(baseDict)
 	if err != nil {
-		return fmt.Errorf("failed to create resolver: %w", err)
-	}
-
-	resolved, err := resolver.ResolveAll()
-	if err != nil {
-		return fmt.Errorf("failed to resolve tokens: %w", err)
+		return err
 	}
 
 	// Filter and collect results
@@ -87,7 +82,7 @@ func runSearch(cmd *cobra.Command, args []string) error {
 		meta := metadata[path]
 
 		// Apply filters
-		if !matchesSearch(path, value, meta, query, searchType, searchCategory) {
+		if !matchesSearch(path, meta, query, searchType, searchCategory) {
 			continue
 		}
 
@@ -137,7 +132,7 @@ func runSearch(cmd *cobra.Command, args []string) error {
 }
 
 // matchesSearch checks if a token matches the search criteria
-func matchesSearch(path string, value any, meta *tokens.TokenMetadata, query, filterType, filterCategory string) bool {
+func matchesSearch(path string, meta *tokens.TokenMetadata, query, filterType, filterCategory string) bool {
 	pathLower := strings.ToLower(path)
 
 	// Query filter (matches path or description)
