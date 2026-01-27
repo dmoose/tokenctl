@@ -1,0 +1,9 @@
+{
+  "button": {
+    "$type": "component",
+    "danger": {
+      "background-color": { "$value": "{color.semantic.danger}" },
+      "color": { "$value": "#ffffff" }
+    }
+  }
+}

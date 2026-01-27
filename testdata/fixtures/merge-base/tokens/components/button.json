@@ -1,0 +1,14 @@
+{
+  "button": {
+    "$type": "component",
+    "$description": "Base button component",
+    "primary": {
+      "background-color": { "$value": "{color.semantic.primary}" },
+      "color": { "$value": "#ffffff" }
+    },
+    "success": {
+      "background-color": { "$value": "{color.semantic.success}" },
+      "color": { "$value": "#ffffff" }
+    }
+  }
+}

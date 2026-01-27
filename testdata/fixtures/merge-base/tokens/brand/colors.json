@@ -1,0 +1,15 @@
+{
+  "color": {
+    "$type": "color",
+    "brand": {
+      "blue-500": {
+        "$value": "#3b82f6",
+        "$description": "Primary brand blue"
+      },
+      "green-500": {
+        "$value": "#22c55e",
+        "$description": "Success green"
+      }
+    }
+  }
+}

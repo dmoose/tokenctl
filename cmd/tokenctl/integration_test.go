@@ -446,3 +446,171 @@ func TestIntegration_ThemeInheritance_Extends(t *testing.T) {
 		t.Error("Expected light theme selector in output")
 	}
 }
+
+// Multi-directory merge tests
+
+func TestIntegration_Build_MultiDir(t *testing.T) {
+	t.Parallel()
+	baseDir := "../../testdata/fixtures/merge-base"
+	extDir := "../../testdata/fixtures/merge-ext"
+	outputDir := t.TempDir()
+
+	cmd := exec.Command(getTokenctlPath(), "build", baseDir, extDir, "--output", outputDir)
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		t.Fatalf("multi-dir build failed: %v\nOutput: %s", err, output)
+	}
+
+	content, err := os.ReadFile(filepath.Join(outputDir, "tokens.css"))
+	if err != nil {
+		t.Fatalf("Failed to read output: %v", err)
+	}
+	css := string(content)
+
+	// Tokens from base
+	for _, expected := range []string{
+		"--color-brand-green-500:",
+		"--color-semantic-success:",
+	} {
+		if !strings.Contains(css, expected) {
+			t.Errorf("Expected base token %q in output", expected)
+		}
+	}
+
+	// Tokens from extension
+	for _, expected := range []string{
+		"--color-brand-red-500:",
+		"--color-semantic-danger:",
+	} {
+		if !strings.Contains(css, expected) {
+			t.Errorf("Expected extension token %q in output", expected)
+		}
+	}
+}
+
+func TestIntegration_Build_MultiDir_Override(t *testing.T) {
+	t.Parallel()
+	baseDir := "../../testdata/fixtures/merge-base"
+	extDir := "../../testdata/fixtures/merge-ext"
+	outputDir := t.TempDir()
+
+	cmd := exec.Command(getTokenctlPath(), "build", baseDir, extDir, "--format", "catalog", "--output", outputDir)
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		t.Fatalf("multi-dir catalog build failed: %v\nOutput: %s", err, output)
+	}
+
+	content, err := os.ReadFile(filepath.Join(outputDir, "catalog.json"))
+	if err != nil {
+		t.Fatalf("Failed to read catalog: %v", err)
+	}
+	catalog := string(content)
+
+	// Extension value (#2563eb) should win over base (#3b82f6)
+	if !strings.Contains(catalog, "#2563eb") {
+		t.Error("Expected extension override value #2563eb in catalog")
+	}
+	if strings.Contains(catalog, "#3b82f6") {
+		t.Error("Base value #3b82f6 should be overridden by extension")
+	}
+}
+
+func TestIntegration_Build_MultiDir_ComponentExtend(t *testing.T) {
+	t.Parallel()
+	baseDir := "../../testdata/fixtures/merge-base"
+	extDir := "../../testdata/fixtures/merge-ext"
+	outputDir := t.TempDir()
+
+	cmd := exec.Command(getTokenctlPath(), "build", baseDir, extDir, "--output", outputDir)
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		t.Fatalf("multi-dir build failed: %v\nOutput: %s", err, output)
+	}
+
+	content, err := os.ReadFile(filepath.Join(outputDir, "tokens.css"))
+	if err != nil {
+		t.Fatalf("Failed to read output: %v", err)
+	}
+	css := string(content)
+
+	// All 3 button variants should be present (primary+success from base, danger from ext)
+	for _, variant := range []string{"primary", "success", "danger"} {
+		if !strings.Contains(css, "--button-"+variant+"-background-color:") {
+			t.Errorf("Expected button variant %q in merged output", variant)
+		}
+	}
+}
+
+func TestIntegration_Build_MultiDir_ThemeMerge(t *testing.T) {
+	t.Parallel()
+	baseDir := "../../testdata/fixtures/merge-base"
+	extDir := "../../testdata/fixtures/merge-ext"
+	outputDir := t.TempDir()
+
+	cmd := exec.Command(getTokenctlPath(), "build", baseDir, extDir, "--output", outputDir)
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		t.Fatalf("multi-dir build failed: %v\nOutput: %s", err, output)
+	}
+
+	content, err := os.ReadFile(filepath.Join(outputDir, "tokens.css"))
+	if err != nil {
+		t.Fatalf("Failed to read output: %v", err)
+	}
+	css := string(content)
+
+	// Dark theme should have overrides from both base and ext
+	if !strings.Contains(css, `[data-theme="dark"]`) {
+		t.Fatal("Expected dark theme selector")
+	}
+	// Base dark theme contributes blue-500 override
+	if !strings.Contains(css, "--color-brand-blue-500: #60a5fa") {
+		t.Error("Expected base dark theme override for blue-500")
+	}
+	// Ext dark theme contributes red-500 override
+	if !strings.Contains(css, "--color-brand-red-500: #f87171") {
+		t.Error("Expected ext dark theme override for red-500")
+	}
+}
+
+func TestIntegration_Validate_MultiDir(t *testing.T) {
+	t.Parallel()
+	baseDir := "../../testdata/fixtures/merge-base"
+	extDir := "../../testdata/fixtures/merge-ext"
+
+	cmd := exec.Command(getTokenctlPath(), "validate", baseDir, extDir)
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		t.Fatalf("multi-dir validate failed: %v\nOutput: %s", err, output)
+	}
+
+	if !strings.Contains(string(output), "Validation Passed") {
+		t.Errorf("Expected validation to pass, got: %s", output)
+	}
+}
+
+func TestIntegration_Build_SingleDir_BackwardCompat(t *testing.T) {
+	t.Parallel()
+	fixtureDir := "../../testdata/fixtures/valid"
+	outputDir := t.TempDir()
+
+	// Single dir should work exactly as before
+	cmd := exec.Command(getTokenctlPath(), "build", fixtureDir, "--output", outputDir)
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		t.Fatalf("single-dir build failed: %v\nOutput: %s", err, output)
+	}
+
+	content, err := os.ReadFile(filepath.Join(outputDir, "tokens.css"))
+	if err != nil {
+		t.Fatalf("Failed to read output: %v", err)
+	}
+
+	css := string(content)
+	if !strings.Contains(css, "@import \"tailwindcss\"") {
+		t.Error("Expected tailwind import in single-dir output")
+	}
+	if !strings.Contains(css, "--color-brand-primary:") {
+		t.Error("Expected tokens in single-dir output")
+	}
+}

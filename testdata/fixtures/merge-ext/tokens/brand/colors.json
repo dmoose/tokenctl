@@ -1,0 +1,15 @@
+{
+  "color": {
+    "$type": "color",
+    "brand": {
+      "blue-500": {
+        "$value": "#2563eb",
+        "$description": "Dashboard brand blue (overrides base)"
+      },
+      "red-500": {
+        "$value": "#ef4444",
+        "$description": "Danger red"
+      }
+    }
+  }
+}

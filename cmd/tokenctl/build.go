@@ -14,9 +14,13 @@ import (
 )
 
 var buildCmd = &cobra.Command{
-	Use:   "build [directory]",
+	Use:   "build [directory...]",
 	Short: "Build token artifacts",
 	Long: `Build token artifacts from JSON token definitions.
+
+Multiple directories can be provided and are merged left-to-right.
+Later directories extend or override tokens from earlier ones.
+See MERGE.md for details on multi-directory merge behavior.
 
 Output formats:
   tailwind          Tailwind CSS 4 with @theme and @layer (default)
@@ -31,10 +35,9 @@ Flags:
 
 Examples:
   tokenctl build ./my-tokens --format=tailwind
-  tokenctl build ./my-tokens --format=manifest:color
-  tokenctl build ./my-tokens --format=manifest:color --customizable-only
-  tokenctl build ./my-tokens --format=manifest:components`,
-	Args: cobra.MaximumNArgs(1),
+  tokenctl build ./base-tokens ./dashboard-tokens
+  tokenctl build ./my-tokens --format=manifest:color --customizable-only`,
+	Args: cobra.ArbitraryArgs,
 	RunE: runBuild,
 }
 
@@ -70,14 +73,14 @@ func parseFormat(format string) (formatType string, category string, err error) 
 }
 
 func runBuild(cmd *cobra.Command, args []string) error {
-	dir := "."
-	if len(args) > 0 {
-		dir = args[0]
+	dirs := args
+	if len(dirs) == 0 {
+		dirs = []string{"."}
 	}
 
-	fmt.Printf("Building tokens from %s...\n", dir)
+	fmt.Printf("Building tokens from %s...\n", strings.Join(dirs, ", "))
 
-	baseDict, themes, err := loadTokens(dir)
+	baseDict, themes, err := loadTokens(dirs...)
 	if err != nil {
 		return err
 	}
