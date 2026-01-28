@@ -38,7 +38,7 @@ next_steps:
 ---
 schema_version: "1"
 timestamp: "2026-01-20T08:37:31-08:00"
-commit_hash: ""
+commit_hash: 54b6e6fbf572e004e61fcdfb044e0c81aff2531b
 changes:
     - summary: Add @keyframes support for CSS animations
       details: Parse 'keyframes' sections from token JSON files and generate CSS @keyframes blocks. Added KeyframeDefinition type with Name and Frames fields, ExtractKeyframes function to scan dictionaries, and GenerateKeyframesCSS to output formatted CSS. Frames are automatically sorted by percentage (from=0%, to=100%).
@@ -69,3 +69,37 @@ next_steps:
       details: Validate frame selectors are valid CSS (percentages, from/to keywords)
       priority: low
       scope: pkg/tokens
+---
+schema_version: "1"
+timestamp: "2026-02-07T12:22:09-08:00"
+commit_hash: ""
+changes:
+    - summary: Add version command with build-time info
+      details: |
+        Added tokenctl version command showing version, git commit, and build time.
+        Makefile now injects version info via ldflags during build and install.
+      change_type: feature
+      scope: cmd/tokenctl
+    - summary: Add body background and foreground colors to CSS reset
+      details: |
+        Body element now sets background-color: var(--color-background) and
+        color: var(--color-foreground) in the reset layer. Ensures theme colors
+        apply immediately without requiring additional CSS.
+      change_type: fix
+      scope: pkg/generators
+    - summary: Support dual theme directory layouts in loader
+      details: |
+        LoadThemes now checks both rootPath/themes/ and rootPath/tokens/themes/.
+        Supports both "tokenctl build tokens" (tokens dir) and "tokenctl build ."
+        (project root) invocations.
+      change_type: fix
+      scope: pkg/tokens
+    - summary: Remove completed AUDIT_TODO.md
+      details: All 34 audit items have been addressed; tracking file no longer needed.
+      change_type: other
+      scope: docs
+next_steps:
+    - summary: Document states section in token format documentation
+      details: Update TOKENS.md to show states alongside variants and sizes
+      priority: med
+      scope: docs

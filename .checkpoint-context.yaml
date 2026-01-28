@@ -58,3 +58,27 @@ context:
     conversation_context:
         - exchange: Discussed whether property-based CSS animations could replace keyframes
           outcome: 'Confirmed both are needed: transitions for triggered state changes, keyframes for autonomous loops'
+---
+schema_version: "1"
+timestamp: "2026-02-07T12:22:09-08:00"
+context:
+    problem_statement: |
+        Dogfooding revealed theme colors weren't applying to body element, requiring
+        manual CSS. Also needed version command for troubleshooting and dual theme
+        path support for different project layouts.
+    key_insights:
+        - insight: CSS reset should set structural colors on body element
+          impact: Theme switching works immediately without user adding body styles
+          scope: project
+        - insight: Token directory can be passed directly or as project root
+          impact: Loader needs to handle both layouts for flexible CLI usage
+          scope: checkpoint
+    decisions_made:
+        - decision: Body reset uses CSS variables, not hardcoded colors
+          rationale: Allows theme switching to work without CSS specificity issues
+          scope: project
+    established_patterns:
+        - pattern: Build-time version injection via ldflags
+          rationale: Standard Go pattern for embedding version info without config files
+          examples: 'go build -ldflags ''-X main.version=...'' '
+          scope: project
