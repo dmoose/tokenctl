@@ -7,7 +7,7 @@ This guide covers token-based design system concepts and how tokenctl implements
 
 1. [Token Architecture](#token-architecture)
 2. [Token Structure](#token-structure)
-3. [Token Types](#token-types)
+3. [Token Types](#token-types) — includes [Color Model](#why-oklch)
 4. [References](#references)
 5. [Expressions & Computed Values](#expressions--computed-values)
 6. [Scale Expansion](#scale-expansion)
@@ -15,7 +15,7 @@ This guide covers token-based design system concepts and how tokenctl implements
 8. [CSS @property Declarations](#css-property-declarations)
 9. [CSS @keyframes Animations](#css-keyframes-animations)
 10. [Theme System](#theme-system)
-11. [Components](#components)
+11. [Components](#components) — includes [States](#states), [Container Queries](#container-queries), [Composition Metadata](#composition-metadata)
 12. [Best Practices](#best-practices)
 13. [Troubleshooting](#troubleshooting)
 
@@ -155,7 +155,16 @@ CSS color values. Accepts hex, rgb, hsl, oklch, or named colors.
 }
 ```
 
-OKLCH is recommended for perceptual uniformity when manipulating colors.
+#### Why OKLCH?
+
+tokenctl's color functions (`contrast()`, `darken()`, `lighten()`, `shade()`) operate in the OKLCH color space. Unlike RGB or HSL, OKLCH is perceptually uniform — equal numeric steps produce equal visual steps. This matters because:
+
+- **`darken(color, 10%)`** reduces the L (lightness) channel in OKLCH, producing a result that *looks* 10% darker regardless of the starting hue. In HSL, the same operation produces wildly different visual results for blue vs yellow.
+- **`contrast(color)`** evaluates WCAG AA luminance contrast. It picks white or black (in the source color's format) based on which provides a contrast ratio >= 4.5:1.
+- **`shade(color, level)`** derives surface colors by stepping lightness down ~4% per level, producing the even progression used by DaisyUI's base-100/200/300 pattern.
+- **Gamut clamping**: Computed colors can fall outside the displayable sRGB gamut. tokenctl clamps these to valid values automatically, so `darken()` on an already-dark color won't produce invalid CSS.
+
+When defining color tokens, OKLCH values (`oklch(49% 0.3 275)`) are recommended but hex, rgb, hsl, and named colors all work. The color space only matters for computed expressions — raw values pass through as-is.
 
 ### dimension
 
@@ -818,6 +827,144 @@ Variants can include pseudo-class states:
 
 Token references in component properties are converted to `var(--token-path)`.
 
+### States
+
+States represent semantic conditions of a component (error, disabled, loading). They are structurally identical to variants but convey a different intent: variants are design choices (primary, outline), while states are application-driven conditions.
+
+```json
+{
+  "components": {
+    "input": {
+      "$type": "component",
+      "$class": "input",
+      "base": {
+        "padding": "{spacing.md}",
+        "border": "1px solid {color.border}"
+      },
+      "states": {
+        "error": {
+          "$class": "input-error",
+          "border-color": "{color.error}",
+          ":focus": {
+            "border-color": "{color.error}",
+            "outline": "2px solid {color.error}"
+          }
+        },
+        "disabled": {
+          "$class": "input-disabled",
+          "opacity": "0.5",
+          "cursor": "not-allowed"
+        }
+      }
+    }
+  }
+}
+```
+
+Each state entry requires a `$class` and can contain CSS properties and pseudo-class selectors (`:hover`, `:focus`, etc.), just like variants.
+
+**Generated CSS:**
+
+```css
+@layer components {
+  .input {
+    padding: var(--spacing-md);
+    border: 1px solid var(--color-border);
+  }
+
+  .input-error {
+    border-color: var(--color-error);
+  }
+
+  .input-error:focus {
+    border-color: var(--color-error);
+    outline: 2px solid var(--color-error);
+  }
+
+  .input-disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+```
+
+### Container Queries
+
+Components can define responsive overrides that activate based on container dimensions using `$container`. This generates CSS `@container` rules.
+
+```json
+{
+  "components": {
+    "sidebar": {
+      "$type": "component",
+      "$class": "sidebar",
+      "base": {
+        "display": "block",
+        "width": "250px"
+      },
+      "$container": {
+        "main (max-width: 768px)": {
+          "display": "none"
+        }
+      }
+    },
+    "content": {
+      "$type": "component",
+      "$class": "content",
+      "base": {
+        "width": "auto"
+      },
+      "$container": {
+        "main (max-width: 768px)": {
+          "width": "100%"
+        }
+      }
+    }
+  }
+}
+```
+
+The `$container` field maps query strings to CSS property overrides. The query format is `"container-name (condition)"`.
+
+**Generated CSS:**
+
+```css
+@container main (max-width: 768px) {
+  .content {
+    width: 100%;
+  }
+  .sidebar {
+    display: none;
+  }
+}
+```
+
+Container query rules are output outside `@layer` so they override component layer styles via the natural CSS cascade. When multiple components share the same query, they are grouped into a single `@container` block. Selectors within a block are sorted alphabetically for deterministic output.
+
+### Composition Metadata
+
+Components can declare relationships for documentation and LLM manifests:
+
+- **`$contains`**: Lists child components this component can contain
+- **`$requires`**: Names the parent component this must appear inside
+
+```json
+{
+  "card": {
+    "$type": "component",
+    "$class": "card",
+    "$contains": ["card-body", "card-title", "card-actions"]
+  },
+  "card-body": {
+    "$type": "component",
+    "$class": "card-body",
+    "$requires": "card"
+  }
+}
+```
+
+These fields appear in catalog and manifest output so that LLMs understand which components can be nested together.
+
 ---
 
 ## Best Practices
@@ -1009,12 +1156,19 @@ Not:
 ### CLI Commands
 
 ```bash
-tokenctl init [dir]           # Initialize token system
-tokenctl validate [dir]       # Validate tokens
-tokenctl build [dir]          # Build artifacts
-  --format=tailwind         # CSS output (default)
-  --format=catalog          # JSON catalog
-  --output=<dir>            # Output directory (default: dist)
+tokenctl init [dir]            # Initialize token system
+tokenctl validate [dir...]     # Validate tokens (multi-dir merge)
+  --strict-layers            # Enforce layer reference rules
+tokenctl build [dir...]        # Build artifacts (multi-dir merge)
+  --format=tailwind          # Tailwind 4 CSS (default)
+  --format=css               # Pure CSS (no Tailwind)
+  --format=catalog           # JSON catalog
+  --format=manifest:CATEGORY # Category-scoped manifest
+  --output=<dir>             # Output directory (default: dist)
+  --customizable-only        # Only $customizable tokens
+tokenctl search [query]        # Search tokens
+  --type=<type>              # Filter by type
+  --category=<cat>           # Filter by category
 ```
 
 ### Token Syntax
@@ -1030,8 +1184,20 @@ tokenctl build [dir]          # Build artifacts
       "$property": true,
       "$min": "...",
       "$max": "...",
-      "$scale": { "xs": 0.6, "md": 1.0, "xl": 1.4 }
+      "$scale": { "xs": 0.6, "md": 1.0, "xl": 1.4 },
+      "$responsive": { "md": "...", "lg": "..." }
     }
+  },
+  "component": {
+    "$type": "component",
+    "$class": "cls",
+    "$contains": ["child"],
+    "$requires": "parent",
+    "$container": { "name (condition)": { "prop": "val" } },
+    "base": {},
+    "variants": {},
+    "sizes": {},
+    "states": {}
   }
 }
 ```

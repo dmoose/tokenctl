@@ -290,5 +290,5 @@ This checks:
 ## See Also
 
 - [DaisyUI Documentation](https://daisyui.com/docs)
-- [tokenctl ADVANCED_USAGE.md](../../ADVANCED_USAGE.md) - CSS composition patterns
+- [tokenctl CSS_PATTERNS.md](../../CSS_PATTERNS.md) - CSS composition patterns
 - [Tailwind CSS 4 Theming](https://tailwindcss.com/docs/theme)

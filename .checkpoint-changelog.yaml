@@ -72,7 +72,7 @@ next_steps:
 ---
 schema_version: "1"
 timestamp: "2026-02-07T12:22:09-08:00"
-commit_hash: ""
+commit_hash: d02da80c7320de00e0a46266653801c775a5f78e
 changes:
     - summary: Add version command with build-time info
       details: |
