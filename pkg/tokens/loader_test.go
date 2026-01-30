@@ -189,12 +189,12 @@ func TestLoader_MergeConflictWarnings(t *testing.T) {
 
 	// Merge with warnings enabled
 	if err := dict1.MergeWithPath(dict2, true); err != nil {
-		w.Close()
+		_ = w.Close()
 		os.Stderr = oldStderr
 		t.Fatalf("Merge failed: %v", err)
 	}
 
-	w.Close()
+	_ = w.Close()
 	os.Stderr = oldStderr
 	captured, _ := io.ReadAll(r)
 	output := string(captured)
@@ -242,12 +242,12 @@ func TestLoader_MergeNoWarnings(t *testing.T) {
 
 	// Merge with warnings disabled
 	if err := dict1.MergeWithPath(dict2, false); err != nil {
-		w.Close()
+		_ = w.Close()
 		os.Stderr = oldStderr
 		t.Fatalf("Merge failed: %v", err)
 	}
 
-	w.Close()
+	_ = w.Close()
 	os.Stderr = oldStderr
 	captured, _ := io.ReadAll(r)
 	output := string(captured)
@@ -284,12 +284,12 @@ func TestLoader_TypeMismatchWarning(t *testing.T) {
 
 	// Merge with warnings enabled
 	if err := dict1.MergeWithPath(dict2, true); err != nil {
-		w.Close()
+		_ = w.Close()
 		os.Stderr = oldStderr
 		t.Fatalf("Merge failed: %v", err)
 	}
 
-	w.Close()
+	_ = w.Close()
 	os.Stderr = oldStderr
 	captured, _ := io.ReadAll(r)
 	output := string(captured)
