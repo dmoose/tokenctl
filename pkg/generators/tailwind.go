@@ -2,44 +2,11 @@ package generators
 
 import (
 	"fmt"
-	"regexp"
 	"sort"
 	"strings"
 
 	"github.com/dmoose/tokenctl/pkg/tokens"
 )
-
-// serializeValueForCSS converts any value to a proper CSS string
-// Handles arrays by joining with appropriate separator based on value type
-func serializeValueForCSS(val any) string {
-	switch v := val.(type) {
-	case []any:
-		// Arrays are comma-separated for CSS custom properties
-		parts := make([]string, len(v))
-		for i, item := range v {
-			parts[i] = fmt.Sprintf("%v", item)
-		}
-		return strings.Join(parts, ", ")
-	case []string:
-		// Handle string slices as well
-		return strings.Join(v, ", ")
-	default:
-		// Check for other slice types via reflection-like approach
-		str := fmt.Sprintf("%v", val)
-		// If the default formatting produced brackets, it's likely a slice we didn't handle
-		// This is a fallback - ideally all slice types should be handled above
-		if len(str) > 2 && str[0] == '[' && str[len(str)-1] == ']' {
-			// Remove brackets and replace spaces with ", " for comma separation
-			inner := str[1 : len(str)-1]
-			// This is a simple heuristic - space-separated values inside brackets
-			parts := strings.Fields(inner)
-			if len(parts) > 1 {
-				return strings.Join(parts, ", ")
-			}
-		}
-		return str
-	}
-}
 
 // GenerationContext provides all necessary data for generation
 type GenerationContext struct {
@@ -74,8 +41,7 @@ func (g *TailwindGenerator) Generate(ctx *GenerationContext) (string, error) {
 
 	// 1. @property declarations (before @theme for type registration)
 	if len(ctx.PropertyTokens) > 0 {
-		propertyDecls := g.generatePropertyDeclarations(ctx.PropertyTokens)
-		sb.WriteString(propertyDecls)
+		sb.WriteString(generatePropertyDeclarations(ctx.PropertyTokens))
 	}
 
 	// 2. @keyframes declarations (global animations)
@@ -119,32 +85,6 @@ func (g *TailwindGenerator) Generate(ctx *GenerationContext) (string, error) {
 	}
 
 	return sb.String(), nil
-}
-
-// generatePropertyDeclarations creates @property declarations for typed tokens
-func (g *TailwindGenerator) generatePropertyDeclarations(properties []tokens.PropertyToken) string {
-	var sb strings.Builder
-
-	// Sort by path for deterministic output
-	sorted := make([]tokens.PropertyToken, len(properties))
-	copy(sorted, properties)
-	sort.Slice(sorted, func(i, j int) bool {
-		return sorted[i].Path < sorted[j].Path
-	})
-
-	for _, prop := range sorted {
-		sb.WriteString(fmt.Sprintf("@property %s {\n", prop.CSSName))
-		sb.WriteString(fmt.Sprintf("  syntax: '%s';\n", prop.CSSSyntax))
-		if prop.Inherits {
-			sb.WriteString("  inherits: true;\n")
-		} else {
-			sb.WriteString("  inherits: false;\n")
-		}
-		sb.WriteString(fmt.Sprintf("  initial-value: %s;\n", prop.InitialValue))
-		sb.WriteString("}\n\n")
-	}
-
-	return sb.String()
 }
 
 // generateBaseTheme creates the root @theme block with base tokens
@@ -193,7 +133,7 @@ func (g *TailwindGenerator) generateThemeVariations(themes map[string]ThemeConte
 
 		// Determine selector
 		selector := fmt.Sprintf(`[data-theme="%s"]`, themeName)
-		if themeName == "light" {
+		if themeName == DefaultThemeName {
 			selector = fmt.Sprintf(`:root, [data-theme="%s"]`, themeName)
 		}
 
@@ -253,7 +193,7 @@ func (g *TailwindGenerator) generateComponents(components map[string]tokens.Comp
 			}
 
 			sb.WriteString(fmt.Sprintf("  .%s {\n", comp.Class))
-			g.writeProperties(&sb, baseProps, 4)
+			writeProperties(&sb, baseProps, 4)
 			sb.WriteString("  }\n")
 
 			// Write nested pseudo-selectors as separate rules
@@ -265,9 +205,9 @@ func (g *TailwindGenerator) generateComponents(components map[string]tokens.Comp
 
 			for _, selectorKey := range nestedKeys {
 				props := nestedSelectors[selectorKey]
-				selector := g.buildStateSelector(comp.Class, selectorKey)
+				selector := buildStateSelector(comp.Class, selectorKey)
 				sb.WriteString(fmt.Sprintf("  %s {\n", selector))
-				g.writeProperties(&sb, props, 4)
+				writeProperties(&sb, props, 4)
 				sb.WriteString("  }\n")
 			}
 		}
@@ -283,7 +223,7 @@ func (g *TailwindGenerator) generateComponents(components map[string]tokens.Comp
 			variant := comp.Variants[vname]
 			if variant.Class != "" {
 				sb.WriteString(fmt.Sprintf("  .%s {\n", variant.Class))
-				g.writeProperties(&sb, variant.Properties, 4)
+				writeProperties(&sb, variant.Properties, 4)
 				sb.WriteString("  }\n")
 
 				// States inside variant (hover, focus, etc)
@@ -295,9 +235,9 @@ func (g *TailwindGenerator) generateComponents(components map[string]tokens.Comp
 
 				for _, stateKey := range stateKeys {
 					state := variant.States[stateKey]
-					selector := g.buildStateSelector(variant.Class, stateKey)
+					selector := buildStateSelector(variant.Class, stateKey)
 					sb.WriteString(fmt.Sprintf("  %s {\n", selector))
-					g.writeProperties(&sb, state.Properties, 4)
+					writeProperties(&sb, state.Properties, 4)
 					sb.WriteString("  }\n")
 				}
 			}
@@ -314,7 +254,7 @@ func (g *TailwindGenerator) generateComponents(components map[string]tokens.Comp
 			size := comp.Sizes[sname]
 			if size.Class != "" {
 				sb.WriteString(fmt.Sprintf("  .%s {\n", size.Class))
-				g.writeProperties(&sb, size.Properties, 4)
+				writeProperties(&sb, size.Properties, 4)
 				sb.WriteString("  }\n")
 			}
 		}
@@ -322,51 +262,6 @@ func (g *TailwindGenerator) generateComponents(components map[string]tokens.Comp
 
 	sb.WriteString("}\n")
 	return sb.String(), nil
-}
-
-// buildStateSelector converts state key to CSS selector
-func (g *TailwindGenerator) buildStateSelector(className, stateKey string) string {
-	// Handle state syntax like "&:hover" or ":hover"
-	if strings.HasPrefix(stateKey, "&") {
-		return fmt.Sprintf(".%s%s", className, stateKey[1:])
-	} else if strings.HasPrefix(stateKey, ":") {
-		return fmt.Sprintf(".%s%s", className, stateKey)
-	}
-	// Fallback for complex selectors
-	return fmt.Sprintf(".%s %s", className, stateKey)
-}
-
-// writeProperties writes CSS properties with proper indentation and serialization
-func (g *TailwindGenerator) writeProperties(sb *strings.Builder, props map[string]any, indent int) {
-	if len(props) == 0 {
-		return
-	}
-
-	padding := strings.Repeat(" ", indent)
-
-	// Sort property names for deterministic output
-	propNames := make([]string, 0, len(props))
-	for k := range props {
-		propNames = append(propNames, k)
-	}
-	sort.Strings(propNames)
-
-	for _, k := range propNames {
-		v := props[k]
-
-		// Skip metadata keys (start with $)
-		if strings.HasPrefix(k, "$") {
-			continue
-		}
-
-		// Serialize complex types (arrays, etc) with context-aware handling
-		valStr := SerializeValueForProperty(k, v)
-
-		// Resolve all token references to var(--token)
-		val := resolveTokenReferences(valStr)
-
-		fmt.Fprintf(sb, "%s%s: %s;\n", padding, k, val)
-	}
 }
 
 // Legacy methods for backwards compatibility during migration
@@ -383,20 +278,3 @@ func (g *TailwindGenerator) GenerateComponents(components map[string]tokens.Comp
 	return g.generateComponents(components)
 }
 
-// resolveTokenReferences converts all {token.path} references to var(--token-path)
-// Handles multiple references in a single string: "{spacing.sm} {spacing.md}" -> "var(--spacing-sm) var(--spacing-md)"
-func resolveTokenReferences(value string) string {
-	// Pattern matches {token.path.here}
-	refPattern := regexp.MustCompile(`\{([^}]+)\}`)
-
-	// Replace all matches
-	result := refPattern.ReplaceAllStringFunc(value, func(match string) string {
-		// Extract token path (remove { and })
-		tokenPath := match[1 : len(match)-1]
-		// Convert to CSS variable format
-		cssVar := strings.ReplaceAll(tokenPath, ".", "-")
-		return fmt.Sprintf("var(--%s)", cssVar)
-	})
-
-	return result
-}

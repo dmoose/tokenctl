@@ -6,16 +6,11 @@ import (
 	"strings"
 )
 
-// ThemeGenerator generates CSS for theme variables
-type ThemeGenerator struct {
-}
-
-func NewThemeGenerator() *ThemeGenerator {
-	return &ThemeGenerator{}
-}
+// DefaultThemeName is the theme that maps to :root (the default/fallback theme).
+const DefaultThemeName = "light"
 
 // GenerateThemes generates CSS blocks for multiple themes
-func (g *ThemeGenerator) GenerateThemes(themes map[string]map[string]any) (string, error) {
+func GenerateThemes(themes map[string]map[string]any) (string, error) {
 	var sb strings.Builder
 	sb.WriteString("@layer base {\n")
 
@@ -30,7 +25,7 @@ func (g *ThemeGenerator) GenerateThemes(themes map[string]map[string]any) (strin
 		tokens := themes[themeName]
 
 		selector := fmt.Sprintf(`[data-theme="%s"]`, themeName)
-		if themeName == "light" {
+		if themeName == DefaultThemeName {
 			selector = fmt.Sprintf(`:root, [data-theme="%s"]`, themeName)
 		}
 

@@ -4,6 +4,8 @@ package main
 import (
 	"fmt"
 	"os"
+	"path/filepath"
+	"sort"
 	"strings"
 
 	"github.com/dmoose/tokenctl/pkg/generators"
@@ -51,15 +53,20 @@ func init() {
 
 // parseFormat extracts format type and optional category from format string
 // e.g., "manifest:color" returns ("manifest", "color")
-func parseFormat(format string) (formatType string, category string) {
+func parseFormat(format string) (formatType string, category string, err error) {
 	if strings.HasPrefix(format, "manifest:") {
 		parts := strings.SplitN(format, ":", 2)
 		if len(parts) == 2 {
-			return "manifest", parts[1]
+			cat := parts[1]
+			// Sanitize category to prevent path traversal
+			if strings.ContainsAny(cat, "/\\") || strings.Contains(cat, "..") {
+				return "", "", fmt.Errorf("invalid category %q: must not contain path separators or '..'", cat)
+			}
+			return "manifest", cat, nil
 		}
-		return "manifest", ""
+		return "manifest", "", nil
 	}
-	return format, ""
+	return format, "", nil
 }
 
 func runBuild(cmd *cobra.Command, args []string) error {
@@ -70,199 +77,176 @@ func runBuild(cmd *cobra.Command, args []string) error {
 
 	fmt.Printf("Building tokens from %s...\n", dir)
 
-	// 1. Load Dictionary
-	loader := tokens.NewLoader()
-
-	// Load Base
-	baseDict, err := loader.LoadBase(dir)
+	baseDict, themes, err := loadTokens(dir)
 	if err != nil {
-		return fmt.Errorf("failed to load base tokens: %w", err)
+		return err
 	}
 
-	// Load Themes
-	themes, err := loader.LoadThemes(dir)
+	resolvedBase, err := resolveTokens(baseDict)
 	if err != nil {
-		return fmt.Errorf("failed to load themes: %w", err)
+		return err
 	}
 
-	// 2. Resolve Base (Root)
-	resolver, err := tokens.NewResolver(baseDict)
+	formatType, category, err := parseFormat(format)
 	if err != nil {
-		return fmt.Errorf("failed to initialize resolver for base: %w", err)
-	}
-	resolvedBase, err := resolver.ResolveAll()
-	if err != nil {
-		return fmt.Errorf("resolution failed for base: %w", err)
+		return err
 	}
 
-	// 3. Prepare Generation Context
 	var content string
-	formatType, category := parseFormat(format)
-
 	switch formatType {
 	case "tailwind", "css":
-		// Resolve theme inheritance chains (handles $extends)
-		inheritedThemes, err := tokens.ResolveThemeInheritance(baseDict, themes)
-		if err != nil {
-			return fmt.Errorf("failed to resolve theme inheritance: %w", err)
-		}
-
-		// Build theme contexts
-		themeContexts := make(map[string]generators.ThemeContext)
-		for name, mergedDict := range inheritedThemes {
-			// Resolve theme tokens
-			themeResolver, err := tokens.NewResolver(mergedDict)
-			if err != nil {
-				return fmt.Errorf("failed to resolve theme %s: %w", name, err)
-			}
-			resolvedTheme, err := themeResolver.ResolveAll()
-			if err != nil {
-				return fmt.Errorf("resolution failed for theme %s: %w", name, err)
-			}
-
-			// Calculate diff from base (only output differences)
-			themeDiff := tokens.Diff(resolvedTheme, resolvedBase)
-
-			themeContexts[name] = generators.ThemeContext{
-				Dict:           mergedDict,
-				ResolvedTokens: resolvedTheme,
-				DiffTokens:     themeDiff,
-			}
-		}
-
-		// Extract components from base dictionary
-		components, err := baseDict.ExtractComponents()
-		if err != nil {
-			return fmt.Errorf("failed to extract components: %w", err)
-		}
-
-		// Extract tokens with $property for @property declarations
-		propertyTokens := tokens.ExtractPropertyTokens(baseDict, resolvedBase)
-
-		// Extract @keyframes definitions
-		keyframes := tokens.ExtractKeyframes(baseDict)
-
-		// Extract breakpoints and responsive tokens
-		breakpoints := tokens.ExtractBreakpoints(baseDict)
-		responsiveTokens := tokens.ExtractResponsiveTokens(baseDict)
-
-		// Build generation context
-		ctx := &generators.GenerationContext{
-			BaseDict:         baseDict,
-			ResolvedTokens:   resolvedBase,
-			Components:       components,
-			Themes:           themeContexts,
-			PropertyTokens:   propertyTokens,
-			Keyframes:        keyframes,
-			Breakpoints:      breakpoints,
-			ResponsiveTokens: responsiveTokens,
-		}
-
-		// Generate CSS using appropriate generator
-		if formatType == "css" {
-			gen := generators.NewCSSGenerator()
-			content, err = gen.Generate(ctx)
-			if err != nil {
-				return fmt.Errorf("css generation failed: %w", err)
-			}
-		} else {
-			gen := generators.NewTailwindGenerator()
-			content, err = gen.Generate(ctx)
-			if err != nil {
-				return fmt.Errorf("tailwind generation failed: %w", err)
-			}
-		}
-
+		content, err = buildCSSOutput(formatType, baseDict, resolvedBase, themes)
 	case "catalog", "manifest":
-		// Create generator with optional category and customizable filters
-		opts := generators.CatalogOptions{
-			Category:         category,
-			CustomizableOnly: customizableOnly,
-		}
-		gen := generators.NewCatalogGeneratorWithOptions(opts)
-
-		components, err := baseDict.ExtractComponents()
-		if err != nil {
-			return fmt.Errorf("failed to extract components: %w", err)
-		}
-
-		// Extract rich metadata from base dictionary
-		metadata := tokens.ExtractMetadata(baseDict)
-
-		// Build theme inputs for catalog
-		var catalogThemes map[string]generators.CatalogThemeInput
-		if len(themes) > 0 {
-			// Resolve theme inheritance chains (handles $extends)
-			inheritedThemes, err := tokens.ResolveThemeInheritance(baseDict, themes)
-			if err != nil {
-				return fmt.Errorf("failed to resolve theme inheritance: %w", err)
-			}
-
-			catalogThemes = make(map[string]generators.CatalogThemeInput)
-			for name, mergedDict := range inheritedThemes {
-				// Resolve theme tokens
-				themeResolver, err := tokens.NewResolver(mergedDict)
-				if err != nil {
-					return fmt.Errorf("failed to resolve theme %s: %w", name, err)
-				}
-				resolvedTheme, err := themeResolver.ResolveAll()
-				if err != nil {
-					return fmt.Errorf("resolution failed for theme %s: %w", name, err)
-				}
-
-				// Calculate diff from base
-				themeDiff := tokens.Diff(resolvedTheme, resolvedBase)
-
-				// Extract extends and description from original theme dict
-				var extends *string
-				var description string
-				if originalTheme, ok := themes[name]; ok {
-					if extendsVal, ok := originalTheme.Root["$extends"].(string); ok {
-						extends = &extendsVal
-					}
-					if descVal, ok := originalTheme.Root["$description"].(string); ok {
-						description = descVal
-					}
-				}
-
-				catalogThemes[name] = generators.CatalogThemeInput{
-					Extends:        extends,
-					Description:    description,
-					ResolvedTokens: resolvedTheme,
-					DiffTokens:     themeDiff,
-				}
-			}
-		}
-
-		content, err = gen.GenerateWithMetadata(resolvedBase, components, catalogThemes, metadata)
-		if err != nil {
-			return fmt.Errorf("catalog generation failed: %w", err)
-		}
-
+		content, err = buildCatalogOutput(category, baseDict, resolvedBase, themes)
 	default:
 		return fmt.Errorf("unknown format: %s (valid: tailwind, css, catalog, manifest:CATEGORY)", format)
 	}
+	if err != nil {
+		return err
+	}
 
-	// 4. Write
+	return writeOutput(formatType, category, content)
+}
+
+// buildCSSOutput generates Tailwind or pure CSS from resolved tokens and themes.
+func buildCSSOutput(formatType string, baseDict *tokens.Dictionary, resolvedBase map[string]any, themes map[string]*tokens.Dictionary) (string, error) {
+	inheritedThemes, err := tokens.ResolveThemeInheritance(baseDict, themes)
+	if err != nil {
+		return "", fmt.Errorf("failed to resolve theme inheritance: %w", err)
+	}
+
+	// Build theme contexts (sorted for deterministic error reporting)
+	themeContexts := make(map[string]generators.ThemeContext)
+	sortedNames := make([]string, 0, len(inheritedThemes))
+	for name := range inheritedThemes {
+		sortedNames = append(sortedNames, name)
+	}
+	sort.Strings(sortedNames)
+
+	for _, name := range sortedNames {
+		mergedDict := inheritedThemes[name]
+		themeResolver, err := tokens.NewResolver(mergedDict)
+		if err != nil {
+			return "", fmt.Errorf("failed to resolve theme %s: %w", name, err)
+		}
+		resolvedTheme, err := themeResolver.ResolveAll()
+		if err != nil {
+			return "", fmt.Errorf("resolution failed for theme %s: %w", name, err)
+		}
+
+		themeContexts[name] = generators.ThemeContext{
+			Dict:           mergedDict,
+			ResolvedTokens: resolvedTheme,
+			DiffTokens:     tokens.Diff(resolvedTheme, resolvedBase),
+		}
+	}
+
+	components, err := baseDict.ExtractComponents()
+	if err != nil {
+		return "", fmt.Errorf("failed to extract components: %w", err)
+	}
+
+	ctx := &generators.GenerationContext{
+		BaseDict:         baseDict,
+		ResolvedTokens:   resolvedBase,
+		Components:       components,
+		Themes:           themeContexts,
+		PropertyTokens:   tokens.ExtractPropertyTokens(baseDict, resolvedBase),
+		Keyframes:        tokens.ExtractKeyframes(baseDict),
+		Breakpoints:      tokens.ExtractBreakpoints(baseDict),
+		ResponsiveTokens: tokens.ExtractResponsiveTokens(baseDict),
+	}
+
+	if formatType == "css" {
+		gen := generators.NewCSSGenerator()
+		return gen.Generate(ctx)
+	}
+	gen := generators.NewTailwindGenerator()
+	return gen.Generate(ctx)
+}
+
+// buildCatalogOutput generates a JSON catalog or category-scoped manifest.
+func buildCatalogOutput(category string, baseDict *tokens.Dictionary, resolvedBase map[string]any, themes map[string]*tokens.Dictionary) (string, error) {
+	gen := generators.NewCatalogGeneratorWithOptions(generators.CatalogOptions{
+		Category:         category,
+		CustomizableOnly: customizableOnly,
+	})
+
+	components, err := baseDict.ExtractComponents()
+	if err != nil {
+		return "", fmt.Errorf("failed to extract components: %w", err)
+	}
+
+	metadata := tokens.ExtractMetadata(baseDict)
+
+	var catalogThemes map[string]generators.CatalogThemeInput
+	if len(themes) > 0 {
+		inheritedThemes, err := tokens.ResolveThemeInheritance(baseDict, themes)
+		if err != nil {
+			return "", fmt.Errorf("failed to resolve theme inheritance: %w", err)
+		}
+
+		catalogThemes = make(map[string]generators.CatalogThemeInput)
+		sortedNames := make([]string, 0, len(inheritedThemes))
+		for name := range inheritedThemes {
+			sortedNames = append(sortedNames, name)
+		}
+		sort.Strings(sortedNames)
+
+		for _, name := range sortedNames {
+			mergedDict := inheritedThemes[name]
+			themeResolver, err := tokens.NewResolver(mergedDict)
+			if err != nil {
+				return "", fmt.Errorf("failed to resolve theme %s: %w", name, err)
+			}
+			resolvedTheme, err := themeResolver.ResolveAll()
+			if err != nil {
+				return "", fmt.Errorf("resolution failed for theme %s: %w", name, err)
+			}
+
+			var extends *string
+			var description string
+			if originalTheme, ok := themes[name]; ok {
+				if extendsVal, ok := originalTheme.Root["$extends"].(string); ok {
+					extends = &extendsVal
+				}
+				if descVal, ok := originalTheme.Root["$description"].(string); ok {
+					description = descVal
+				}
+			}
+
+			catalogThemes[name] = generators.CatalogThemeInput{
+				Extends:        extends,
+				Description:    description,
+				ResolvedTokens: resolvedTheme,
+				DiffTokens:     tokens.Diff(resolvedTheme, resolvedBase),
+			}
+		}
+	}
+
+	return gen.GenerateWithMetadata(resolvedBase, components, catalogThemes, metadata)
+}
+
+// writeOutput writes generated content to the appropriate output file.
+func writeOutput(formatType, category, content string) error {
 	if err := os.MkdirAll(outputDir, 0755); err != nil {
 		return fmt.Errorf("failed to create output dir: %w", err)
 	}
 
-	// Determine output filename based on format
 	var outfile string
 	switch formatType {
 	case "tailwind", "css":
-		outfile = fmt.Sprintf("%s/tokens.css", outputDir)
+		outfile = filepath.Join(outputDir, "tokens.css")
 	case "catalog":
-		outfile = fmt.Sprintf("%s/catalog.json", outputDir)
+		outfile = filepath.Join(outputDir, "catalog.json")
 	case "manifest":
 		if category != "" {
-			outfile = fmt.Sprintf("%s/manifest-%s.json", outputDir, category)
+			outfile = filepath.Join(outputDir, fmt.Sprintf("manifest-%s.json", category))
 		} else {
-			outfile = fmt.Sprintf("%s/manifest.json", outputDir)
+			outfile = filepath.Join(outputDir, "manifest.json")
 		}
 	default:
-		outfile = fmt.Sprintf("%s/tokens.css", outputDir)
+		outfile = filepath.Join(outputDir, "tokens.css")
 	}
 
 	if err := os.WriteFile(outfile, []byte(content), 0644); err != nil {

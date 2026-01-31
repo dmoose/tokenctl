@@ -5,6 +5,31 @@ import (
 	"strings"
 )
 
+// serializeValueForCSS converts any value to a proper CSS string for custom properties.
+// Handles arrays by joining with comma separation, and string slices.
+func serializeValueForCSS(val any) string {
+	switch v := val.(type) {
+	case []any:
+		parts := make([]string, len(v))
+		for i, item := range v {
+			parts[i] = fmt.Sprintf("%v", item)
+		}
+		return strings.Join(parts, ", ")
+	case []string:
+		return strings.Join(v, ", ")
+	default:
+		str := fmt.Sprintf("%v", val)
+		if len(str) > 2 && str[0] == '[' && str[len(str)-1] == ']' {
+			inner := str[1 : len(str)-1]
+			parts := strings.Fields(inner)
+			if len(parts) > 1 {
+				return strings.Join(parts, ", ")
+			}
+		}
+		return str
+	}
+}
+
 // SerializeValue converts any any to a CSS value string
 // For arrays, uses comma separation (safe default for most CSS properties)
 func SerializeValue(val any) string {
@@ -52,7 +77,7 @@ func getArraySeparator(property string) string {
 	prop = strings.TrimPrefix(prop, "-o-")
 
 	// Properties that use space separation
-	spaceSeperatedProps := map[string]bool{
+	spaceSeparatedProps := map[string]bool{
 		// Box model
 		"margin":        true,
 		"padding":       true,
@@ -93,7 +118,7 @@ func getArraySeparator(property string) string {
 		"offset":    true,
 	}
 
-	if spaceSeperatedProps[prop] {
+	if spaceSeparatedProps[prop] {
 		return " "
 	}
 

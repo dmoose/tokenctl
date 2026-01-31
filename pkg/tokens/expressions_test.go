@@ -8,6 +8,7 @@ import (
 )
 
 func TestIsExpression(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		input string
 		want  bool
@@ -30,6 +31,7 @@ func TestIsExpression(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.input, func(t *testing.T) {
+			t.Parallel()
 			got := IsExpression(tt.input)
 			if got != tt.want {
 				t.Errorf("IsExpression(%q) = %v, want %v", tt.input, got, tt.want)
@@ -68,6 +70,7 @@ func createTestResolver(tokens map[string]any) *Resolver {
 }
 
 func TestExpressionEvaluator_Calc(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name    string
 		tokens  map[string]any
@@ -127,6 +130,7 @@ func TestExpressionEvaluator_Calc(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			resolver := createTestResolver(tt.tokens)
 			eval := NewExpressionEvaluator(resolver)
 
@@ -151,6 +155,7 @@ func TestExpressionEvaluator_Calc(t *testing.T) {
 }
 
 func TestExpressionEvaluator_Contrast(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name    string
 		tokens  map[string]any
@@ -188,6 +193,7 @@ func TestExpressionEvaluator_Contrast(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			resolver := createTestResolver(tt.tokens)
 			eval := NewExpressionEvaluator(resolver)
 
@@ -220,6 +226,7 @@ func TestExpressionEvaluator_Contrast(t *testing.T) {
 }
 
 func TestExpressionEvaluator_Darken(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name    string
 		tokens  map[string]any
@@ -252,6 +259,7 @@ func TestExpressionEvaluator_Darken(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			resolver := createTestResolver(tt.tokens)
 			eval := NewExpressionEvaluator(resolver)
 
@@ -282,6 +290,7 @@ func TestExpressionEvaluator_Darken(t *testing.T) {
 }
 
 func TestExpressionEvaluator_Lighten(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name    string
 		tokens  map[string]any
@@ -308,6 +317,7 @@ func TestExpressionEvaluator_Lighten(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			resolver := createTestResolver(tt.tokens)
 			eval := NewExpressionEvaluator(resolver)
 
@@ -338,6 +348,7 @@ func TestExpressionEvaluator_Lighten(t *testing.T) {
 }
 
 func TestExpressionEvaluator_Scale(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name    string
 		tokens  map[string]any
@@ -379,6 +390,7 @@ func TestExpressionEvaluator_Scale(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			resolver := createTestResolver(tt.tokens)
 			eval := NewExpressionEvaluator(resolver)
 
@@ -403,6 +415,7 @@ func TestExpressionEvaluator_Scale(t *testing.T) {
 }
 
 func TestExpressionEvaluator_UnrecognizedExpression(t *testing.T) {
+	t.Parallel()
 	resolver := createTestResolver(map[string]any{})
 	eval := NewExpressionEvaluator(resolver)
 
@@ -417,6 +430,7 @@ func TestExpressionEvaluator_UnrecognizedExpression(t *testing.T) {
 }
 
 func TestResolverWithExpressions(t *testing.T) {
+	t.Parallel()
 	// Test that expressions are evaluated during resolution
 	dict := NewDictionary()
 	dict.Root = map[string]any{
@@ -469,6 +483,7 @@ func TestResolverWithExpressions(t *testing.T) {
 }
 
 func TestExpressionEvaluator_Shade(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name    string
 		tokens  map[string]any
@@ -506,6 +521,7 @@ func TestExpressionEvaluator_Shade(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			resolver := createTestResolver(tt.tokens)
 			eval := NewExpressionEvaluator(resolver)
 

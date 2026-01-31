@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	"os"
+	"sort"
 
 	"github.com/dmoose/tokenctl/pkg/tokens"
 	"github.com/spf13/cobra"
@@ -33,13 +33,9 @@ Example token structure with layers:
 	RunE: runValidate,
 }
 
-var (
-	strictMode   bool
-	strictLayers bool
-)
+var strictLayers bool
 
 func init() {
-	validateCmd.Flags().BoolVar(&strictMode, "strict", false, "Fail on warnings")
 	validateCmd.Flags().BoolVar(&strictLayers, "strict-layers", false, "Enforce layer reference rules (brand -> semantic -> component)")
 	rootCmd.AddCommand(validateCmd)
 }
@@ -53,26 +49,16 @@ func runValidate(cmd *cobra.Command, args []string) error {
 	fmt.Printf("Validating token system in %s...\n", dir)
 
 	// 1. Load Dictionary (Base + Themes)
-	loader := tokens.NewLoader()
-
-	// Load Base
-	baseDict, err := loader.LoadBase(dir)
+	baseDict, themes, err := loadTokens(dir)
 	if err != nil {
-		return fmt.Errorf("failed to load base tokens: %w", err)
+		return err
 	}
 
-	// Load Themes
-	themes, err := loader.LoadThemes(dir)
-	if err != nil {
-		return fmt.Errorf("failed to load themes: %w", err)
-	}
-
-	validator := tokens.NewValidator()
 	hasErrors := false
 
 	// 2. Validate Base
 	fmt.Println("Checking Base Dictionary...")
-	errs, err := validator.Validate(baseDict)
+	errs, err := tokens.Validate(baseDict)
 	if err != nil {
 		return fmt.Errorf("base validation failed to run: %w", err)
 	}
@@ -92,10 +78,17 @@ func runValidate(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("theme inheritance failed: %w", err)
 	}
 
-	for name, merged := range inheritedThemes {
+	themeNames := make([]string, 0, len(inheritedThemes))
+	for name := range inheritedThemes {
+		themeNames = append(themeNames, name)
+	}
+	sort.Strings(themeNames)
+
+	for _, name := range themeNames {
+		merged := inheritedThemes[name]
 		fmt.Printf("Checking Theme '%s'...\n", name)
 
-		errs, err := validator.Validate(merged)
+		errs, err := tokens.Validate(merged)
 		if err != nil {
 			return fmt.Errorf("theme validation failed to run: %w", err)
 		}
@@ -126,7 +119,7 @@ func runValidate(cmd *cobra.Command, args []string) error {
 	}
 
 	if hasErrors {
-		os.Exit(1)
+		return fmt.Errorf("validation failed")
 	}
 
 	fmt.Println("\nValidation Passed!")

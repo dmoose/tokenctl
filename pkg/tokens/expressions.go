@@ -4,7 +4,6 @@ package tokens
 
 import (
 	"fmt"
-	"math"
 	"regexp"
 	"strconv"
 	"strings"
@@ -78,22 +77,34 @@ func (e *ExpressionEvaluator) Evaluate(expr string) (any, error) {
 	}
 
 	if matches := darkenRegex.FindStringSubmatch(expr); matches != nil {
-		amount, _ := strconv.ParseFloat(matches[2], 64)
+		amount, err := strconv.ParseFloat(matches[2], 64)
+		if err != nil {
+			return nil, fmt.Errorf("darken: invalid amount %q: %w", matches[2], err)
+		}
 		return e.evaluateDarken(matches[1], amount/100)
 	}
 
 	if matches := lightenRegex.FindStringSubmatch(expr); matches != nil {
-		amount, _ := strconv.ParseFloat(matches[2], 64)
+		amount, err := strconv.ParseFloat(matches[2], 64)
+		if err != nil {
+			return nil, fmt.Errorf("lighten: invalid amount %q: %w", matches[2], err)
+		}
 		return e.evaluateLighten(matches[1], amount/100)
 	}
 
 	if matches := scaleRegex.FindStringSubmatch(expr); matches != nil {
-		factor, _ := strconv.ParseFloat(matches[2], 64)
+		factor, err := strconv.ParseFloat(matches[2], 64)
+		if err != nil {
+			return nil, fmt.Errorf("scale: invalid factor %q: %w", matches[2], err)
+		}
 		return e.evaluateScale(matches[1], factor)
 	}
 
 	if matches := shadeRegex.FindStringSubmatch(expr); matches != nil {
-		level, _ := strconv.ParseFloat(matches[2], 64)
+		level, err := strconv.ParseFloat(matches[2], 64)
+		if err != nil {
+			return nil, fmt.Errorf("shade: invalid level %q: %w", matches[2], err)
+		}
 		return e.evaluateShade(matches[1], level)
 	}
 
@@ -188,7 +199,7 @@ func (e *ExpressionEvaluator) evaluateMultiply(left, right string) (string, erro
 		// dimension * number
 		result := leftDim.Multiply(rightNum)
 		// Round to avoid floating point artifacts
-		result.Value = roundFloat(result.Value, 4)
+		result.Value = roundTo(result.Value, 4)
 		return result.String(), nil
 	}
 
@@ -199,7 +210,7 @@ func (e *ExpressionEvaluator) evaluateMultiply(left, right string) (string, erro
 	if leftNumErr == nil && rightDimErr == nil {
 		result := rightDim.Multiply(leftNum)
 		// Round to avoid floating point artifacts
-		result.Value = roundFloat(result.Value, 4)
+		result.Value = roundTo(result.Value, 4)
 		return result.String(), nil
 	}
 
@@ -216,7 +227,7 @@ func (e *ExpressionEvaluator) evaluateDivide(left, right string) (string, error)
 			return "", err
 		}
 		// Round to avoid floating point artifacts
-		result.Value = roundFloat(result.Value, 4)
+		result.Value = roundTo(result.Value, 4)
 		return result.String(), nil
 	}
 
@@ -365,7 +376,7 @@ func (e *ExpressionEvaluator) evaluateScale(tokenPath string, factor float64) (s
 
 	result := dim.Multiply(factor)
 	// Round to avoid floating point artifacts
-	result.Value = roundFloat(result.Value, 4)
+	result.Value = roundTo(result.Value, 4)
 	return result.String(), nil
 }
 
@@ -405,8 +416,3 @@ func (e *ExpressionEvaluator) evaluateShade(tokenPath string, level float64) (st
 	return result.Hex(), nil
 }
 
-// roundFloat rounds a float to n decimal places
-func roundFloat(val float64, places int) float64 {
-	pow := math.Pow(10, float64(places))
-	return math.Round(val*pow) / pow
-}

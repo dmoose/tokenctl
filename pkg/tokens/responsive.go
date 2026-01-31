@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"maps"
 	"sort"
+	"strconv"
 	"strings"
 )
 
@@ -172,9 +173,8 @@ func sortBreakpointsBySize(breakpoints map[string]string) []string {
 
 	entries := make([]bpEntry, 0, len(breakpoints))
 	for name, value := range breakpoints {
-		// Parse pixel value (assumes format like "640px")
-		var px int
-		_, _ = fmt.Sscanf(value, "%dpx", &px)
+		// Parse pixel value (e.g. "640px"); unparseable values default to 0
+		px, _ := strconv.Atoi(strings.TrimSuffix(value, "px"))
 		entries = append(entries, bpEntry{name: name, value: px})
 	}
 

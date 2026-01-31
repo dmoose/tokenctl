@@ -24,21 +24,13 @@ func (v ValidationError) Error() string {
 	return fmt.Sprintf("%s: %s", v.Path, v.Message)
 }
 
-// Validator checks token dictionaries for compliance
-type Validator struct {
-}
-
-func NewValidator() *Validator {
-	return &Validator{}
-}
-
 // Validate checks the dictionary for:
 // 1. Broken references (using Resolver)
 // 2. Schema compliance (basic checks)
 // 3. Type-specific validation (color, dimension, number, effect)
 // 4. Constraint validation ($min/$max)
-func (v *Validator) Validate(d *Dictionary) ([]ValidationError, error) {
-	var errors []ValidationError
+func Validate(d *Dictionary) ([]ValidationError, error) {
+	var errs []ValidationError
 
 	// 1. Check References & Cycles by trying to resolve everything
 	r, err := NewResolver(d)
@@ -59,39 +51,31 @@ func (v *Validator) Validate(d *Dictionary) ([]ValidationError, error) {
 		val := r.flatTokens[path]
 		_, err := r.ResolveValue(path, val)
 		if err != nil {
-			// Is it a cycle or missing ref?
 			verr := ValidationError{
 				Path:    path,
 				Message: err.Error(),
 			}
-			// Add source file if available
 			if sourceFile, ok := d.SourceFiles[path]; ok {
 				verr.SourceFile = sourceFile
 			}
-			errors = append(errors, verr)
+			errs = append(errs, verr)
 		}
 	}
 
 	// 2. Schema Validation (Basic)
-	// Walk the tree and check required fields
-	walkErrors := v.validateSchema(d, d.Root, "")
-	errors = append(errors, walkErrors...)
+	errs = append(errs, validateSchema(d, d.Root, "")...)
 
 	// 3. Type-specific and constraint validation
-	typeErrors := v.validateTypes(d, d.Root, "")
-	errors = append(errors, typeErrors...)
+	errs = append(errs, validateTypes(d, d.Root, "")...)
 
-	return errors, nil
+	return errs, nil
 }
 
-func (v *Validator) validateSchema(dict *Dictionary, node map[string]any, currentPath string) []ValidationError {
-	var errors []ValidationError
+func validateSchema(dict *Dictionary, node map[string]any, currentPath string) []ValidationError {
+	var errs []ValidationError
 
 	if IsToken(node) {
-		// Check for valid $value (cannot be nil or empty string unless explicitly allowed?)
-		// W3C spec says $value is required (implied by IsToken check)
-		// We could check $type valid values here if we wanted strictly typed validation
-		return errors
+		return errs
 	}
 
 	for key, val := range node {
@@ -109,11 +93,10 @@ func (v *Validator) validateSchema(dict *Dictionary, node map[string]any, curren
 				Path:    childPath,
 				Message: fmt.Sprintf("expected object, got %T", val),
 			}
-			// Add source file if available
 			if sourceFile, ok := dict.SourceFiles[childPath]; ok {
 				verr.SourceFile = sourceFile
 			}
-			errors = append(errors, verr)
+			errs = append(errs, verr)
 			continue
 		}
 
@@ -122,22 +105,21 @@ func (v *Validator) validateSchema(dict *Dictionary, node map[string]any, curren
 			childPath = currentPath + "." + key
 		}
 
-		childErrors := v.validateSchema(dict, childMap, childPath)
-		errors = append(errors, childErrors...)
+		errs = append(errs, validateSchema(dict, childMap, childPath)...)
 	}
 
-	return errors
+	return errs
 }
 
 // validateTypes performs type-specific validation including constraints
 // inheritedType is the $type inherited from parent groups
-func (v *Validator) validateTypes(dict *Dictionary, node map[string]any, currentPath string) []ValidationError {
-	return v.validateTypesWithInheritance(dict, node, currentPath, "")
+func validateTypes(dict *Dictionary, node map[string]any, currentPath string) []ValidationError {
+	return validateTypesWithInheritance(dict, node, currentPath, "")
 }
 
 // validateTypesWithInheritance performs type validation with $type inheritance from parent groups
-func (v *Validator) validateTypesWithInheritance(dict *Dictionary, node map[string]any, currentPath string, inheritedType string) []ValidationError {
-	var errors []ValidationError
+func validateTypesWithInheritance(dict *Dictionary, node map[string]any, currentPath string, inheritedType string) []ValidationError {
+	var errs []ValidationError
 
 	// Check for $type at this level to pass to children
 	currentType := inheritedType
@@ -147,13 +129,13 @@ func (v *Validator) validateTypesWithInheritance(dict *Dictionary, node map[stri
 
 	if IsToken(node) {
 		// Get token type (from token itself or inherited)
-		tokenType := v.getTokenTypeWithInheritance(node, currentPath, currentType)
+		tokenType := getTokenTypeWithInheritance(node, currentPath, currentType)
 		value := node["$value"]
 
 		// Type-specific validation
 		switch tokenType {
 		case "color":
-			if err := v.validateColorFormat(value); err != nil {
+			if err := validateColorFormat(value); err != nil {
 				verr := ValidationError{
 					Path:    currentPath,
 					Message: fmt.Sprintf("invalid color: %s", err.Error()),
@@ -161,11 +143,11 @@ func (v *Validator) validateTypesWithInheritance(dict *Dictionary, node map[stri
 				if sourceFile, ok := dict.SourceFiles[currentPath]; ok {
 					verr.SourceFile = sourceFile
 				}
-				errors = append(errors, verr)
+				errs = append(errs, verr)
 			}
 
 		case "dimension":
-			if err := v.validateDimension(value); err != nil {
+			if err := validateDimension(value); err != nil {
 				verr := ValidationError{
 					Path:    currentPath,
 					Message: fmt.Sprintf("invalid dimension: %s", err.Error()),
@@ -173,11 +155,11 @@ func (v *Validator) validateTypesWithInheritance(dict *Dictionary, node map[stri
 				if sourceFile, ok := dict.SourceFiles[currentPath]; ok {
 					verr.SourceFile = sourceFile
 				}
-				errors = append(errors, verr)
+				errs = append(errs, verr)
 			}
 
 		case "number":
-			if err := v.validateNumber(value); err != nil {
+			if err := validateNumber(value); err != nil {
 				verr := ValidationError{
 					Path:    currentPath,
 					Message: fmt.Sprintf("invalid number: %s", err.Error()),
@@ -185,11 +167,11 @@ func (v *Validator) validateTypesWithInheritance(dict *Dictionary, node map[stri
 				if sourceFile, ok := dict.SourceFiles[currentPath]; ok {
 					verr.SourceFile = sourceFile
 				}
-				errors = append(errors, verr)
+				errs = append(errs, verr)
 			}
 
 		case "fontFamily":
-			if err := v.validateFontFamily(value); err != nil {
+			if err := validateFontFamily(value); err != nil {
 				verr := ValidationError{
 					Path:    currentPath,
 					Message: fmt.Sprintf("invalid fontFamily: %s", err.Error()),
@@ -197,11 +179,11 @@ func (v *Validator) validateTypesWithInheritance(dict *Dictionary, node map[stri
 				if sourceFile, ok := dict.SourceFiles[currentPath]; ok {
 					verr.SourceFile = sourceFile
 				}
-				errors = append(errors, verr)
+				errs = append(errs, verr)
 			}
 
 		case "effect":
-			if err := v.validateEffect(value); err != nil {
+			if err := validateEffect(value); err != nil {
 				verr := ValidationError{
 					Path:    currentPath,
 					Message: fmt.Sprintf("invalid effect: %s", err.Error()),
@@ -209,15 +191,14 @@ func (v *Validator) validateTypesWithInheritance(dict *Dictionary, node map[stri
 				if sourceFile, ok := dict.SourceFiles[currentPath]; ok {
 					verr.SourceFile = sourceFile
 				}
-				errors = append(errors, verr)
+				errs = append(errs, verr)
 			}
 		}
 
 		// Constraint validation ($min/$max)
-		constraintErrors := v.validateConstraints(dict, currentPath, node, value)
-		errors = append(errors, constraintErrors...)
+		errs = append(errs, validateConstraints(dict, currentPath, node, value)...)
 
-		return errors
+		return errs
 	}
 
 	// Recurse into children
@@ -236,15 +217,14 @@ func (v *Validator) validateTypesWithInheritance(dict *Dictionary, node map[stri
 			childPath = currentPath + "." + key
 		}
 
-		childErrors := v.validateTypesWithInheritance(dict, childMap, childPath, currentType)
-		errors = append(errors, childErrors...)
+		errs = append(errs, validateTypesWithInheritance(dict, childMap, childPath, currentType)...)
 	}
 
-	return errors
+	return errs
 }
 
 // getTokenTypeWithInheritance extracts the $type from a token, using inherited type if not set
-func (v *Validator) getTokenTypeWithInheritance(token map[string]any, _ string, inheritedType string) string {
+func getTokenTypeWithInheritance(token map[string]any, _ string, inheritedType string) string {
 	if t, ok := token["$type"].(string); ok {
 		return t
 	}
@@ -252,8 +232,8 @@ func (v *Validator) getTokenTypeWithInheritance(token map[string]any, _ string, 
 }
 
 // validateConstraints checks $min/$max constraints on a token value
-func (v *Validator) validateConstraints(dict *Dictionary, path string, token map[string]any, value any) []ValidationError {
-	var errors []ValidationError
+func validateConstraints(dict *Dictionary, path string, token map[string]any, value any) []ValidationError {
+	var errs []ValidationError
 
 	constraint, err := ParseConstraints(token)
 	if err != nil {
@@ -264,18 +244,18 @@ func (v *Validator) validateConstraints(dict *Dictionary, path string, token map
 		if sourceFile, ok := dict.SourceFiles[path]; ok {
 			verr.SourceFile = sourceFile
 		}
-		errors = append(errors, verr)
-		return errors
+		errs = append(errs, verr)
+		return errs
 	}
 
 	if constraint == nil {
-		return errors
+		return errs
 	}
 
 	// Skip constraint checking for reference values (they'll be checked after resolution)
 	if strVal, ok := value.(string); ok {
 		if strings.Contains(strVal, "{") && strings.Contains(strVal, "}") {
-			return errors
+			return errs
 		}
 	}
 
@@ -287,14 +267,14 @@ func (v *Validator) validateConstraints(dict *Dictionary, path string, token map
 		if sourceFile, ok := dict.SourceFiles[path]; ok {
 			verr.SourceFile = sourceFile
 		}
-		errors = append(errors, verr)
+		errs = append(errs, verr)
 	}
 
-	return errors
+	return errs
 }
 
 // validateColorFormat ensures a color value is a valid CSS color
-func (v *Validator) validateColorFormat(value any) error {
+func validateColorFormat(value any) error {
 	strVal, ok := value.(string)
 	if !ok {
 		return fmt.Errorf("expected string, got %T", value)
@@ -305,10 +285,11 @@ func (v *Validator) validateColorFormat(value any) error {
 		return nil
 	}
 
-	// Skip validation for expression values (contrast, darken, lighten, etc.)
+	// Skip validation for expression values (evaluated during resolution)
 	if strings.HasPrefix(strVal, "contrast(") ||
 		strings.HasPrefix(strVal, "darken(") ||
-		strings.HasPrefix(strVal, "lighten(") {
+		strings.HasPrefix(strVal, "lighten(") ||
+		strings.HasPrefix(strVal, "shade(") {
 		return nil
 	}
 
@@ -317,7 +298,7 @@ func (v *Validator) validateColorFormat(value any) error {
 }
 
 // validateDimension ensures a dimension value has valid format and units
-func (v *Validator) validateDimension(value any) error {
+func validateDimension(value any) error {
 	strVal, ok := value.(string)
 	if !ok {
 		// Allow numeric zero
@@ -345,7 +326,7 @@ func (v *Validator) validateDimension(value any) error {
 }
 
 // validateNumber ensures a value is numeric
-func (v *Validator) validateNumber(value any) error {
+func validateNumber(value any) error {
 	switch val := value.(type) {
 	case float64:
 		return nil
@@ -367,7 +348,7 @@ func (v *Validator) validateNumber(value any) error {
 }
 
 // validateFontFamily ensures a font family value is valid
-func (v *Validator) validateFontFamily(value any) error {
+func validateFontFamily(value any) error {
 	switch val := value.(type) {
 	case string:
 		if strings.TrimSpace(val) == "" {
@@ -394,7 +375,7 @@ func (v *Validator) validateFontFamily(value any) error {
 }
 
 // validateEffect ensures an effect value is 0 or 1
-func (v *Validator) validateEffect(value any) error {
+func validateEffect(value any) error {
 	switch val := value.(type) {
 	case float64:
 		if val != 0 && val != 1 {

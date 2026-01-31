@@ -42,7 +42,9 @@ func (v *VariantDef) UnmarshalJSON(data []byte) error {
 
 	for key, val := range raw {
 		if key == "$class" {
-			v.Class = val.(string)
+			if s, ok := val.(string); ok {
+				v.Class = s
+			}
 			continue
 		}
 

@@ -7,6 +7,7 @@ import (
 )
 
 func TestParseDimension(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name      string
 		input     string
@@ -67,6 +68,7 @@ func TestParseDimension(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			dim, err := ParseDimension(tt.input)
 
 			if tt.wantErr {
@@ -92,6 +94,7 @@ func TestParseDimension(t *testing.T) {
 }
 
 func TestDimension_String(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name string
 		dim  Dimension
@@ -108,6 +111,7 @@ func TestDimension_String(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			got := tt.dim.String()
 			if got != tt.want {
 				t.Errorf("Dimension{%v, %q}.String() = %q, want %q", tt.dim.Value, tt.dim.Unit, got, tt.want)
@@ -117,6 +121,7 @@ func TestDimension_String(t *testing.T) {
 }
 
 func TestDimension_Add(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name    string
 		d1      Dimension
@@ -132,6 +137,7 @@ func TestDimension_Add(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			got, err := tt.d1.Add(tt.d2)
 
 			if tt.wantErr {
@@ -153,6 +159,7 @@ func TestDimension_Add(t *testing.T) {
 }
 
 func TestDimension_Subtract(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name    string
 		d1      Dimension
@@ -167,6 +174,7 @@ func TestDimension_Subtract(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			got, err := tt.d1.Subtract(tt.d2)
 
 			if tt.wantErr {
@@ -188,6 +196,7 @@ func TestDimension_Subtract(t *testing.T) {
 }
 
 func TestDimension_Multiply(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name   string
 		dim    Dimension
@@ -203,6 +212,7 @@ func TestDimension_Multiply(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			got := tt.dim.Multiply(tt.scalar)
 			if got != tt.want {
 				t.Errorf("Multiply(%v) = %v, want %v", tt.scalar, got, tt.want)
@@ -212,6 +222,7 @@ func TestDimension_Multiply(t *testing.T) {
 }
 
 func TestDimension_Divide(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name    string
 		dim     Dimension
@@ -226,6 +237,7 @@ func TestDimension_Divide(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			got, err := tt.dim.Divide(tt.scalar)
 
 			if tt.wantErr {
@@ -247,6 +259,7 @@ func TestDimension_Divide(t *testing.T) {
 }
 
 func TestDimension_IsZero(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name string
 		dim  Dimension
@@ -259,6 +272,7 @@ func TestDimension_IsZero(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			if got := tt.dim.IsZero(); got != tt.want {
 				t.Errorf("IsZero() = %v, want %v", got, tt.want)
 			}
@@ -267,6 +281,7 @@ func TestDimension_IsZero(t *testing.T) {
 }
 
 func TestIsDimension(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		input string
 		want  bool
@@ -282,6 +297,7 @@ func TestIsDimension(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.input, func(t *testing.T) {
+			t.Parallel()
 			if got := IsDimension(tt.input); got != tt.want {
 				t.Errorf("IsDimension(%q) = %v, want %v", tt.input, got, tt.want)
 			}
@@ -290,6 +306,7 @@ func TestIsDimension(t *testing.T) {
 }
 
 func TestMustParseDimension(t *testing.T) {
+	t.Parallel()
 	// Test successful parse
 	dim := MustParseDimension("10px")
 	if dim.Value != 10 || dim.Unit != "px" {

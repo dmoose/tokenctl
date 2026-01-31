@@ -65,13 +65,13 @@ func MeetsWCAG(c1, c2 Color, level string, largeText bool) bool {
 	}
 }
 
-// MeetsWCAAA is a convenience function that checks for AA compliance with normal text
-func MeetsWCAAA(c1, c2 Color) bool {
+// MeetsWCAG_AA is a convenience function that checks for AA compliance with normal text
+func MeetsWCAG_AA(c1, c2 Color) bool {
 	return MeetsWCAG(c1, c2, "AA", false)
 }
 
-// MeetsWCAAAAA is a convenience function that checks for AAA compliance with normal text
-func MeetsWCAAAAA(c1, c2 Color) bool {
+// MeetsWCAG_AAA is a convenience function that checks for AAA compliance with normal text
+func MeetsWCAG_AAA(c1, c2 Color) bool {
 	return MeetsWCAG(c1, c2, "AAA", false)
 }
 

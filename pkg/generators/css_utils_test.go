@@ -6,6 +6,8 @@ import (
 )
 
 func TestSerializeValue(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name     string
 		value    any
@@ -50,6 +52,8 @@ func TestSerializeValue(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
 			result := SerializeValue(tt.value)
 			if result != tt.expected {
 				t.Errorf("Expected '%s', got '%s'", tt.expected, result)
@@ -59,6 +63,8 @@ func TestSerializeValue(t *testing.T) {
 }
 
 func TestSerializeValueForProperty_SpaceSeparated(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name     string
 		property string
@@ -129,6 +135,8 @@ func TestSerializeValueForProperty_SpaceSeparated(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
 			result := SerializeValueForProperty(tt.property, tt.value)
 			if result != tt.expected {
 				t.Errorf("Property '%s': Expected '%s', got '%s'", tt.property, tt.expected, result)
@@ -138,6 +146,8 @@ func TestSerializeValueForProperty_SpaceSeparated(t *testing.T) {
 }
 
 func TestSerializeValueForProperty_CommaSeparated(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name     string
 		property string
@@ -196,6 +206,8 @@ func TestSerializeValueForProperty_CommaSeparated(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
 			result := SerializeValueForProperty(tt.property, tt.value)
 			if result != tt.expected {
 				t.Errorf("Property '%s': Expected '%s', got '%s'", tt.property, tt.expected, result)
@@ -205,6 +217,8 @@ func TestSerializeValueForProperty_CommaSeparated(t *testing.T) {
 }
 
 func TestSerializeValueForProperty_VendorPrefixes(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name     string
 		property string
@@ -239,6 +253,8 @@ func TestSerializeValueForProperty_VendorPrefixes(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
 			result := SerializeValueForProperty(tt.property, tt.value)
 			if result != tt.expected {
 				t.Errorf("Property '%s': Expected '%s', got '%s'", tt.property, tt.expected, result)
@@ -248,6 +264,8 @@ func TestSerializeValueForProperty_VendorPrefixes(t *testing.T) {
 }
 
 func TestSerializeValueForProperty_CaseInsensitive(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name     string
 		property string
@@ -276,6 +294,8 @@ func TestSerializeValueForProperty_CaseInsensitive(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
 			result := SerializeValueForProperty(tt.property, tt.value)
 			if result != tt.expected {
 				t.Errorf("Property '%s': Expected '%s', got '%s'", tt.property, tt.expected, result)
@@ -285,6 +305,8 @@ func TestSerializeValueForProperty_CaseInsensitive(t *testing.T) {
 }
 
 func TestSerializeValueForProperty_NonArrayValues(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name     string
 		property string
@@ -319,6 +341,8 @@ func TestSerializeValueForProperty_NonArrayValues(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
 			result := SerializeValueForProperty(tt.property, tt.value)
 			if result != tt.expected {
 				t.Errorf("Property '%s': Expected '%s', got '%s'", tt.property, tt.expected, result)
@@ -328,6 +352,8 @@ func TestSerializeValueForProperty_NonArrayValues(t *testing.T) {
 }
 
 func TestSerializeValueForProperty_EdgeCases(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name     string
 		property string
@@ -368,6 +394,8 @@ func TestSerializeValueForProperty_EdgeCases(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
 			result := SerializeValueForProperty(tt.property, tt.value)
 			if result != tt.expected {
 				t.Errorf("Property '%s': Expected '%s', got '%s'", tt.property, tt.expected, result)
@@ -377,6 +405,8 @@ func TestSerializeValueForProperty_EdgeCases(t *testing.T) {
 }
 
 func TestGetArraySeparator(t *testing.T) {
+	t.Parallel()
+
 	spaceSeparated := []string{
 		"margin",
 		"padding",
@@ -401,6 +431,8 @@ func TestGetArraySeparator(t *testing.T) {
 
 	for _, prop := range spaceSeparated {
 		t.Run(prop+" should be space-separated", func(t *testing.T) {
+			t.Parallel()
+
 			sep := getArraySeparator(prop)
 			if sep != " " {
 				t.Errorf("Expected space separator for '%s', got '%s'", prop, sep)
@@ -410,6 +442,8 @@ func TestGetArraySeparator(t *testing.T) {
 
 	for _, prop := range commaSeparated {
 		t.Run(prop+" should be comma-separated", func(t *testing.T) {
+			t.Parallel()
+
 			sep := getArraySeparator(prop)
 			if sep != ", " {
 				t.Errorf("Expected comma separator for '%s', got '%s'", prop, sep)

@@ -31,6 +31,7 @@ func getTokenctlPath() string {
 }
 
 func TestIntegration_Init(t *testing.T) {
+	t.Parallel()
 	tmpDir := t.TempDir()
 
 	cmd := exec.Command(getTokenctlPath(), "init", tmpDir)
@@ -59,6 +60,7 @@ func TestIntegration_Init(t *testing.T) {
 }
 
 func TestIntegration_Validate_Valid(t *testing.T) {
+	t.Parallel()
 	fixtureDir := "../../testdata/fixtures/valid"
 
 	cmd := exec.Command(getTokenctlPath(), "validate", fixtureDir)
@@ -73,6 +75,7 @@ func TestIntegration_Validate_Valid(t *testing.T) {
 }
 
 func TestIntegration_Validate_BrokenReference(t *testing.T) {
+	t.Parallel()
 	fixtureDir := "../../testdata/fixtures/invalid"
 
 	cmd := exec.Command(getTokenctlPath(), "validate", fixtureDir)
@@ -91,6 +94,7 @@ func TestIntegration_Validate_BrokenReference(t *testing.T) {
 }
 
 func TestIntegration_Build_Valid(t *testing.T) {
+	t.Parallel()
 	fixtureDir := "../../testdata/fixtures/valid"
 	outputDir := t.TempDir()
 
@@ -128,6 +132,7 @@ func TestIntegration_Build_Valid(t *testing.T) {
 }
 
 func TestIntegration_Build_WithThemes(t *testing.T) {
+	t.Parallel()
 	fixtureDir := "../../testdata/fixtures/extends"
 	outputDir := t.TempDir()
 
@@ -161,6 +166,7 @@ func TestIntegration_Build_WithThemes(t *testing.T) {
 }
 
 func TestIntegration_Build_GoldenFile_Valid(t *testing.T) {
+	t.Parallel()
 	fixtureDir := "../../testdata/fixtures/valid"
 	outputDir := t.TempDir()
 
@@ -194,6 +200,7 @@ func TestIntegration_Build_GoldenFile_Valid(t *testing.T) {
 }
 
 func TestIntegration_Build_GoldenFile_Extends(t *testing.T) {
+	t.Parallel()
 	fixtureDir := "../../testdata/fixtures/extends"
 	outputDir := t.TempDir()
 
@@ -227,6 +234,7 @@ func TestIntegration_Build_GoldenFile_Extends(t *testing.T) {
 }
 
 func TestIntegration_Build_Components(t *testing.T) {
+	t.Parallel()
 	fixtureDir := "../../examples/components"
 	outputDir := t.TempDir()
 
@@ -266,6 +274,7 @@ func TestIntegration_Build_Components(t *testing.T) {
 }
 
 func TestIntegration_Build_Catalog(t *testing.T) {
+	t.Parallel()
 	fixtureDir := "../../testdata/fixtures/valid"
 	outputDir := t.TempDir()
 
@@ -307,6 +316,7 @@ func TestIntegration_Build_Catalog(t *testing.T) {
 }
 
 func TestIntegration_Build_CatalogWithThemes(t *testing.T) {
+	t.Parallel()
 	fixtureDir := "../../testdata/fixtures/extends"
 	outputDir := t.TempDir()
 
@@ -348,6 +358,7 @@ func TestIntegration_Build_CatalogWithThemes(t *testing.T) {
 }
 
 func TestIntegration_Build_InvalidFormat(t *testing.T) {
+	t.Parallel()
 	fixtureDir := "../../testdata/fixtures/valid"
 	outputDir := t.TempDir()
 
@@ -366,6 +377,7 @@ func TestIntegration_Build_InvalidFormat(t *testing.T) {
 }
 
 func TestIntegration_Workflow_InitValidateBuild(t *testing.T) {
+	t.Parallel()
 	// Test complete workflow: init -> validate -> build
 	tmpDir := t.TempDir()
 
@@ -396,6 +408,7 @@ func TestIntegration_Workflow_InitValidateBuild(t *testing.T) {
 }
 
 func TestIntegration_ThemeInheritance_Extends(t *testing.T) {
+	t.Parallel()
 	// Verify that $extends actually works correctly
 	fixtureDir := "../../testdata/fixtures/extends"
 

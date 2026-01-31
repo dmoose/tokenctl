@@ -6,6 +6,7 @@ import (
 )
 
 func TestValidator_BrokenReferences(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name           string
 		tokens         map[string]any
@@ -85,10 +86,9 @@ func TestValidator_BrokenReferences(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			dict := &Dictionary{Root: tt.tokens}
-			validator := NewValidator()
-
-			errors, err := validator.Validate(dict)
+			errors, err := Validate(dict)
 			if err != nil {
 				t.Fatalf("Validation failed to run: %v", err)
 			}
@@ -120,6 +120,7 @@ func TestValidator_BrokenReferences(t *testing.T) {
 }
 
 func TestValidator_CircularDependencies(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name           string
 		tokens         map[string]any
@@ -179,10 +180,9 @@ func TestValidator_CircularDependencies(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			dict := &Dictionary{Root: tt.tokens}
-			validator := NewValidator()
-
-			errors, err := validator.Validate(dict)
+			errors, err := Validate(dict)
 			if err != nil {
 				t.Fatalf("Validation failed to run: %v", err)
 			}
@@ -207,6 +207,7 @@ func TestValidator_CircularDependencies(t *testing.T) {
 }
 
 func TestValidator_SchemaValidation(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name         string
 		tokens       map[string]any
@@ -291,10 +292,9 @@ func TestValidator_SchemaValidation(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			dict := &Dictionary{Root: tt.tokens}
-			validator := NewValidator()
-
-			errors, err := validator.Validate(dict)
+			errors, err := Validate(dict)
 			if err != nil {
 				t.Fatalf("Validation failed to run: %v", err)
 			}
@@ -326,6 +326,7 @@ func TestValidator_SchemaValidation(t *testing.T) {
 }
 
 func TestValidator_MultipleErrors(t *testing.T) {
+	t.Parallel()
 	// Test that validator collects ALL errors, not just the first one
 	tokens := map[string]any{
 		"broken1": map[string]any{
@@ -344,9 +345,7 @@ func TestValidator_MultipleErrors(t *testing.T) {
 	}
 
 	dict := &Dictionary{Root: tokens}
-	validator := NewValidator()
-
-	errors, err := validator.Validate(dict)
+	errors, err := Validate(dict)
 	if err != nil {
 		t.Fatalf("Validation failed to run: %v", err)
 	}
@@ -384,10 +383,9 @@ func TestValidator_MultipleErrors(t *testing.T) {
 }
 
 func TestValidator_EmptyDictionary(t *testing.T) {
+	t.Parallel()
 	dict := NewDictionary()
-	validator := NewValidator()
-
-	errors, err := validator.Validate(dict)
+	errors, err := Validate(dict)
 	if err != nil {
 		t.Fatalf("Validation failed to run: %v", err)
 	}
@@ -398,6 +396,7 @@ func TestValidator_EmptyDictionary(t *testing.T) {
 }
 
 func TestValidationError_Error(t *testing.T) {
+	t.Parallel()
 	verr := ValidationError{
 		Path:    "color.primary",
 		Message: "test error message",
@@ -410,6 +409,7 @@ func TestValidationError_Error(t *testing.T) {
 }
 
 func TestValidationError_WithSourceFile(t *testing.T) {
+	t.Parallel()
 	verr := ValidationError{
 		Path:       "color.primary",
 		Message:    "test error message",
@@ -423,6 +423,7 @@ func TestValidationError_WithSourceFile(t *testing.T) {
 }
 
 func TestValidator_TypeValidation_Color(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name         string
 		value        any
@@ -442,6 +443,7 @@ func TestValidator_TypeValidation_Color(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			dict := &Dictionary{
 				Root: map[string]any{
 					"color": map[string]any{
@@ -457,8 +459,7 @@ func TestValidator_TypeValidation_Color(t *testing.T) {
 				},
 			}
 
-			validator := NewValidator()
-			errors, err := validator.Validate(dict)
+			errors, err := Validate(dict)
 			if err != nil {
 				t.Fatalf("Validation failed to run: %v", err)
 			}
@@ -475,6 +476,7 @@ func TestValidator_TypeValidation_Color(t *testing.T) {
 }
 
 func TestValidator_TypeValidation_Dimension(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name         string
 		value        any
@@ -493,6 +495,7 @@ func TestValidator_TypeValidation_Dimension(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			dict := &Dictionary{
 				Root: map[string]any{
 					"size": map[string]any{
@@ -508,8 +511,7 @@ func TestValidator_TypeValidation_Dimension(t *testing.T) {
 				},
 			}
 
-			validator := NewValidator()
-			errors, err := validator.Validate(dict)
+			errors, err := Validate(dict)
 			if err != nil {
 				t.Fatalf("Validation failed to run: %v", err)
 			}
@@ -526,6 +528,7 @@ func TestValidator_TypeValidation_Dimension(t *testing.T) {
 }
 
 func TestValidator_TypeValidation_Number(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name         string
 		value        any
@@ -540,6 +543,7 @@ func TestValidator_TypeValidation_Number(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			dict := &Dictionary{
 				Root: map[string]any{
 					"opacity": map[string]any{
@@ -555,8 +559,7 @@ func TestValidator_TypeValidation_Number(t *testing.T) {
 				},
 			}
 
-			validator := NewValidator()
-			errors, err := validator.Validate(dict)
+			errors, err := Validate(dict)
 			if err != nil {
 				t.Fatalf("Validation failed to run: %v", err)
 			}
@@ -573,6 +576,7 @@ func TestValidator_TypeValidation_Number(t *testing.T) {
 }
 
 func TestValidator_TypeValidation_FontFamily(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name         string
 		value        any
@@ -589,6 +593,7 @@ func TestValidator_TypeValidation_FontFamily(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			dict := &Dictionary{
 				Root: map[string]any{
 					"font": map[string]any{
@@ -600,8 +605,7 @@ func TestValidator_TypeValidation_FontFamily(t *testing.T) {
 				},
 			}
 
-			validator := NewValidator()
-			errors, err := validator.Validate(dict)
+			errors, err := Validate(dict)
 			if err != nil {
 				t.Fatalf("Validation failed to run: %v", err)
 			}
@@ -618,6 +622,7 @@ func TestValidator_TypeValidation_FontFamily(t *testing.T) {
 }
 
 func TestValidator_TypeValidation_Effect(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name         string
 		value        any
@@ -637,6 +642,7 @@ func TestValidator_TypeValidation_Effect(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			dict := &Dictionary{
 				Root: map[string]any{
 					"effect": map[string]any{
@@ -652,8 +658,7 @@ func TestValidator_TypeValidation_Effect(t *testing.T) {
 				},
 			}
 
-			validator := NewValidator()
-			errors, err := validator.Validate(dict)
+			errors, err := Validate(dict)
 			if err != nil {
 				t.Fatalf("Validation failed to run: %v", err)
 			}
@@ -670,6 +675,7 @@ func TestValidator_TypeValidation_Effect(t *testing.T) {
 }
 
 func TestValidator_ConstraintValidation(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name         string
 		token        map[string]any
@@ -743,6 +749,7 @@ func TestValidator_ConstraintValidation(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			dict := &Dictionary{
 				Root: map[string]any{
 					"test": map[string]any{
@@ -751,8 +758,7 @@ func TestValidator_ConstraintValidation(t *testing.T) {
 				},
 			}
 
-			validator := NewValidator()
-			errors, err := validator.Validate(dict)
+			errors, err := Validate(dict)
 			if err != nil {
 				t.Fatalf("Validation failed to run: %v", err)
 			}
@@ -782,6 +788,7 @@ func TestValidator_ConstraintValidation(t *testing.T) {
 }
 
 func TestValidator_SourceFileTracking(t *testing.T) {
+	t.Parallel()
 	// Create a dictionary with source file annotations
 	dict := &Dictionary{
 		Root: map[string]any{
@@ -800,8 +807,7 @@ func TestValidator_SourceFileTracking(t *testing.T) {
 		},
 	}
 
-	validator := NewValidator()
-	errors, err := validator.Validate(dict)
+	errors, err := Validate(dict)
 	if err != nil {
 		t.Fatalf("Validation failed to run: %v", err)
 	}

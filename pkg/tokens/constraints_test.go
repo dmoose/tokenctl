@@ -7,6 +7,7 @@ import (
 )
 
 func TestParseConstraints_NoConstraints(t *testing.T) {
+	t.Parallel()
 	token := map[string]any{
 		"$value": "10px",
 		"$type":  "dimension",
@@ -22,6 +23,7 @@ func TestParseConstraints_NoConstraints(t *testing.T) {
 }
 
 func TestParseConstraints_DimensionMinOnly(t *testing.T) {
+	t.Parallel()
 	token := map[string]any{
 		"$value": "10px",
 		"$type":  "dimension",
@@ -52,6 +54,7 @@ func TestParseConstraints_DimensionMinOnly(t *testing.T) {
 }
 
 func TestParseConstraints_DimensionMaxOnly(t *testing.T) {
+	t.Parallel()
 	token := map[string]any{
 		"$value": "10px",
 		"$type":  "dimension",
@@ -76,6 +79,7 @@ func TestParseConstraints_DimensionMaxOnly(t *testing.T) {
 }
 
 func TestParseConstraints_DimensionMinAndMax(t *testing.T) {
+	t.Parallel()
 	token := map[string]any{
 		"$value": "2.5rem",
 		"$type":  "dimension",
@@ -104,6 +108,7 @@ func TestParseConstraints_DimensionMinAndMax(t *testing.T) {
 }
 
 func TestParseConstraints_NumberConstraints(t *testing.T) {
+	t.Parallel()
 	token := map[string]any{
 		"$value": 0.5,
 		"$type":  "number",
@@ -130,6 +135,7 @@ func TestParseConstraints_NumberConstraints(t *testing.T) {
 }
 
 func TestParseConstraints_IntConstraints(t *testing.T) {
+	t.Parallel()
 	token := map[string]any{
 		"$value": 5,
 		"$type":  "number",
@@ -150,6 +156,7 @@ func TestParseConstraints_IntConstraints(t *testing.T) {
 }
 
 func TestParseConstraints_InvalidMinGreaterThanMax(t *testing.T) {
+	t.Parallel()
 	token := map[string]any{
 		"$value": "10px",
 		"$type":  "dimension",
@@ -164,6 +171,7 @@ func TestParseConstraints_InvalidMinGreaterThanMax(t *testing.T) {
 }
 
 func TestParseConstraints_MismatchedUnits(t *testing.T) {
+	t.Parallel()
 	token := map[string]any{
 		"$value": "10px",
 		"$type":  "dimension",
@@ -178,6 +186,7 @@ func TestParseConstraints_MismatchedUnits(t *testing.T) {
 }
 
 func TestConstraint_CheckValue_DimensionInRange(t *testing.T) {
+	t.Parallel()
 	token := map[string]any{
 		"$min": "5px",
 		"$max": "20px",
@@ -201,6 +210,7 @@ func TestConstraint_CheckValue_DimensionInRange(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.value, func(t *testing.T) {
+			t.Parallel()
 			err := constraint.CheckValue(tt.value)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("CheckValue(%s) error = %v, wantErr %v", tt.value, err, tt.wantErr)
@@ -210,6 +220,7 @@ func TestConstraint_CheckValue_DimensionInRange(t *testing.T) {
 }
 
 func TestConstraint_CheckValue_NumberInRange(t *testing.T) {
+	t.Parallel()
 	min := 0.0
 	max := 1.0
 	constraint := &Constraint{
@@ -235,6 +246,7 @@ func TestConstraint_CheckValue_NumberInRange(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			err := constraint.CheckValue(tt.value)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("CheckValue(%v) error = %v, wantErr %v", tt.value, err, tt.wantErr)
@@ -244,6 +256,7 @@ func TestConstraint_CheckValue_NumberInRange(t *testing.T) {
 }
 
 func TestConstraint_CheckValue_UnitMismatch(t *testing.T) {
+	t.Parallel()
 	token := map[string]any{
 		"$min": "5px",
 		"$max": "20px",
@@ -261,6 +274,7 @@ func TestConstraint_CheckValue_UnitMismatch(t *testing.T) {
 }
 
 func TestConstraint_CheckValue_InvalidDimension(t *testing.T) {
+	t.Parallel()
 	token := map[string]any{
 		"$min": "5px",
 		"$max": "20px",
@@ -278,6 +292,7 @@ func TestConstraint_CheckValue_InvalidDimension(t *testing.T) {
 }
 
 func TestConstraint_CheckValue_NilConstraint(t *testing.T) {
+	t.Parallel()
 	var constraint *Constraint = nil
 	err := constraint.CheckValue("anything")
 	if err != nil {
@@ -286,6 +301,7 @@ func TestConstraint_CheckValue_NilConstraint(t *testing.T) {
 }
 
 func TestConstraint_String(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name       string
 		constraint *Constraint
@@ -327,6 +343,7 @@ func TestConstraint_String(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			got := tt.constraint.String()
 			if got != tt.want {
 				t.Errorf("String() = %q, want %q", got, tt.want)
@@ -336,6 +353,7 @@ func TestConstraint_String(t *testing.T) {
 }
 
 func TestParseConstraints_StringNumber(t *testing.T) {
+	t.Parallel()
 	token := map[string]any{
 		"$value": "5",
 		"$min":   "0",
@@ -355,6 +373,7 @@ func TestParseConstraints_StringNumber(t *testing.T) {
 }
 
 func TestParseConstraints_InvalidConstraintValue(t *testing.T) {
+	t.Parallel()
 	token := map[string]any{
 		"$value": "10px",
 		"$min":   "invalid",
@@ -367,6 +386,7 @@ func TestParseConstraints_InvalidConstraintValue(t *testing.T) {
 }
 
 func TestParseConstraints_UnsupportedType(t *testing.T) {
+	t.Parallel()
 	token := map[string]any{
 		"$value": "10px",
 		"$min":   []string{"invalid"},

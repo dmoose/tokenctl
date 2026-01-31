@@ -7,6 +7,7 @@ import (
 )
 
 func TestCSSPropertySyntax(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		tokenType string
 		want      string
@@ -23,6 +24,7 @@ func TestCSSPropertySyntax(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.tokenType, func(t *testing.T) {
+			t.Parallel()
 			got := CSSPropertySyntax(tt.tokenType)
 			if got != tt.want {
 				t.Errorf("CSSPropertySyntax(%q) = %q, want %q", tt.tokenType, got, tt.want)
@@ -32,6 +34,7 @@ func TestCSSPropertySyntax(t *testing.T) {
 }
 
 func TestExtractPropertyTokens_Basic(t *testing.T) {
+	t.Parallel()
 	dict := &Dictionary{
 		Root: map[string]any{
 			"color": map[string]any{
@@ -79,6 +82,7 @@ func TestExtractPropertyTokens_Basic(t *testing.T) {
 }
 
 func TestExtractPropertyTokens_InheritsFromParentType(t *testing.T) {
+	t.Parallel()
 	dict := &Dictionary{
 		Root: map[string]any{
 			"spacing": map[string]any{
@@ -114,6 +118,7 @@ func TestExtractPropertyTokens_InheritsFromParentType(t *testing.T) {
 }
 
 func TestExtractPropertyTokens_CustomInherits(t *testing.T) {
+	t.Parallel()
 	dict := &Dictionary{
 		Root: map[string]any{
 			"timing": map[string]any{
@@ -144,6 +149,7 @@ func TestExtractPropertyTokens_CustomInherits(t *testing.T) {
 }
 
 func TestExtractPropertyTokens_PropertyFalse(t *testing.T) {
+	t.Parallel()
 	dict := &Dictionary{
 		Root: map[string]any{
 			"color": map[string]any{
@@ -168,6 +174,7 @@ func TestExtractPropertyTokens_PropertyFalse(t *testing.T) {
 }
 
 func TestExtractPropertyTokens_SkipsUnmappableTypes(t *testing.T) {
+	t.Parallel()
 	dict := &Dictionary{
 		Root: map[string]any{
 			"font": map[string]any{
@@ -192,6 +199,7 @@ func TestExtractPropertyTokens_SkipsUnmappableTypes(t *testing.T) {
 }
 
 func TestExtractPropertyTokens_NoTypeSkipped(t *testing.T) {
+	t.Parallel()
 	dict := &Dictionary{
 		Root: map[string]any{
 			"custom": map[string]any{
@@ -216,6 +224,7 @@ func TestExtractPropertyTokens_NoTypeSkipped(t *testing.T) {
 }
 
 func TestExtractPropertyTokens_NumericValues(t *testing.T) {
+	t.Parallel()
 	dict := &Dictionary{
 		Root: map[string]any{
 			"opacity": map[string]any{
@@ -277,6 +286,7 @@ func TestExtractPropertyTokens_NumericValues(t *testing.T) {
 }
 
 func TestFormatInitialValue(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name  string
 		value any
@@ -292,6 +302,7 @@ func TestFormatInitialValue(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			got := formatInitialValue(tt.value)
 			if got != tt.want {
 				t.Errorf("formatInitialValue(%v) = %q, want %q", tt.value, got, tt.want)

@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"log"
+	"io/fs"
 	"maps"
 	"os"
 	"path/filepath"
@@ -48,11 +48,11 @@ func NewLoader() *Loader {
 // LoadBase loads all token files EXCEPT those in the themes directory
 func (l *Loader) LoadBase(path string) (*Dictionary, error) {
 	master := NewDictionary()
-	err := filepath.Walk(path, func(filePath string, info os.FileInfo, err error) error {
+	err := filepath.WalkDir(path, func(filePath string, d fs.DirEntry, err error) error {
 		if err != nil {
 			return err
 		}
-		if info.IsDir() {
+		if d.IsDir() {
 			return nil
 		}
 
@@ -66,7 +66,7 @@ func (l *Loader) LoadBase(path string) (*Dictionary, error) {
 			if err != nil {
 				return fmt.Errorf("failed to load %s: %w", filePath, err)
 			}
-			if err := master.MergeWithPath(dict, l.WarnConflicts, filePath); err != nil {
+			if err := master.MergeWithPath(dict, l.WarnConflicts); err != nil {
 				return fmt.Errorf("failed to merge %s: %w", filePath, err)
 			}
 		}
@@ -94,11 +94,11 @@ func (l *Loader) LoadThemes(rootPath string) (map[string]*Dictionary, error) {
 		return themes, nil // Return empty map if no themes dir
 	}
 
-	err := filepath.Walk(themesPath, func(filePath string, info os.FileInfo, err error) error {
+	err := filepath.WalkDir(themesPath, func(filePath string, d fs.DirEntry, err error) error {
 		if err != nil {
 			return err
 		}
-		if info.IsDir() || !l.isTokenFile(filePath) {
+		if d.IsDir() || !l.isTokenFile(filePath) {
 			return nil
 		}
 
@@ -212,8 +212,8 @@ func (d *Dictionary) Merge(other *Dictionary) error {
 	return nil
 }
 
-// MergeWithPath is like Merge but tracks the current path for better error messages
-func (d *Dictionary) MergeWithPath(other *Dictionary, warnConflicts bool, _ string) error {
+// MergeWithPath is like Merge but allows controlling conflict warnings
+func (d *Dictionary) MergeWithPath(other *Dictionary, warnConflicts bool) error {
 	if err := deepMergeWithWarnings(d.Root, other.Root, "", warnConflicts); err != nil {
 		return err
 	}
@@ -250,7 +250,7 @@ func deepMergeWithWarnings(dst, src map[string]any, currentPath string, warnConf
 				if isDstToken || isSrcToken {
 					// One or both are tokens - this is an overwrite
 					if warnConflicts && !isMetadataKey {
-						log.Printf("Warning: Token '%s' redefined (overwriting)\n", path)
+						fmt.Fprintf(os.Stderr, "Warning: Token '%s' redefined (overwriting)\n", path)
 					}
 					dst[key] = srcVal
 				} else {
@@ -262,7 +262,7 @@ func deepMergeWithWarnings(dst, src map[string]any, currentPath string, warnConf
 			} else {
 				// Type mismatch or value overwrite
 				if warnConflicts && !isMetadataKey {
-					log.Printf("Warning: Token '%s' redefined (overwriting %T with %T)\n", path, dstVal, srcVal)
+					fmt.Fprintf(os.Stderr, "Warning: Token '%s' redefined (overwriting %T with %T)\n", path, dstVal, srcVal)
 				}
 				dst[key] = srcVal
 			}

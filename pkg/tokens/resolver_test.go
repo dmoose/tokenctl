@@ -5,6 +5,7 @@ import (
 )
 
 func TestResolveValue(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name      string
 		tokens    map[string]any
@@ -69,6 +70,7 @@ func TestResolveValue(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			// Manually construct flat tokens for resolver since we are testing core logic
 			r := &Resolver{
 				flatTokens: tt.tokens,

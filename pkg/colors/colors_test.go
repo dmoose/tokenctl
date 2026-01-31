@@ -12,6 +12,8 @@ import (
 // ============================================================================
 
 func TestParse_Hex(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name    string
 		input   string
@@ -91,6 +93,8 @@ func TestParse_Hex(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
 			c, err := Parse(tt.input)
 			if tt.wantErr {
 				if err == nil {
@@ -116,6 +120,8 @@ func TestParse_Hex(t *testing.T) {
 }
 
 func TestParse_RGB(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name    string
 		input   string
@@ -175,6 +181,8 @@ func TestParse_RGB(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
 			c, err := Parse(tt.input)
 			if tt.wantErr {
 				if err == nil {
@@ -201,6 +209,8 @@ func TestParse_RGB(t *testing.T) {
 }
 
 func TestParse_HSL(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name    string
 		input   string
@@ -253,6 +263,8 @@ func TestParse_HSL(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
 			c, err := Parse(tt.input)
 			if tt.wantErr {
 				if err == nil {
@@ -279,6 +291,8 @@ func TestParse_HSL(t *testing.T) {
 }
 
 func TestParse_OKLCH(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name    string
 		input   string
@@ -331,6 +345,8 @@ func TestParse_OKLCH(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
 			c, err := Parse(tt.input)
 			if tt.wantErr {
 				if err == nil {
@@ -359,6 +375,8 @@ func TestParse_OKLCH(t *testing.T) {
 }
 
 func TestParse_NamedColors(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name  string
 		input string
@@ -375,6 +393,8 @@ func TestParse_NamedColors(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
 			c, err := Parse(tt.input)
 			if err != nil {
 				t.Fatalf("Parse(%q) unexpected error: %v", tt.input, err)
@@ -390,6 +410,8 @@ func TestParse_NamedColors(t *testing.T) {
 }
 
 func TestParse_Errors(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name  string
 		input string
@@ -402,6 +424,8 @@ func TestParse_Errors(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
 			_, err := Parse(tt.input)
 			if err == nil {
 				t.Errorf("Parse(%q) expected error, got nil", tt.input)
@@ -415,6 +439,8 @@ func TestParse_Errors(t *testing.T) {
 // ============================================================================
 
 func TestColor_ToCSS(t *testing.T) {
+	t.Parallel()
+
 	c := MustParse("#3b82f6")
 
 	tests := []struct {
@@ -427,6 +453,8 @@ func TestColor_ToCSS(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.format, func(t *testing.T) {
+			t.Parallel()
+
 			got := c.ToCSS(tt.format)
 			if got != tt.want {
 				t.Errorf("ToCSS(%q) = %q, want %q", tt.format, got, tt.want)
@@ -436,6 +464,8 @@ func TestColor_ToCSS(t *testing.T) {
 }
 
 func TestColor_ToOKLCH(t *testing.T) {
+	t.Parallel()
+
 	// Test that ToOKLCH produces valid output format
 	c := MustParse("#3b82f6")
 	oklch := c.ToOKLCH()
@@ -458,6 +488,8 @@ func TestColor_ToOKLCH(t *testing.T) {
 }
 
 func TestColor_RoundTrip(t *testing.T) {
+	t.Parallel()
+
 	// Test that colors can be round-tripped through various formats
 	tests := []string{
 		"#3b82f6",
@@ -470,6 +502,8 @@ func TestColor_RoundTrip(t *testing.T) {
 
 	for _, input := range tests {
 		t.Run(input, func(t *testing.T) {
+			t.Parallel()
+
 			c1, err := Parse(input)
 			if err != nil {
 				t.Fatalf("Parse(%q) error: %v", input, err)
@@ -498,6 +532,8 @@ func TestColor_RoundTrip(t *testing.T) {
 // ============================================================================
 
 func TestContrastRatio(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name    string
 		c1      string
@@ -537,6 +573,8 @@ func TestContrastRatio(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
 			c1 := MustParse(tt.c1)
 			c2 := MustParse(tt.c2)
 
@@ -551,6 +589,8 @@ func TestContrastRatio(t *testing.T) {
 }
 
 func TestContrastRatio_Symmetric(t *testing.T) {
+	t.Parallel()
+
 	// Contrast ratio should be the same regardless of argument order
 	c1 := MustParse("#3b82f6")
 	c2 := MustParse("#ffffff")
@@ -564,6 +604,8 @@ func TestContrastRatio_Symmetric(t *testing.T) {
 }
 
 func TestMeetsWCAG(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name      string
 		c1        string
@@ -612,6 +654,8 @@ func TestMeetsWCAG(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
 			c1 := MustParse(tt.c1)
 			c2 := MustParse(tt.c2)
 
@@ -625,6 +669,8 @@ func TestMeetsWCAG(t *testing.T) {
 }
 
 func TestContrastLevel(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name string
 		c1   string
@@ -639,6 +685,8 @@ func TestContrastLevel(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
 			c1 := MustParse(tt.c1)
 			c2 := MustParse(tt.c2)
 
@@ -651,6 +699,8 @@ func TestContrastLevel(t *testing.T) {
 }
 
 func TestOptimalTextColor(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name       string
 		background string
@@ -666,6 +716,8 @@ func TestOptimalTextColor(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
 			bg := MustParse(tt.background)
 			result := OptimalTextColor(bg)
 
@@ -685,6 +737,8 @@ func TestOptimalTextColor(t *testing.T) {
 // ============================================================================
 
 func TestContentColor_WCAGCompliance(t *testing.T) {
+	t.Parallel()
+
 	// Test that ContentColor always produces WCAG AA compliant results
 	testColors := []string{
 		"#3b82f6", // Blue
@@ -701,6 +755,8 @@ func TestContentColor_WCAGCompliance(t *testing.T) {
 
 	for _, hex := range testColors {
 		t.Run(hex, func(t *testing.T) {
+			t.Parallel()
+
 			bg := MustParse(hex)
 			content := ContentColor(bg)
 
@@ -715,6 +771,8 @@ func TestContentColor_WCAGCompliance(t *testing.T) {
 }
 
 func TestContentColor_DaisyUIColors(t *testing.T) {
+	t.Parallel()
+
 	// Test with actual DaisyUI default theme colors
 	daisyColors := []struct {
 		name  string
@@ -733,6 +791,8 @@ func TestContentColor_DaisyUIColors(t *testing.T) {
 
 	for _, dc := range daisyColors {
 		t.Run(dc.name, func(t *testing.T) {
+			t.Parallel()
+
 			bg, err := Parse(dc.value)
 			if err != nil {
 				t.Fatalf("Parse(%q) error: %v", dc.value, err)
@@ -750,6 +810,8 @@ func TestContentColor_DaisyUIColors(t *testing.T) {
 }
 
 func TestContentColorWithRatio(t *testing.T) {
+	t.Parallel()
+
 	// Test with a dark color where AAA (7:1) is achievable with white
 	bg := MustParse("#1e3a5f") // Dark blue
 	content := ContentColorWithRatio(bg, WCAGAAANormal)
@@ -772,6 +834,8 @@ func TestContentColorWithRatio(t *testing.T) {
 }
 
 func TestGenerateContentPair(t *testing.T) {
+	t.Parallel()
+
 	base := MustParse("#3b82f6")
 	gotBase, gotContent := GenerateContentPair(base)
 
@@ -788,6 +852,8 @@ func TestGenerateContentPair(t *testing.T) {
 }
 
 func TestDaisyContentColor(t *testing.T) {
+	t.Parallel()
+
 	// Test that DaisyContentColor produces valid results
 	testColors := []string{
 		"#3b82f6",
@@ -799,6 +865,8 @@ func TestDaisyContentColor(t *testing.T) {
 
 	for _, hex := range testColors {
 		t.Run(hex, func(t *testing.T) {
+			t.Parallel()
+
 			bg := MustParse(hex)
 			content := DaisyContentColor(bg)
 
@@ -816,6 +884,8 @@ func TestDaisyContentColor(t *testing.T) {
 // ============================================================================
 
 func TestMustParse_Panic(t *testing.T) {
+	t.Parallel()
+
 	defer func() {
 		if r := recover(); r == nil {
 			t.Error("MustParse with invalid input should panic")
@@ -826,6 +896,8 @@ func TestMustParse_Panic(t *testing.T) {
 }
 
 func TestWhiteAndBlack(t *testing.T) {
+	t.Parallel()
+
 	white := White()
 	black := Black()
 
@@ -841,6 +913,8 @@ func TestWhiteAndBlack(t *testing.T) {
 }
 
 func TestFromOkLch(t *testing.T) {
+	t.Parallel()
+
 	c := FromOkLch(0.5, 0.2, 180)
 
 	l, ch, h := c.OkLch()
@@ -854,6 +928,8 @@ func TestFromOkLch(t *testing.T) {
 }
 
 func TestFromRGB255(t *testing.T) {
+	t.Parallel()
+
 	c := FromRGB255(128, 64, 32)
 
 	r, g, b := c.RGB255()
@@ -863,6 +939,8 @@ func TestFromRGB255(t *testing.T) {
 }
 
 func TestIsValid(t *testing.T) {
+	t.Parallel()
+
 	valid := MustParse("#3b82f6")
 	if !valid.IsValid() {
 		t.Error("Valid color reported as invalid")
@@ -870,6 +948,8 @@ func TestIsValid(t *testing.T) {
 }
 
 func TestClamped(t *testing.T) {
+	t.Parallel()
+
 	// Create a potentially invalid color from OKLCH
 	// Some OKLCH values produce out-of-gamut RGB
 	c := FromOkLch(0.9, 0.4, 150)
@@ -882,6 +962,8 @@ func TestClamped(t *testing.T) {
 }
 
 func TestRelativeLuminance(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name    string
 		color   string
@@ -895,6 +977,8 @@ func TestRelativeLuminance(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
 			c := MustParse(tt.color)
 			lum := RelativeLuminance(c)
 

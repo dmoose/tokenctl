@@ -8,6 +8,7 @@ import (
 )
 
 func TestExtractKeyframes_Basic(t *testing.T) {
+	t.Parallel()
 	dict := &Dictionary{
 		Root: map[string]any{
 			"keyframes": map[string]any{
@@ -43,6 +44,7 @@ func TestExtractKeyframes_Basic(t *testing.T) {
 }
 
 func TestExtractKeyframes_Multiple(t *testing.T) {
+	t.Parallel()
 	dict := &Dictionary{
 		Root: map[string]any{
 			"keyframes": map[string]any{
@@ -74,6 +76,7 @@ func TestExtractKeyframes_Multiple(t *testing.T) {
 }
 
 func TestExtractKeyframes_Empty(t *testing.T) {
+	t.Parallel()
 	dict := &Dictionary{
 		Root: map[string]any{
 			"color": map[string]any{
@@ -90,6 +93,7 @@ func TestExtractKeyframes_Empty(t *testing.T) {
 }
 
 func TestGenerateKeyframesCSS(t *testing.T) {
+	t.Parallel()
 	keyframes := []KeyframeDefinition{
 		{
 			Name: "pulse",
@@ -114,6 +118,7 @@ func TestGenerateKeyframesCSS(t *testing.T) {
 }
 
 func TestGenerateKeyframesCSS_FrameOrder(t *testing.T) {
+	t.Parallel()
 	keyframes := []KeyframeDefinition{
 		{
 			Name: "slide",
@@ -138,6 +143,7 @@ func TestGenerateKeyframesCSS_FrameOrder(t *testing.T) {
 }
 
 func TestGenerateKeyframesCSS_FromTo(t *testing.T) {
+	t.Parallel()
 	keyframes := []KeyframeDefinition{
 		{
 			Name: "fade",
@@ -160,6 +166,7 @@ func TestGenerateKeyframesCSS_FromTo(t *testing.T) {
 }
 
 func TestGenerateKeyframesCSS_Empty(t *testing.T) {
+	t.Parallel()
 	css := GenerateKeyframesCSS(nil)
 	if css != "" {
 		t.Error("Empty keyframes should produce empty string")

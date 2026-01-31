@@ -9,6 +9,8 @@ import (
 )
 
 func TestCatalogGenerator_Generate_BasicTokens(t *testing.T) {
+	t.Parallel()
+
 	gen := NewCatalogGenerator()
 
 	resolvedTokens := map[string]any{
@@ -55,6 +57,8 @@ func TestCatalogGenerator_Generate_BasicTokens(t *testing.T) {
 }
 
 func TestCatalogGenerator_Generate_WithComponents(t *testing.T) {
+	t.Parallel()
+
 	gen := NewCatalogGenerator()
 
 	resolvedTokens := map[string]any{
@@ -109,6 +113,8 @@ func TestCatalogGenerator_Generate_WithComponents(t *testing.T) {
 }
 
 func TestCatalogGenerator_Generate_WithThemes(t *testing.T) {
+	t.Parallel()
+
 	gen := NewCatalogGenerator()
 
 	resolvedTokens := map[string]any{
@@ -203,6 +209,8 @@ func TestCatalogGenerator_Generate_WithThemes(t *testing.T) {
 }
 
 func TestCatalogGenerator_Generate_FiltersNestedMaps(t *testing.T) {
+	t.Parallel()
+
 	gen := NewCatalogGenerator()
 
 	// Include a nested map that should be filtered out
@@ -235,6 +243,8 @@ func TestCatalogGenerator_Generate_FiltersNestedMaps(t *testing.T) {
 }
 
 func TestCatalogGenerator_Generate_ThemeFiltersNestedMaps(t *testing.T) {
+	t.Parallel()
+
 	gen := NewCatalogGenerator()
 
 	resolvedTokens := map[string]any{
@@ -275,6 +285,8 @@ func TestCatalogGenerator_Generate_ThemeFiltersNestedMaps(t *testing.T) {
 }
 
 func TestCatalogGenerator_Generate_EmptyThemesOmitted(t *testing.T) {
+	t.Parallel()
+
 	gen := NewCatalogGenerator()
 
 	resolvedTokens := map[string]any{
@@ -312,6 +324,8 @@ func TestCatalogGenerator_Generate_EmptyThemesOmitted(t *testing.T) {
 }
 
 func TestCatalogGenerator_CategoryFilter_Colors(t *testing.T) {
+	t.Parallel()
+
 	opts := CatalogOptions{Category: "color"}
 	gen := NewCatalogGeneratorWithOptions(opts)
 
@@ -363,6 +377,8 @@ func TestCatalogGenerator_CategoryFilter_Colors(t *testing.T) {
 }
 
 func TestCatalogGenerator_CategoryFilter_Components(t *testing.T) {
+	t.Parallel()
+
 	opts := CatalogOptions{Category: "components"}
 	gen := NewCatalogGeneratorWithOptions(opts)
 
@@ -403,6 +419,8 @@ func TestCatalogGenerator_CategoryFilter_Components(t *testing.T) {
 }
 
 func TestCatalogGenerator_CategoryFilter_WithThemes(t *testing.T) {
+	t.Parallel()
+
 	opts := CatalogOptions{Category: "color"}
 	gen := NewCatalogGeneratorWithOptions(opts)
 
@@ -451,6 +469,8 @@ func TestCatalogGenerator_CategoryFilter_WithThemes(t *testing.T) {
 }
 
 func TestCatalogGenerator_CategoryFilter_PluralSingular(t *testing.T) {
+	t.Parallel()
+
 	// Test that "colors" matches "color" category
 	tests := []struct {
 		category string
@@ -469,6 +489,8 @@ func TestCatalogGenerator_CategoryFilter_PluralSingular(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.category+"_"+tt.tokenKey, func(t *testing.T) {
+			t.Parallel()
+
 			gen := NewCatalogGeneratorWithOptions(CatalogOptions{Category: tt.category})
 			result := gen.matchesCategory(tt.tokenKey)
 			if result != tt.expected {
@@ -479,6 +501,8 @@ func TestCatalogGenerator_CategoryFilter_PluralSingular(t *testing.T) {
 }
 
 func TestFilterAtomicTokens(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name     string
 		input    map[string]any
@@ -533,6 +557,8 @@ func TestFilterAtomicTokens(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
 			result := filterAtomicTokens(tt.input)
 
 			if tt.expected == nil {
