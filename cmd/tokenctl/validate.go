@@ -3,15 +3,20 @@ package main
 import (
 	"fmt"
 	"sort"
+	"strings"
 
 	"github.com/dmoose/tokenctl/pkg/tokens"
 	"github.com/spf13/cobra"
 )
 
 var validateCmd = &cobra.Command{
-	Use:   "validate [directory]",
+	Use:   "validate [directory...]",
 	Short: "Validate the token system integrity",
 	Long: `Validate tokens for type correctness, reference integrity, and optionally layer rules.
+
+Multiple directories can be provided and are merged left-to-right before
+validation. This validates the combined result, not individual directories.
+See MERGE.md for details on multi-directory merge behavior.
 
 Layer validation (--strict-layers) enforces design system architecture:
   - brand layer: Can only use raw values (no references)
@@ -29,7 +34,7 @@ Example token structure with layers:
       "primary": { "$value": "{color.blue-500}" }
     }
   }`,
-	Args: cobra.MaximumNArgs(1),
+	Args: cobra.ArbitraryArgs,
 	RunE: runValidate,
 }
 
@@ -41,15 +46,15 @@ func init() {
 }
 
 func runValidate(cmd *cobra.Command, args []string) error {
-	dir := "."
-	if len(args) > 0 {
-		dir = args[0]
+	dirs := args
+	if len(dirs) == 0 {
+		dirs = []string{"."}
 	}
 
-	fmt.Printf("Validating token system in %s...\n", dir)
+	fmt.Printf("Validating token system in %s...\n", strings.Join(dirs, ", "))
 
 	// 1. Load Dictionary (Base + Themes)
-	baseDict, themes, err := loadTokens(dir)
+	baseDict, themes, err := loadTokens(dirs...)
 	if err != nil {
 		return err
 	}

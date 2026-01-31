@@ -101,6 +101,17 @@ tokenctl build my-design-system --output=./dist
 }
 ```
 
+### 5. Multi-Directory Merge
+
+Combine a base component library with project-specific extensions:
+
+```bash
+tokenctl build ./base-components ./dashboard-ext --output=./dist
+tokenctl validate ./base-components ./dashboard-ext
+```
+
+Directories merge left-to-right: later directories extend or override earlier ones. See [MERGE.md](MERGE.md) for details.
+
 ## Token Features
 
 ### References
@@ -170,7 +181,7 @@ Enables animated theme transitions.
 ```bash
 tokenctl init [dir]                    # Initialize token system
 
-tokenctl build [dir]                   # Build artifacts
+tokenctl build [dir...]                # Build artifacts (multi-dir merge)
   --format=tailwind                  # Tailwind 4 CSS (default)
   --format=css                       # Pure CSS (no Tailwind import)
   --format=catalog                   # Full JSON catalog
@@ -178,7 +189,7 @@ tokenctl build [dir]                   # Build artifacts
   --output=<dir>                     # Output directory (default: dist)
   --customizable-only                # Only tokens marked $customizable: true
 
-tokenctl validate [dir]                # Validate tokens
+tokenctl validate [dir...]             # Validate tokens (multi-dir merge)
   --strict                           # Fail on warnings
   --strict-layers                    # Enforce layer reference rules
 
@@ -262,6 +273,7 @@ See [examples/README.md](examples/README.md) for details.
 ## Documentation
 
 - [README.md](README.md) - Quick start (this file)
+- [MERGE.md](MERGE.md) - Multi-directory merge guide
 - [HOWTO.md](HOWTO.md) - Comprehensive design system guide
 - [TOKENS.md](TOKENS.md) - Token format, types, expressions, constraints
 - [ADVANCED_USAGE.md](ADVANCED_USAGE.md) - CSS composition patterns

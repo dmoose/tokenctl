@@ -1,0 +1,9 @@
+{
+  "color": {
+    "$type": "color",
+    "semantic": {
+      "primary": { "$value": "{color.brand.blue-500}" },
+      "success": { "$value": "{color.brand.green-500}" }
+    }
+  }
+}
