@@ -49,7 +49,9 @@ Creates:
 my-design-system/
 ├── tokens/
 │   ├── brand/colors.json
+│   ├── surface/
 │   ├── semantic/status.json
+│   ├── typography/
 │   ├── spacing/scale.json
 │   └── themes/
 ```
@@ -192,13 +194,14 @@ tokenctl build [dir...]                # Build artifacts (multi-dir merge)
   --customizable-only                # Only tokens marked $customizable: true
 
 tokenctl validate [dir...]             # Validate tokens (multi-dir merge)
-  --strict                           # Fail on warnings
   --strict-layers                    # Enforce layer reference rules
 
 tokenctl search [query]                # Search tokens
   --type=<type>                      # Filter by type (color, dimension, etc.)
   --category=<cat>                   # Filter by category
   --dir=<dir>                        # Token directory (default: .)
+
+tokenctl version                       # Print version information
 ```
 
 ## Catalog Format (v2.1)

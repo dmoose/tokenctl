@@ -55,29 +55,9 @@ This creates a vocabulary that both humans and LLMs can use consistently.
 
 ### Three-Layer Design
 
-tokenctl supports a three-layer architecture that enforces clean separation:
+tokenctl uses a three-layer architecture: Brand (raw values) → Semantic (meaning) → Component (usage). See [TOKENS.md](TOKENS.md#token-architecture) for the full diagram, rationale, and layer reference rules.
 
-```
-┌─────────────────────────────────────────────────────┐
-│                   COMPONENT LAYER                   │
-│  btn-bg, card-padding, input-border-radius          │
-│  Can only reference: semantic tokens                │
-└───────────────────────┬─────────────────────────────┘
-                        │ references
-┌───────────────────────▼─────────────────────────────┐
-│                   SEMANTIC LAYER                    │
-│  primary, success, error, spacing-md                │
-│  Can reference: brand tokens                        │
-└───────────────────────┬─────────────────────────────┘
-                        │ references
-┌───────────────────────▼─────────────────────────────┐
-│                    BRAND LAYER                      │
-│  blue-500, gray-100, 1rem, 400                      │
-│  Raw values only (no references)                    │
-└─────────────────────────────────────────────────────┘
-```
-
-### Layer Definitions
+### Layer Example
 
 ```json
 {
@@ -103,24 +83,6 @@ tokenctl supports a three-layer architecture that enforces clean separation:
   }
 }
 ```
-
-### Why Layers Matter
-
-**Without layers:**
-```css
-/* Component directly references raw value - tight coupling */
-.btn { background: #3b82f6; }
-```
-
-**With layers:**
-```css
-/* Component references semantic token - loose coupling */
-.btn { background: var(--component-btn-bg); }
-```
-
-When you change your brand color from blue to purple:
-- **Without layers:** Find and replace across entire codebase
-- **With layers:** Change `semantic.primary` reference, everything updates
 
 ---
 
