@@ -1,82 +1,64 @@
 schema_version: "1"
-timestamp: "2026-01-20T08:37:31-08:00"
+timestamp: "2026-02-07T12:22:09-08:00"
 commit_hash: ""
 
 changes:
-  - summary: "Add @keyframes support for CSS animations"
-    details: "Parse 'keyframes' sections from token JSON files and generate CSS @keyframes blocks. Added KeyframeDefinition type with Name and Frames fields, ExtractKeyframes function to scan dictionaries, and GenerateKeyframesCSS to output formatted CSS. Frames are automatically sorted by percentage (from=0%, to=100%)."
-    change_type: "feature"
-    scope: "pkg/tokens"
+  - summary: Add version command with build-time info
+    details: |
+      Added tokenctl version command showing version, git commit, and build time.
+      Makefile now injects version info via ldflags during build and install.
+    change_type: feature
+    scope: cmd/tokenctl
 
-  - summary: "Integrate keyframes into CSS and Tailwind generators"
-    details: "Added Keyframes field to GenerationContext. Both CSSGenerator and TailwindGenerator now call tokens.GenerateKeyframesCSS after @property declarations. Keyframes are output before @layer reset as global definitions."
-    change_type: "feature"
-    scope: "pkg/generators"
+  - summary: Add body background and foreground colors to CSS reset
+    details: |
+      Body element now sets background-color: var(--color-background) and
+      color: var(--color-foreground) in the reset layer. Ensures theme colors
+      apply immediately without requiring additional CSS.
+    change_type: fix
+    scope: pkg/generators
 
-  - summary: "Extract and pass keyframes in build command"
-    details: "Call tokens.ExtractKeyframes(baseDict) in build.go and include in GenerationContext for CSS/Tailwind generation."
-    change_type: "feature"
-    scope: "cmd/tokenctl"
+  - summary: Support dual theme directory layouts in loader
+    details: |
+      LoadThemes now checks both rootPath/themes/ and rootPath/tokens/themes/.
+      Supports both "tokenctl build tokens" (tokens dir) and "tokenctl build ."
+      (project root) invocations.
+    change_type: fix
+    scope: pkg/tokens
 
-  - summary: "Add keyframes unit tests"
-    details: "Added TestExtractKeyframes_Basic, TestExtractKeyframes_Multiple, TestExtractKeyframes_Empty, TestGenerateKeyframesCSS, TestGenerateKeyframesCSS_FrameOrder, TestGenerateKeyframesCSS_FromTo in keyframes_test.go. Added TestCSSGenerator_Generate_WithKeyframes in css_test.go."
-    change_type: "feature"
-    scope: "pkg/tokens,pkg/generators"
-
-  - summary: "Document @keyframes in README and TOKENS.md"
-    details: "Added 'CSS @keyframes' to README features list. Added comprehensive 'CSS @keyframes Animations' section to TOKENS.md with examples for basic keyframes, from/to keywords, complex animations, and component references."
-    change_type: "docs"
-    scope: "docs"
+  - summary: Remove completed AUDIT_TODO.md
+    details: All 34 audit items have been addressed; tracking file no longer needed.
+    change_type: other
+    scope: docs
 
 context:
-  problem_statement: "Components like skeleton loaders need CSS animations that run autonomously (without triggers). CSS transitions require state changes to activate, so @keyframes are necessary for looping animations. tokenctl needed native support to keep all styling in the token system."
+  problem_statement: |
+    Dogfooding revealed theme colors weren't applying to body element, requiring
+    manual CSS. Also needed version command for troubleshooting and dual theme
+    path support for different project layouts.
 
   key_insights:
-    - insight: "Keyframes are structurally similar to @property - global definitions parsed from a root-level section"
-      impact: "Following the @property implementation pattern (ExtractX function, add to GenerationContext, generate in both generators) made implementation straightforward"
-      scope: "project"
+    - insight: CSS reset should set structural colors on body element
+      impact: Theme switching works immediately without user adding body styles
+      scope: project
 
-    - insight: "CSS transitions vs keyframes serve different purposes and both are needed"
-      impact: "Transitions require triggers (hover, class change); keyframes run autonomously. Design systems need both."
-      scope: "project"
-
-    - insight: "Frame selectors need deterministic ordering for consistent output"
-      impact: "Implemented keyframeSelectorOrder to sort from < 0% < 50% < 100% < to"
-      scope: "checkpoint"
+    - insight: Token directory can be passed directly or as project root
+      impact: Loader needs to handle both layouts for flexible CLI usage
+      scope: checkpoint
 
   decisions_made:
-    - decision: "Place keyframes at root level of token files alongside components section"
-      rationale: "Keyframes are global definitions like @property, not component-specific. Allows sharing across components."
-      alternatives_considered:
-        - "Nest keyframes inside component definitions (limits reuse)"
-        - "Separate keyframes.json file (fragments related definitions)"
-      scope: "project"
-
-    - decision: "Output keyframes after @property but before @layer reset"
-      rationale: "Follows natural CSS order: type definitions (@property), animation definitions (@keyframes), then layered rules. Consistent with existing @property placement."
-      scope: "project"
-
-    - decision: "Store frame properties as map[string]map[string]string in KeyframeDefinition"
-      rationale: "Simple structure that maps directly to CSS output. Frame selector -> property name -> value."
-      scope: "checkpoint"
+    - decision: Body reset uses CSS variables, not hardcoded colors
+      rationale: Allows theme switching to work without CSS specificity issues
+      scope: project
 
   established_patterns:
-    - pattern: "New CSS at-rules follow ExtractX -> GenerationContext field -> generateX method pattern"
-      rationale: "Consistent with @property implementation. Keeps extraction in tokens package, generation in generators package."
-      examples: "ExtractPropertyTokens/PropertyTokens, ExtractKeyframes/Keyframes"
-      scope: "project"
-
-  conversation_context:
-    - exchange: "Discussed whether property-based CSS animations could replace keyframes"
-      outcome: "Confirmed both are needed: transitions for triggered state changes, keyframes for autonomous loops"
+    - pattern: Build-time version injection via ldflags
+      rationale: Standard Go pattern for embedding version info without config files
+      examples: "go build -ldflags '-X main.version=...' "
+      scope: project
 
 next_steps:
-  - summary: "Document states section in token format documentation"
-    details: "Update TOKENS.md to show states alongside variants and sizes"
-    priority: "med"
-    scope: "docs"
-
-  - summary: "Consider adding keyframe validation"
-    details: "Validate frame selectors are valid CSS (percentages, from/to keywords)"
-    priority: "low"
-    scope: "pkg/tokens"
+  - summary: Document states section in token format documentation
+    details: Update TOKENS.md to show states alongside variants and sizes
+    priority: med
+    scope: docs

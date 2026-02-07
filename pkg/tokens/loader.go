@@ -87,7 +87,14 @@ func (l *Loader) LoadBase(path string) (*Dictionary, error) {
 // LoadThemes scans the themes directory and returns a map of ThemeName -> Dictionary
 func (l *Loader) LoadThemes(rootPath string) (map[string]*Dictionary, error) {
 	themes := make(map[string]*Dictionary)
-	themesPath := filepath.Join(rootPath, "tokens", "themes")
+
+	// Support both layouts:
+	// 1. rootPath/themes/ - when user passes tokens directory directly (tokenctl build tokens)
+	// 2. rootPath/tokens/themes/ - when user passes project root (tokenctl build .)
+	themesPath := filepath.Join(rootPath, "themes")
+	if _, err := os.Stat(themesPath); os.IsNotExist(err) {
+		themesPath = filepath.Join(rootPath, "tokens", "themes")
+	}
 
 	// Check if themes directory exists
 	if _, err := os.Stat(themesPath); os.IsNotExist(err) {

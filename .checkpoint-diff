@@ -1,491 +1,883 @@
 ## Unstaged changes (git diff)
 diff --git a/.checkpoint-changelog.yaml b/.checkpoint-changelog.yaml
-index da80c4d..1a26ccd 100644
+index 2910b24..0403bb6 100644
 --- a/.checkpoint-changelog.yaml
 +++ b/.checkpoint-changelog.yaml
-@@ -13,7 +13,7 @@ languages:
+@@ -38,7 +38,7 @@ next_steps:
  ---
  schema_version: "1"
- timestamp: "2026-01-18T13:28:55-08:00"
+ timestamp: "2026-01-20T08:37:31-08:00"
 -commit_hash: ""
-+commit_hash: 561b68fa2a274b19d322b217ca62285c2d1c8898
- files_changed:
-     - path: pkg/generators/css.go
-       additions: 31
++commit_hash: 54b6e6fbf572e004e61fcdfb044e0c81aff2531b
+ changes:
+     - summary: Add @keyframes support for CSS animations
+       details: Parse 'keyframes' sections from token JSON files and generate CSS @keyframes blocks. Added KeyframeDefinition type with Name and Frames fields, ExtractKeyframes function to scan dictionaries, and GenerateKeyframesCSS to output formatted CSS. Frames are automatically sorted by percentage (from=0%, to=100%).
 diff --git a/.checkpoint-diff b/.checkpoint-diff
 deleted file mode 100644
-index 653c5cf..0000000
+index 814ba47..0000000
 --- a/.checkpoint-diff
 +++ /dev/null
-@@ -1,61 +0,0 @@
+@@ -1,491 +0,0 @@
 -## Unstaged changes (git diff)
+-diff --git a/.checkpoint-changelog.yaml b/.checkpoint-changelog.yaml
+-index da80c4d..1a26ccd 100644
+---- a/.checkpoint-changelog.yaml
+-+++ b/.checkpoint-changelog.yaml
+-@@ -13,7 +13,7 @@ languages:
+- ---
+- schema_version: "1"
+- timestamp: "2026-01-18T13:28:55-08:00"
+--commit_hash: ""
+-+commit_hash: 561b68fa2a274b19d322b217ca62285c2d1c8898
+- files_changed:
+-     - path: pkg/generators/css.go
+-       additions: 31
+-diff --git a/.checkpoint-diff b/.checkpoint-diff
+-deleted file mode 100644
+-index 653c5cf..0000000
+---- a/.checkpoint-diff
+-+++ /dev/null
+-@@ -1,61 +0,0 @@
+--## Unstaged changes (git diff)
+--diff --git a/pkg/generators/css.go b/pkg/generators/css.go
+--index 04eae7b..13155b7 100644
+----- a/pkg/generators/css.go
+--+++ b/pkg/generators/css.go
+--@@ -273,6 +273,37 @@ func (g *CSSGenerator) generateComponents(components map[string]tokens.Component
+-- 				sb.WriteString("  }\n\n")
+-- 			}
+-- 		}
+--+
+--+		// States (error, active, disabled, etc.)
+--+		stateNames := make([]string, 0, len(comp.States))
+--+		for sname := range comp.States {
+--+			stateNames = append(stateNames, sname)
+--+		}
+--+		sort.Strings(stateNames)
+--+
+--+		for _, sname := range stateNames {
+--+			state := comp.States[sname]
+--+			if state.Class != "" {
+--+				sb.WriteString(fmt.Sprintf("  .%s {\n", state.Class))
+--+				g.writeProperties(&sb, state.Properties, 4)
+--+				sb.WriteString("  }\n\n")
+--+
+--+				// States can also have pseudo-selectors
+--+				stateKeys := make([]string, 0, len(state.States))
+--+				for skey := range state.States {
+--+					stateKeys = append(stateKeys, skey)
+--+				}
+--+				sort.Strings(stateKeys)
+--+
+--+				for _, stateKey := range stateKeys {
+--+					pseudoState := state.States[stateKey]
+--+					selector := g.buildStateSelector(state.Class, stateKey)
+--+					sb.WriteString(fmt.Sprintf("  %s {\n", selector))
+--+					g.writeProperties(&sb, pseudoState.Properties, 4)
+--+					sb.WriteString("  }\n\n")
+--+				}
+--+			}
+--+		}
+-- 	}
+-- 
+-- 	sb.WriteString("}\n")
+--diff --git a/pkg/tokens/components.go b/pkg/tokens/components.go
+--index 131f257..be4af1c 100644
+----- a/pkg/tokens/components.go
+--+++ b/pkg/tokens/components.go
+--@@ -12,10 +12,10 @@ type ComponentDefinition struct {
+-- 	Description string                 `json:"$description,omitempty"`
+-- 	Contains    []string               `json:"$contains,omitempty"` // Child components this can contain
+-- 	Requires    string                 `json:"$requires,omitempty"` // Parent component this must be inside
+---	Base        map[string]any `json:"base"`
+--+	Base        map[string]any         `json:"base"`
+-- 	Variants    map[string]VariantDef  `json:"variants"`
+-- 	Sizes       map[string]VariantDef  `json:"sizes"`
+---	States      map[string]any `json:"states"` // Reserved for future state enforcement
+--+	States      map[string]VariantDef  `json:"states"` // Component states (error, active, etc.)
+-- }
+-- 
+-- // VariantDef represents a specific variant (primary, outline) or size (sm, lg)
+--
+-diff --git a/.checkpoint-input b/.checkpoint-input
+-deleted file mode 100644
+-index 786b07f..0000000
+---- a/.checkpoint-input
+-+++ /dev/null
+-@@ -1,61 +0,0 @@
+--schema_version: "1"
+--timestamp: "2026-01-18T13:28:55-08:00"
+--commit_hash: ""
+--
+--git_status: |
+--  M pkg/generators/css.go
+--  M pkg/tokens/components.go
+--  ?? .checkpoint-lock
+--  ?? PLAN.md
+--
+--diff_file: ".checkpoint-diff"
+--files_changed:
+--  - path: "pkg/generators/css.go"
+--    additions: 31
+--    deletions: 0
+--  - path: "pkg/tokens/components.go"
+--    additions: 2
+--    deletions: 2
+--
+--changes:
+--  - summary: "Add CSS generation for component-level states"
+--    details: "States like 'error', 'active', 'has-toggle' can now be defined in component token files and will generate corresponding CSS classes. Previously the 'states' field was reserved but not processed."
+--    change_type: "feature"
+--    scope: "pkg/generators"
+--
+--  - summary: "Change States field type to support CSS generation"
+--    details: "Changed States from map[string]any to map[string]VariantDef to enable proper parsing of $class and CSS properties, matching how variants and sizes work."
+--    change_type: "feature"
+--    scope: "pkg/tokens"
+--
+--context:
+--  problem_statement: "Component tokens support 'base', 'variants', and 'sizes' sections that generate CSS, but the 'states' section was marked 'reserved for future' and ignored. This forced users to define state classes as separate top-level components instead of logically grouping them with their parent component."
+--
+--  key_insights:
+--    - insight: "States follow the same pattern as variants - they have a $class and CSS properties"
+--      impact: "Reusing VariantDef type means states automatically get pseudo-selector support too"
+--      scope: "project"
+--
+--    - insight: "The existing VariantDef UnmarshalJSON handles the $class extraction cleanly"
+--      impact: "No new parsing code needed, just type change and generation loop"
+--      scope: "checkpoint"
+--
+--  decisions_made:
+--    - decision: "Reuse VariantDef type for States instead of creating a new StateDef type"
+--      rationale: "States have identical structure to variants - a class name and CSS properties. Adding pseudo-selector support for free is a bonus."
+--      alternatives_considered:
+--        - "Create separate StateDef type - rejected as it would duplicate VariantDef"
+--        - "Keep map[string]any and parse manually - rejected as VariantDef already does this"
+--      scope: "project"
+--
+--  established_patterns:
+--    - pattern: "Component sections (variants, sizes, states) all use VariantDef structure"
+--      rationale: "Consistency makes the token format predictable and the generator code uniform"
+--      examples: "variants, sizes, and now states all support $class, properties, and nested pseudo-selectors"
+--      scope: "project"
+--
+--next_steps:
+--  - summary: "Document states section in token format documentation"
+--    details: "Update TOKENS.md to show states alongside variants and sizes"
+--    priority: "med"
+--    scope: "docs"
+-diff --git a/.checkpoint-lock b/.checkpoint-lock
+-index 0228160..f43ccb8 100644
+---- a/.checkpoint-lock
+-+++ b/.checkpoint-lock
+-@@ -1,2 +1,2 @@
+--pid=30938
+--timestamp=2026-01-18T13:28:55-08:00
+-+pid=21263
+-+timestamp=2026-01-20T08:37:30-08:00
+-diff --git a/README.md b/README.md
+-index dfbaae9..285d836 100644
+---- a/README.md
+-+++ b/README.md
+-@@ -17,6 +17,7 @@ A W3C Design Tokens CLI that generates CSS from JSON token definitions. Define y
+- - **Computed Values**: `contrast()`, `darken()`, `lighten()`, `shade()`, `calc()` expressions
+- - **Scale Expansion**: `$scale` generates size variants automatically (xs, sm, md, lg, xl)
+- - **CSS @property**: `$property` field generates typed CSS custom properties for animations
+-+- **CSS @keyframes**: Define animations in tokens, output to CSS `@keyframes` blocks
+- - **Responsive Tokens**: `$breakpoints` and `$responsive` for media query generation
+- - **Layer Validation**: `--strict-layers` enforces brand → semantic → component architecture
+- - **Token Search**: CLI search by name, type, or category
+-diff --git a/TOKENS.md b/TOKENS.md
+-index 3e5ddd3..53434b3 100644
+---- a/TOKENS.md
+-+++ b/TOKENS.md
+-@@ -13,10 +13,11 @@ This guide covers token-based design system concepts and how tokenctl implements
+- 6. [Scale Expansion](#scale-expansion)
+- 7. [Constraints](#constraints)
+- 8. [CSS @property Declarations](#css-property-declarations)
+--9. [Theme System](#theme-system)
+--10. [Components](#components)
+--11. [Best Practices](#best-practices)
+--12. [Troubleshooting](#troubleshooting)
+-+9. [CSS @keyframes Animations](#css-keyframes-animations)
+-+10. [Theme System](#theme-system)
+-+11. [Components](#components)
+-+12. [Best Practices](#best-practices)
+-+13. [Troubleshooting](#troubleshooting)
+- 
+- ---
+- 
+-@@ -547,6 +548,103 @@ Without `@property`, custom properties change instantly. With it, they transitio
+- 
+- ---
+- 
+-+## CSS @keyframes Animations
+-+
+-+Define CSS animations as tokens in a `keyframes` section at the root level of any token file.
+-+
+-+### Basic Keyframes
+-+
+-+```json
+-+{
+-+  "keyframes": {
+-+    "skeleton-pulse": {
+-+      "0%, 100%": { "opacity": "1" },
+-+      "50%": { "opacity": "0.5" }
+-+    }
+-+  }
+-+}
+-+```
+-+
+-+**Generated CSS:**
+-+```css
+-+@keyframes skeleton-pulse {
+-+  0%, 100% {
+-+    opacity: 1;
+-+  }
+-+  50% {
+-+    opacity: 0.5;
+-+  }
+-+}
+-+```
+-+
+-+### Using from/to Keywords
+-+
+-+```json
+-+{
+-+  "keyframes": {
+-+    "slide-in": {
+-+      "from": { "transform": "translateX(-100%)" },
+-+      "to": { "transform": "translateX(0)" }
+-+    },
+-+    "fade-in": {
+-+      "from": { "opacity": "0" },
+-+      "to": { "opacity": "1" }
+-+    }
+-+  }
+-+}
+-+```
+-+
+-+### Complex Animations
+-+
+-+```json
+-+{
+-+  "keyframes": {
+-+    "bounce": {
+-+      "0%, 100%": {
+-+        "transform": "translateY(0)",
+-+        "animation-timing-function": "ease-out"
+-+      },
+-+      "50%": {
+-+        "transform": "translateY(-25%)",
+-+        "animation-timing-function": "ease-in"
+-+      }
+-+    }
+-+  }
+-+}
+-+```
+-+
+-+### Referencing in Components
+-+
+-+Keyframes are referenced by name in component animation properties:
+-+
+-+```json
+-+{
+-+  "components": {
+-+    "skeleton": {
+-+      "$class": "skeleton",
+-+      "base": {
+-+        "animation": "skeleton-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite"
+-+      }
+-+    }
+-+  },
+-+  "keyframes": {
+-+    "skeleton-pulse": {
+-+      "0%, 100%": { "opacity": "1" },
+-+      "50%": { "opacity": "0.5" }
+-+    }
+-+  }
+-+}
+-+```
+-+
+-+### Keyframe Ordering
+-+
+-+Frames are automatically sorted by percentage in the generated CSS:
+-+- `from` is treated as 0%
+-+- `to` is treated as 100%
+-+- Percentage values are sorted numerically
+-+
+-+---
+-+
+- ## Theme System
+- 
+- Themes are defined in `tokens/themes/` and override base tokens.
+-diff --git a/cmd/tokenctl/build.go b/cmd/tokenctl/build.go
+-index 18990fe..1963eb5 100644
+---- a/cmd/tokenctl/build.go
+-+++ b/cmd/tokenctl/build.go
+-@@ -139,6 +139,9 @@ func runBuild(cmd *cobra.Command, args []string) error {
+- 		// Extract tokens with $property for @property declarations
+- 		propertyTokens := tokens.ExtractPropertyTokens(baseDict, resolvedBase)
+- 
+-+		// Extract @keyframes definitions
+-+		keyframes := tokens.ExtractKeyframes(baseDict)
+-+
+- 		// Extract breakpoints and responsive tokens
+- 		breakpoints := tokens.ExtractBreakpoints(baseDict)
+- 		responsiveTokens := tokens.ExtractResponsiveTokens(baseDict)
+-@@ -150,6 +153,7 @@ func runBuild(cmd *cobra.Command, args []string) error {
+- 			Components:       components,
+- 			Themes:           themeContexts,
+- 			PropertyTokens:   propertyTokens,
+-+			Keyframes:        keyframes,
+- 			Breakpoints:      breakpoints,
+- 			ResponsiveTokens: responsiveTokens,
+- 		}
 -diff --git a/pkg/generators/css.go b/pkg/generators/css.go
--index 04eae7b..13155b7 100644
+-index 13155b7..06277d8 100644
 ---- a/pkg/generators/css.go
 -+++ b/pkg/generators/css.go
--@@ -273,6 +273,37 @@ func (g *CSSGenerator) generateComponents(components map[string]tokens.Component
-- 				sb.WriteString("  }\n\n")
-- 			}
-- 		}
--+
--+		// States (error, active, disabled, etc.)
--+		stateNames := make([]string, 0, len(comp.States))
--+		for sname := range comp.States {
--+			stateNames = append(stateNames, sname)
--+		}
--+		sort.Strings(stateNames)
--+
--+		for _, sname := range stateNames {
--+			state := comp.States[sname]
--+			if state.Class != "" {
--+				sb.WriteString(fmt.Sprintf("  .%s {\n", state.Class))
--+				g.writeProperties(&sb, state.Properties, 4)
--+				sb.WriteString("  }\n\n")
--+
--+				// States can also have pseudo-selectors
--+				stateKeys := make([]string, 0, len(state.States))
--+				for skey := range state.States {
--+					stateKeys = append(stateKeys, skey)
--+				}
--+				sort.Strings(stateKeys)
--+
--+				for _, stateKey := range stateKeys {
--+					pseudoState := state.States[stateKey]
--+					selector := g.buildStateSelector(state.Class, stateKey)
--+					sb.WriteString(fmt.Sprintf("  %s {\n", selector))
--+					g.writeProperties(&sb, pseudoState.Properties, 4)
--+					sb.WriteString("  }\n\n")
--+				}
--+			}
--+		}
+-@@ -30,17 +30,23 @@ func (g *CSSGenerator) Generate(ctx *GenerationContext) (string, error) {
+- 		sb.WriteString(propertyDecls)
 - 	}
 - 
-- 	sb.WriteString("}\n")
--diff --git a/pkg/tokens/components.go b/pkg/tokens/components.go
--index 131f257..be4af1c 100644
----- a/pkg/tokens/components.go
--+++ b/pkg/tokens/components.go
--@@ -12,10 +12,10 @@ type ComponentDefinition struct {
-- 	Description string                 `json:"$description,omitempty"`
-- 	Contains    []string               `json:"$contains,omitempty"` // Child components this can contain
-- 	Requires    string                 `json:"$requires,omitempty"` // Parent component this must be inside
---	Base        map[string]any `json:"base"`
--+	Base        map[string]any         `json:"base"`
-- 	Variants    map[string]VariantDef  `json:"variants"`
-- 	Sizes       map[string]VariantDef  `json:"sizes"`
---	States      map[string]any `json:"states"` // Reserved for future state enforcement
--+	States      map[string]VariantDef  `json:"states"` // Component states (error, active, etc.)
-- }
+--	// 3. Reset layer
+-+	// 3. @keyframes declarations (global animations)
+-+	if len(ctx.Keyframes) > 0 {
+-+		keyframesCSS := tokens.GenerateKeyframesCSS(ctx.Keyframes)
+-+		sb.WriteString(keyframesCSS)
+-+	}
+-+
+-+	// 4. Reset layer
+- 	sb.WriteString(generateReset())
 - 
-- // VariantDef represents a specific variant (primary, outline) or size (sm, lg)
+--	// 4. Root variables (in tokens layer)
+-+	// 5. Root variables (in tokens layer)
+- 	rootVars, err := g.generateRootVariables(ctx.ResolvedTokens)
+- 	if err != nil {
+- 		return "", fmt.Errorf("failed to generate root variables: %w", err)
+- 	}
+- 	sb.WriteString(rootVars)
+- 
+--	// 5. Theme variations
+-+	// 6. Theme variations
+- 	if len(ctx.Themes) > 0 {
+- 		themeVariations, err := g.generateThemeVariations(ctx.Themes)
+- 		if err != nil {
+-@@ -49,7 +55,7 @@ func (g *CSSGenerator) Generate(ctx *GenerationContext) (string, error) {
+- 		sb.WriteString(themeVariations)
+- 	}
+- 
+--	// 6. Components
+-+	// 7. Components
+- 	if len(ctx.Components) > 0 {
+- 		components, err := g.generateComponents(ctx.Components)
+- 		if err != nil {
+-@@ -58,7 +64,7 @@ func (g *CSSGenerator) Generate(ctx *GenerationContext) (string, error) {
+- 		sb.WriteString(components)
+- 	}
+- 
+--	// 7. Responsive overrides via media queries
+-+	// 8. Responsive overrides via media queries
+- 	if len(ctx.ResponsiveTokens) > 0 {
+- 		responsiveCSS := tokens.GenerateResponsiveCSS(ctx.Breakpoints, ctx.ResponsiveTokens)
+- 		if responsiveCSS != "" {
+-diff --git a/pkg/generators/css_test.go b/pkg/generators/css_test.go
+-index 7bc1057..1586cfc 100644
+---- a/pkg/generators/css_test.go
+-+++ b/pkg/generators/css_test.go
+-@@ -325,3 +325,63 @@ func TestCSSGenerator_DeterministicOutput(t *testing.T) {
+- 		t.Error("Variables should be sorted alphabetically")
+- 	}
+- }
+-+
+-+func TestCSSGenerator_Generate_WithKeyframes(t *testing.T) {
+-+	g := NewCSSGenerator()
+-+	ctx := &GenerationContext{
+-+		ResolvedTokens: map[string]any{},
+-+		Keyframes: []tokens.KeyframeDefinition{
+-+			{
+-+				Name: "pulse",
+-+				Frames: map[string]map[string]string{
+-+					"0%, 100%": {"opacity": "1"},
+-+					"50%":      {"opacity": "0.5"},
+-+				},
+-+			},
+-+			{
+-+				Name: "slide-in",
+-+				Frames: map[string]map[string]string{
+-+					"from": {"transform": "translateX(-100%)"},
+-+					"to":   {"transform": "translateX(0)"},
+-+				},
+-+			},
+-+		},
+-+	}
+-+
+-+	output, err := g.Generate(ctx)
+-+	if err != nil {
+-+		t.Fatalf("Generate failed: %v", err)
+-+	}
+-+
+-+	// Check @keyframes declarations
+-+	if !strings.Contains(output, "@keyframes pulse {") {
+-+		t.Error("Missing @keyframes pulse declaration")
+-+	}
+-+	if !strings.Contains(output, "@keyframes slide-in {") {
+-+		t.Error("Missing @keyframes slide-in declaration")
+-+	}
+-+
+-+	// Check frame selectors
+-+	if !strings.Contains(output, "0%, 100% {") {
+-+		t.Error("Missing 0%, 100% frame selector")
+-+	}
+-+	if !strings.Contains(output, "50% {") {
+-+		t.Error("Missing 50% frame selector")
+-+	}
+-+
+-+	// Check properties
+-+	if !strings.Contains(output, "opacity: 1;") {
+-+		t.Error("Missing opacity: 1 property")
+-+	}
+-+	if !strings.Contains(output, "opacity: 0.5;") {
+-+		t.Error("Missing opacity: 0.5 property")
+-+	}
+-+
+-+	// Check from/to keywords
+-+	if !strings.Contains(output, "from {") {
+-+		t.Error("Missing from frame selector")
+-+	}
+-+	if !strings.Contains(output, "to {") {
+-+		t.Error("Missing to frame selector")
+-+	}
+-+}
+-diff --git a/pkg/generators/tailwind.go b/pkg/generators/tailwind.go
+-index f64f6a2..fa62262 100644
+---- a/pkg/generators/tailwind.go
+-+++ b/pkg/generators/tailwind.go
+-@@ -44,10 +44,11 @@ func serializeValueForCSS(val any) string {
+- // GenerationContext provides all necessary data for generation
+- type GenerationContext struct {
+- 	BaseDict         *tokens.Dictionary                    // Original base dictionary (unresolved)
+--	ResolvedTokens   map[string]any                // Flattened, resolved atomic tokens
+-+	ResolvedTokens   map[string]any                        // Flattened, resolved atomic tokens
+- 	Components       map[string]tokens.ComponentDefinition // Extracted components
+- 	Themes           map[string]ThemeContext               // Theme-specific contexts
+- 	PropertyTokens   []tokens.PropertyToken                // Tokens with $property for @property declarations
+-+	Keyframes        []tokens.KeyframeDefinition           // CSS @keyframes animations
+- 	Breakpoints      map[string]string                     // Breakpoint definitions (name -> min-width)
+- 	ResponsiveTokens []tokens.ResponsiveToken              // Tokens with responsive overrides
+- }
+-@@ -77,14 +78,20 @@ func (g *TailwindGenerator) Generate(ctx *GenerationContext) (string, error) {
+- 		sb.WriteString(propertyDecls)
+- 	}
+- 
+--	// 2. Import and base @theme block
+-+	// 2. @keyframes declarations (global animations)
+-+	if len(ctx.Keyframes) > 0 {
+-+		keyframesCSS := tokens.GenerateKeyframesCSS(ctx.Keyframes)
+-+		sb.WriteString(keyframesCSS)
+-+	}
+-+
+-+	// 3. Import and base @theme block
+- 	baseTheme, err := g.generateBaseTheme(ctx.ResolvedTokens)
+- 	if err != nil {
+- 		return "", fmt.Errorf("failed to generate base theme: %w", err)
+- 	}
+- 	sb.WriteString(baseTheme)
+- 
+--	// 3. Theme variations in @layer base
+-+	// 4. Theme variations in @layer base
+- 	if len(ctx.Themes) > 0 {
+- 		themeVariations, err := g.generateThemeVariations(ctx.Themes)
+- 		if err != nil {
+-@@ -94,7 +101,7 @@ func (g *TailwindGenerator) Generate(ctx *GenerationContext) (string, error) {
+- 		sb.WriteString(themeVariations)
+- 	}
+- 
+--	// 4. Components in @layer components (always output for consistency)
+-+	// 5. Components in @layer components (always output for consistency)
+- 	components, err := g.generateComponents(ctx.Components)
+- 	if err != nil {
+- 		return "", fmt.Errorf("failed to generate components: %w", err)
+-@@ -102,7 +109,7 @@ func (g *TailwindGenerator) Generate(ctx *GenerationContext) (string, error) {
+- 	sb.WriteString("\n")
+- 	sb.WriteString(components)
+- 
+--	// 5. Responsive overrides via media queries
+-+	// 6. Responsive overrides via media queries
+- 	if len(ctx.ResponsiveTokens) > 0 {
+- 		responsiveCSS := tokens.GenerateResponsiveCSS(ctx.Breakpoints, ctx.ResponsiveTokens)
+- 		if responsiveCSS != "" {
 -
 diff --git a/.checkpoint-input b/.checkpoint-input
 deleted file mode 100644
-index 786b07f..0000000
+index 20df763..0000000
 --- a/.checkpoint-input
 +++ /dev/null
-@@ -1,61 +0,0 @@
+@@ -1,82 +0,0 @@
 -schema_version: "1"
--timestamp: "2026-01-18T13:28:55-08:00"
+-timestamp: "2026-01-20T08:37:31-08:00"
 -commit_hash: ""
 -
--git_status: |
--  M pkg/generators/css.go
--  M pkg/tokens/components.go
--  ?? .checkpoint-lock
--  ?? PLAN.md
--
--diff_file: ".checkpoint-diff"
--files_changed:
--  - path: "pkg/generators/css.go"
--    additions: 31
--    deletions: 0
--  - path: "pkg/tokens/components.go"
--    additions: 2
--    deletions: 2
--
 -changes:
--  - summary: "Add CSS generation for component-level states"
--    details: "States like 'error', 'active', 'has-toggle' can now be defined in component token files and will generate corresponding CSS classes. Previously the 'states' field was reserved but not processed."
--    change_type: "feature"
--    scope: "pkg/generators"
--
--  - summary: "Change States field type to support CSS generation"
--    details: "Changed States from map[string]any to map[string]VariantDef to enable proper parsing of $class and CSS properties, matching how variants and sizes work."
+-  - summary: "Add @keyframes support for CSS animations"
+-    details: "Parse 'keyframes' sections from token JSON files and generate CSS @keyframes blocks. Added KeyframeDefinition type with Name and Frames fields, ExtractKeyframes function to scan dictionaries, and GenerateKeyframesCSS to output formatted CSS. Frames are automatically sorted by percentage (from=0%, to=100%)."
 -    change_type: "feature"
 -    scope: "pkg/tokens"
 -
+-  - summary: "Integrate keyframes into CSS and Tailwind generators"
+-    details: "Added Keyframes field to GenerationContext. Both CSSGenerator and TailwindGenerator now call tokens.GenerateKeyframesCSS after @property declarations. Keyframes are output before @layer reset as global definitions."
+-    change_type: "feature"
+-    scope: "pkg/generators"
+-
+-  - summary: "Extract and pass keyframes in build command"
+-    details: "Call tokens.ExtractKeyframes(baseDict) in build.go and include in GenerationContext for CSS/Tailwind generation."
+-    change_type: "feature"
+-    scope: "cmd/tokenctl"
+-
+-  - summary: "Add keyframes unit tests"
+-    details: "Added TestExtractKeyframes_Basic, TestExtractKeyframes_Multiple, TestExtractKeyframes_Empty, TestGenerateKeyframesCSS, TestGenerateKeyframesCSS_FrameOrder, TestGenerateKeyframesCSS_FromTo in keyframes_test.go. Added TestCSSGenerator_Generate_WithKeyframes in css_test.go."
+-    change_type: "feature"
+-    scope: "pkg/tokens,pkg/generators"
+-
+-  - summary: "Document @keyframes in README and TOKENS.md"
+-    details: "Added 'CSS @keyframes' to README features list. Added comprehensive 'CSS @keyframes Animations' section to TOKENS.md with examples for basic keyframes, from/to keywords, complex animations, and component references."
+-    change_type: "docs"
+-    scope: "docs"
+-
 -context:
--  problem_statement: "Component tokens support 'base', 'variants', and 'sizes' sections that generate CSS, but the 'states' section was marked 'reserved for future' and ignored. This forced users to define state classes as separate top-level components instead of logically grouping them with their parent component."
+-  problem_statement: "Components like skeleton loaders need CSS animations that run autonomously (without triggers). CSS transitions require state changes to activate, so @keyframes are necessary for looping animations. tokenctl needed native support to keep all styling in the token system."
 -
 -  key_insights:
--    - insight: "States follow the same pattern as variants - they have a $class and CSS properties"
--      impact: "Reusing VariantDef type means states automatically get pseudo-selector support too"
+-    - insight: "Keyframes are structurally similar to @property - global definitions parsed from a root-level section"
+-      impact: "Following the @property implementation pattern (ExtractX function, add to GenerationContext, generate in both generators) made implementation straightforward"
 -      scope: "project"
 -
--    - insight: "The existing VariantDef UnmarshalJSON handles the $class extraction cleanly"
--      impact: "No new parsing code needed, just type change and generation loop"
+-    - insight: "CSS transitions vs keyframes serve different purposes and both are needed"
+-      impact: "Transitions require triggers (hover, class change); keyframes run autonomously. Design systems need both."
+-      scope: "project"
+-
+-    - insight: "Frame selectors need deterministic ordering for consistent output"
+-      impact: "Implemented keyframeSelectorOrder to sort from < 0% < 50% < 100% < to"
 -      scope: "checkpoint"
 -
 -  decisions_made:
--    - decision: "Reuse VariantDef type for States instead of creating a new StateDef type"
--      rationale: "States have identical structure to variants - a class name and CSS properties. Adding pseudo-selector support for free is a bonus."
+-    - decision: "Place keyframes at root level of token files alongside components section"
+-      rationale: "Keyframes are global definitions like @property, not component-specific. Allows sharing across components."
 -      alternatives_considered:
--        - "Create separate StateDef type - rejected as it would duplicate VariantDef"
--        - "Keep map[string]any and parse manually - rejected as VariantDef already does this"
+-        - "Nest keyframes inside component definitions (limits reuse)"
+-        - "Separate keyframes.json file (fragments related definitions)"
 -      scope: "project"
 -
--  established_patterns:
--    - pattern: "Component sections (variants, sizes, states) all use VariantDef structure"
--      rationale: "Consistency makes the token format predictable and the generator code uniform"
--      examples: "variants, sizes, and now states all support $class, properties, and nested pseudo-selectors"
+-    - decision: "Output keyframes after @property but before @layer reset"
+-      rationale: "Follows natural CSS order: type definitions (@property), animation definitions (@keyframes), then layered rules. Consistent with existing @property placement."
 -      scope: "project"
+-
+-    - decision: "Store frame properties as map[string]map[string]string in KeyframeDefinition"
+-      rationale: "Simple structure that maps directly to CSS output. Frame selector -> property name -> value."
+-      scope: "checkpoint"
+-
+-  established_patterns:
+-    - pattern: "New CSS at-rules follow ExtractX -> GenerationContext field -> generateX method pattern"
+-      rationale: "Consistent with @property implementation. Keeps extraction in tokens package, generation in generators package."
+-      examples: "ExtractPropertyTokens/PropertyTokens, ExtractKeyframes/Keyframes"
+-      scope: "project"
+-
+-  conversation_context:
+-    - exchange: "Discussed whether property-based CSS animations could replace keyframes"
+-      outcome: "Confirmed both are needed: transitions for triggered state changes, keyframes for autonomous loops"
 -
 -next_steps:
 -  - summary: "Document states section in token format documentation"
 -    details: "Update TOKENS.md to show states alongside variants and sizes"
 -    priority: "med"
 -    scope: "docs"
+-
+-  - summary: "Consider adding keyframe validation"
+-    details: "Validate frame selectors are valid CSS (percentages, from/to keywords)"
+-    priority: "low"
+-    scope: "pkg/tokens"
 diff --git a/.checkpoint-lock b/.checkpoint-lock
-index 0228160..f43ccb8 100644
+index f43ccb8..e2a5c2b 100644
 --- a/.checkpoint-lock
 +++ b/.checkpoint-lock
 @@ -1,2 +1,2 @@
--pid=30938
--timestamp=2026-01-18T13:28:55-08:00
-+pid=21263
-+timestamp=2026-01-20T08:37:30-08:00
-diff --git a/README.md b/README.md
-index dfbaae9..285d836 100644
---- a/README.md
-+++ b/README.md
-@@ -17,6 +17,7 @@ A W3C Design Tokens CLI that generates CSS from JSON token definitions. Define y
- - **Computed Values**: `contrast()`, `darken()`, `lighten()`, `shade()`, `calc()` expressions
- - **Scale Expansion**: `$scale` generates size variants automatically (xs, sm, md, lg, xl)
- - **CSS @property**: `$property` field generates typed CSS custom properties for animations
-+- **CSS @keyframes**: Define animations in tokens, output to CSS `@keyframes` blocks
- - **Responsive Tokens**: `$breakpoints` and `$responsive` for media query generation
- - **Layer Validation**: `--strict-layers` enforces brand → semantic → component architecture
- - **Token Search**: CLI search by name, type, or category
-diff --git a/TOKENS.md b/TOKENS.md
-index 3e5ddd3..53434b3 100644
---- a/TOKENS.md
-+++ b/TOKENS.md
-@@ -13,10 +13,11 @@ This guide covers token-based design system concepts and how tokenctl implements
- 6. [Scale Expansion](#scale-expansion)
- 7. [Constraints](#constraints)
- 8. [CSS @property Declarations](#css-property-declarations)
--9. [Theme System](#theme-system)
--10. [Components](#components)
--11. [Best Practices](#best-practices)
--12. [Troubleshooting](#troubleshooting)
-+9. [CSS @keyframes Animations](#css-keyframes-animations)
-+10. [Theme System](#theme-system)
-+11. [Components](#components)
-+12. [Best Practices](#best-practices)
-+13. [Troubleshooting](#troubleshooting)
+-pid=21263
+-timestamp=2026-01-20T08:37:30-08:00
++pid=22635
++timestamp=2026-02-07T12:22:09-08:00
+diff --git a/.checkpoint-status.yaml b/.checkpoint-status.yaml
+index c38ef15..7284ec7 100644
+--- a/.checkpoint-status.yaml
++++ b/.checkpoint-status.yaml
+@@ -1,12 +1,16 @@
+ project_id: "01KF9GDH0ZCA6HSJHEX7VWF3SN"
+ path_hash: "7e3588ce5e77a23a"
+-last_commit_hash: "561b68fa2a274b19d322b217ca62285c2d1c8898"
+-last_commit_timestamp: "2026-01-18T13:28:55-08:00"
+-last_commit_message: "Checkpoint: 2 changes - feature(2) [pkg/generators, pkg/tokens]"
++last_commit_hash: "54b6e6fbf572e004e61fcdfb044e0c81aff2531b"
++last_commit_timestamp: "2026-01-20T08:37:31-08:00"
++last_commit_message: "Checkpoint: 5 changes - feature(4), docs [pkg/tokens, pkg/generators, cmd/tokenctl, pkg/tokens,pkg/generators, docs]"
+ status: "success"
+-changes_count: 2
++changes_count: 5
+ next_steps:
+   - summary: "Document states section in token format documentation"
+     details: "Update TOKENS.md to show states alongside variants and sizes"
+     priority: "med"
+     scope: "docs"
++  - summary: "Consider adding keyframe validation"
++    details: "Validate frame selectors are valid CSS (percentages, from/to keywords)"
++    priority: "low"
++    scope: "pkg/tokens"
+diff --git a/AUDIT_TODO.md b/AUDIT_TODO.md
+deleted file mode 100644
+index 20104fd..0000000
+--- a/AUDIT_TODO.md
++++ /dev/null
+@@ -1,135 +0,0 @@
+-# tokenctl Code Audit TODO
+-
+-Ranked by importance. Items marked [FIXED] have been addressed.
+-
+-## Tier 1 -- Correctness / Safety Bugs
+-
+-- [x] **1. `defer f.Close()` inside a loop leaks file descriptors**
+-  `cmd/tokenctl/init.go` -- Extracted `writeTokenFile` helper; each file is now closed within its own scope.
+-
+-- [x] **2. `os.Exit(1)` inside a `RunE` function bypasses cobra error handling**
+-  `cmd/tokenctl/validate.go` -- Replaced with `return fmt.Errorf("validation failed")`.
+-
+-- [x] **3. Unchecked type assertion panics on bad input**
+-  `pkg/tokens/components.go` -- Changed to comma-ok assertion; non-string `$class` is now silently skipped.
+-
+-- [x] **4. `strictMode` flag is registered but never read**
+-  `cmd/tokenctl/validate.go` -- Removed dead `--strict` flag and `strictMode` variable entirely.
+-
+-- [x] **5. `validateColorFormat` skips `contrast/darken/lighten` but not `shade`**
+-  `pkg/tokens/validator.go` -- Added `shade(` to the expression skip list.
+-
+-## Tier 2 -- Significant Code Duplication
+-
+-- [x] **6. Massive duplication between `CSSGenerator` and `TailwindGenerator`**
+-  Extracted `generatePropertyDeclarations`, `buildStateSelector`, `writeProperties`, and
+-  `resolveTokenReferences` into `pkg/generators/shared.go` as free functions. Hoisted regex
+-  to package-level `var`. `generateThemeVariations` and `generateComponents` kept as methods
+-  (they have real structural differences beyond formatting).
+-
+-- [x] **7. `roundTo` vs `roundFloat` -- identical functions with different names**
+-  Removed `roundFloat` from `expressions.go`; all call sites now use `roundTo` from `dimension.go`.
+-
+-- [~] **8. Repeated tree-walking pattern across 8+ functions** -- WON'T FIX
+-  The walkers have different return types, recursion conditions, and side effects.
+-  A generic walker would require complex callbacks that obscure rather than simplify.
+-
+-- [x] **9. "Load base + load themes + resolve" sequence duplicated across 3 commands**
+-  Extracted `loadTokens` and `resolveTokens` helpers into `cmd/tokenctl/helpers.go`;
+-  `validate.go`, `build.go`, and `search.go` now use the shared helpers.
+-
+-## Tier 3 -- Go Idiom Violations
+-
+-- [x] **10. `filepath.Walk` instead of `filepath.WalkDir`**
+-  Both call sites in `loader.go` updated to `filepath.WalkDir` with `fs.DirEntry`.
+-
+-- [x] **11. Regex compiled on every call in hot path**
+-  Fixed as part of #6 -- `resolveTokenReferences` moved to `shared.go` with regex hoisted to package-level `var`.
+-
+-- [x] **12. `fmt.Sprintf` instead of `filepath.Join` for paths**
+-  `cmd/tokenctl/build.go` -- All 5 path constructions now use `filepath.Join`.
+-
+-- [x] **13. Empty structs as method namespaces**
+-  Converted `Validator` and `ThemeGenerator` to standalone functions (unique names).
+-  `CSSGenerator`/`TailwindGenerator` kept as structs (method names like `Generate`,
+-  `generateThemeVariations`, `generateComponents` collide without the receiver).
+-
+-- [x] **14. `errors` variable shadows the `errors` package**
+-  Renamed `errors` to `errs` in all four validator functions.
+-
+-- [x] **15. Custom `contains`/`containsString` reimplementing `strings.Contains`**
+-  Replaced both with `strings.Contains` and deleted the custom functions.
+-
+-## Tier 4 -- Swallowed Errors
+-
+-- [x] **16. `strconv.ParseFloat` errors silently ignored (4 sites)**
+-  Added error checking with descriptive messages for all 4 `strconv.ParseFloat` calls in `expressions.go`.
+-
+-- [x] **17. `fmt.Sscanf` return value ignored**
+-  Replaced with `strconv.Atoi` in both `responsive.go` and `keyframes.go`; default-to-zero behavior documented.
+-
+-- [x] **18. `log.Printf` in library code**
+-  Replaced with `fmt.Fprintf(os.Stderr, ...)` in `loader.go`; removed `log` import from package.
+-
+-## Tier 5 -- Missing Test Coverage
+-
+-- [x] **19. Five files have zero test coverage:**
+-  Added test files: `layers_test.go` (37 tests), `responsive_test.go` (25 tests),
+-  `components_test.go` (22 tests), `metadata_test.go` (20 tests), `themes_test.go` (9 tests).
+-
+-## Tier 6 -- Dead Code
+-
+-- [x] **20. `Token` struct defined but never used**
+-  Removed from `types.go`.
+-
+-- [x] **21. Unused exported functions:**
+-  - `colors.FromRGB` (`colors.go:340`)
+-  - `colors.CreateFromColorful` (`content.go:224`)
+-  - `colors.ContentColorPreserveHue` (`content.go:159`)
+-  - `colors.SufficientContrast` (`contrast.go:79`)
+-
+-- [x] **22. Unused `value` parameter in `matchesSearch`**
+-  Removed from function signature and call site in `search.go`.
+-
+-- [x] **23. Unused `_` parameter in `MergeWithPath`**
+-  Removed third parameter from signature; updated all callers in `loader.go` and `loader_test.go`.
+-
+-## Tier 7 -- Design / Maintainability
+-
+-- [x] **24. `runBuild` is a 209-line god function**
+-  Split into `buildCSSOutput`, `buildCatalogOutput`, and `writeOutput` helpers.
+-
+-- [~] **25. Over-reliance on `map[string]any` with no typed intermediate representation** -- WON'T FIX
+-  Massive rewrite for marginal benefit; the W3C spec's dynamic nesting maps naturally to `map[string]any`.
+-
+-- [x] **26. `MeetsWCAAA` / `MeetsWCAAAAA` -- misleading function names**
+-  Renamed to `MeetsWCAG_AA` and `MeetsWCAG_AAA`.
+-
+-- [x] **27. `serializeValueForCSS` lives in `tailwind.go` but is used by `css.go`**
+-  Moved to `pkg/generators/css_utils.go` alongside the other serialization helpers.
+-
+-- [x] **28. Non-deterministic map iteration order in output**
+-  Added sorted theme-name iteration in `validate.go` and both theme loops in `build.go`.
+-
+-## Tier 8 -- Minor / Cosmetic
+-
+-- [x] **29. Typo: `spaceSeperatedProps`**
+-  Renamed to `spaceSeparatedProps`.
+-
+-- [x] **30. Hardcoded `"light"` theme name in 3 places**
+-  Extracted `DefaultThemeName` constant in `themes.go`; all 3 sites now reference it.
+-
+-- [~] **31. Magic numbers without named constants** -- WON'T FIX
+-  Most numeric literals are CSS spec values (e.g., WCAG thresholds, permission bits);
+-  naming them adds indirection without clarity.
+-
+-- [x] **32. Path traversal via unsanitized `category` in `--format=manifest:CATEGORY`**
+-  `parseFormat` now rejects categories containing `/`, `\`, or `..`.
+-
+-- [x] **33. No `t.Parallel()` on independent tests**
+-  Added `t.Parallel()` to all top-level tests and table-driven subtests across all 4 packages.
+-  Excluded 3 loader tests that mutate `os.Stderr` (inherently non-parallelizable).
+-
+-- [~] **34. No golden file update mechanism (`-update` flag pattern)** -- WON'T FIX
+-  Tests use substring checks rather than exact golden file comparisons;
+-  an `-update` flag would add complexity without addressing a real maintenance burden.
+diff --git a/Makefile b/Makefile
+index 347de24..3841262 100644
+--- a/Makefile
++++ b/Makefile
+@@ -5,6 +5,12 @@ BUILD_DIR=bin
+ CMD_DIR=./cmd/tokenctl
+ PKG=./...
  
- ---
- 
-@@ -547,6 +548,103 @@ Without `@property`, custom properties change instantly. With it, they transitio
- 
- ---
- 
-+## CSS @keyframes Animations
++# Version info for builds
++VERSION ?= $(shell git describe --tags --always --dirty 2>/dev/null || echo dev)
++COMMIT := $(shell git rev-parse --short HEAD 2>/dev/null || echo unknown)
++BUILD_TIME := $(shell date -u '+%Y-%m-%dT%H:%M:%SZ')
++LDFLAGS := -X main.version=$(VERSION) -X main.commit=$(COMMIT) -X main.buildTime=$(BUILD_TIME)
 +
-+Define CSS animations as tokens in a `keyframes` section at the root level of any token file.
+ # Pin golangci-lint version (keep in sync with .github/workflows/go.yml)
+ GOLANGCI_LINT_VERSION := v2.8.0
+ 
+@@ -17,11 +23,11 @@ all: clean build test
+ build: ## Build the tokenctl binary
+ 	@echo "Building $(BINARY_NAME)..."
+ 	@mkdir -p $(BUILD_DIR)
+-	go build -o $(BUILD_DIR)/$(BINARY_NAME) $(CMD_DIR)
++	go build -ldflags "$(LDFLAGS)" -o $(BUILD_DIR)/$(BINARY_NAME) $(CMD_DIR)
+ 
+-install: build ## Install tokenctl to GOPATH/bin
++install: ## Install tokenctl to GOPATH/bin
+ 	@echo "Installing $(BINARY_NAME)..."
+-	go install $(CMD_DIR)
++	go install -ldflags "$(LDFLAGS)" $(CMD_DIR)
+ 
+ ## Clean
+ 
+diff --git a/cmd/tokenctl/main.go b/cmd/tokenctl/main.go
+index 682700d..950e073 100644
+--- a/cmd/tokenctl/main.go
++++ b/cmd/tokenctl/main.go
+@@ -7,6 +7,15 @@ import (
+ 	"github.com/spf13/cobra"
+ )
+ 
++// Build-time version info, injected via ldflags:
++//
++//	go build -ldflags "-X main.version=... -X main.commit=... -X main.buildTime=..."
++var (
++	version   = "dev"
++	commit    = "unknown"
++	buildTime = "unknown"
++)
 +
-+### Basic Keyframes
-+
-+```json
-+{
-+  "keyframes": {
-+    "skeleton-pulse": {
-+      "0%, 100%": { "opacity": "1" },
-+      "50%": { "opacity": "0.5" }
-+    }
-+  }
+ var rootCmd = &cobra.Command{
+ 	Use:   "tokenctl",
+ 	Short: "tokenctl: Semantic Design Tokens Manager",
+@@ -14,6 +23,22 @@ var rootCmd = &cobra.Command{
+ and generating semantic design systems in Go applications.`,
+ }
+ 
++var versionCmd = &cobra.Command{
++	Use:   "version",
++	Short: "Print version information",
++	Run: func(cmd *cobra.Command, args []string) {
++		c := commit
++		if len(c) > 7 {
++			c = c[:7]
++		}
++		fmt.Printf("tokenctl version %s (%s) built %s\n", version, c, buildTime)
++	},
 +}
-+```
 +
-+**Generated CSS:**
-+```css
-+@keyframes skeleton-pulse {
-+  0%, 100% {
-+    opacity: 1;
-+  }
-+  50% {
-+    opacity: 0.5;
-+  }
++func init() {
++	rootCmd.AddCommand(versionCmd)
 +}
-+```
 +
-+### Using from/to Keywords
-+
-+```json
-+{
-+  "keyframes": {
-+    "slide-in": {
-+      "from": { "transform": "translateX(-100%)" },
-+      "to": { "transform": "translateX(0)" }
-+    },
-+    "fade-in": {
-+      "from": { "opacity": "0" },
-+      "to": { "opacity": "1" }
-+    }
-+  }
-+}
-+```
-+
-+### Complex Animations
-+
-+```json
-+{
-+  "keyframes": {
-+    "bounce": {
-+      "0%, 100%": {
-+        "transform": "translateY(0)",
-+        "animation-timing-function": "ease-out"
-+      },
-+      "50%": {
-+        "transform": "translateY(-25%)",
-+        "animation-timing-function": "ease-in"
-+      }
-+    }
-+  }
-+}
-+```
-+
-+### Referencing in Components
-+
-+Keyframes are referenced by name in component animation properties:
-+
-+```json
-+{
-+  "components": {
-+    "skeleton": {
-+      "$class": "skeleton",
-+      "base": {
-+        "animation": "skeleton-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite"
-+      }
-+    }
-+  },
-+  "keyframes": {
-+    "skeleton-pulse": {
-+      "0%, 100%": { "opacity": "1" },
-+      "50%": { "opacity": "0.5" }
-+    }
-+  }
-+}
-+```
-+
-+### Keyframe Ordering
-+
-+Frames are automatically sorted by percentage in the generated CSS:
-+- `from` is treated as 0%
-+- `to` is treated as 100%
-+- Percentage values are sorted numerically
-+
-+---
-+
- ## Theme System
- 
- Themes are defined in `tokens/themes/` and override base tokens.
-diff --git a/cmd/tokenctl/build.go b/cmd/tokenctl/build.go
-index 18990fe..1963eb5 100644
---- a/cmd/tokenctl/build.go
-+++ b/cmd/tokenctl/build.go
-@@ -139,6 +139,9 @@ func runBuild(cmd *cobra.Command, args []string) error {
- 		// Extract tokens with $property for @property declarations
- 		propertyTokens := tokens.ExtractPropertyTokens(baseDict, resolvedBase)
- 
-+		// Extract @keyframes definitions
-+		keyframes := tokens.ExtractKeyframes(baseDict)
-+
- 		// Extract breakpoints and responsive tokens
- 		breakpoints := tokens.ExtractBreakpoints(baseDict)
- 		responsiveTokens := tokens.ExtractResponsiveTokens(baseDict)
-@@ -150,6 +153,7 @@ func runBuild(cmd *cobra.Command, args []string) error {
- 			Components:       components,
- 			Themes:           themeContexts,
- 			PropertyTokens:   propertyTokens,
-+			Keyframes:        keyframes,
- 			Breakpoints:      breakpoints,
- 			ResponsiveTokens: responsiveTokens,
- 		}
+ func main() {
+ 	if err := rootCmd.Execute(); err != nil {
+ 		fmt.Fprintln(os.Stderr, err)
 diff --git a/pkg/generators/css.go b/pkg/generators/css.go
-index 13155b7..06277d8 100644
+index 1ccdbca..53227d0 100644
 --- a/pkg/generators/css.go
 +++ b/pkg/generators/css.go
-@@ -30,17 +30,23 @@ func (g *CSSGenerator) Generate(ctx *GenerationContext) (string, error) {
- 		sb.WriteString(propertyDecls)
- 	}
- 
--	// 3. Reset layer
-+	// 3. @keyframes declarations (global animations)
-+	if len(ctx.Keyframes) > 0 {
-+		keyframesCSS := tokens.GenerateKeyframesCSS(ctx.Keyframes)
-+		sb.WriteString(keyframesCSS)
-+	}
+@@ -295,7 +295,7 @@ func generateReset() string {
+   *, *::before, *::after { box-sizing: border-box; }
+   * { margin: 0; }
+   html { line-height: 1.5; -webkit-text-size-adjust: 100%; }
+-  body { font-family: var(--font-family-sans, system-ui, sans-serif); }
++  body { font-family: var(--font-family-sans, system-ui, sans-serif); background-color: var(--color-background); color: var(--color-foreground); }
+   img, picture, video, canvas, svg { display: block; max-width: 100%; }
+   input, button, textarea, select { font: inherit; }
+   p, h1, h2, h3, h4, h5, h6 { overflow-wrap: break-word; }
+diff --git a/pkg/tokens/loader.go b/pkg/tokens/loader.go
+index 1eb3a9c..5eecc4a 100644
+--- a/pkg/tokens/loader.go
++++ b/pkg/tokens/loader.go
+@@ -87,7 +87,14 @@ func (l *Loader) LoadBase(path string) (*Dictionary, error) {
+ // LoadThemes scans the themes directory and returns a map of ThemeName -> Dictionary
+ func (l *Loader) LoadThemes(rootPath string) (map[string]*Dictionary, error) {
+ 	themes := make(map[string]*Dictionary)
+-	themesPath := filepath.Join(rootPath, "tokens", "themes")
 +
-+	// 4. Reset layer
- 	sb.WriteString(generateReset())
++	// Support both layouts:
++	// 1. rootPath/themes/ - when user passes tokens directory directly (tokenctl build tokens)
++	// 2. rootPath/tokens/themes/ - when user passes project root (tokenctl build .)
++	themesPath := filepath.Join(rootPath, "themes")
++	if _, err := os.Stat(themesPath); os.IsNotExist(err) {
++		themesPath = filepath.Join(rootPath, "tokens", "themes")
++	}
  
--	// 4. Root variables (in tokens layer)
-+	// 5. Root variables (in tokens layer)
- 	rootVars, err := g.generateRootVariables(ctx.ResolvedTokens)
- 	if err != nil {
- 		return "", fmt.Errorf("failed to generate root variables: %w", err)
- 	}
- 	sb.WriteString(rootVars)
- 
--	// 5. Theme variations
-+	// 6. Theme variations
- 	if len(ctx.Themes) > 0 {
- 		themeVariations, err := g.generateThemeVariations(ctx.Themes)
- 		if err != nil {
-@@ -49,7 +55,7 @@ func (g *CSSGenerator) Generate(ctx *GenerationContext) (string, error) {
- 		sb.WriteString(themeVariations)
- 	}
- 
--	// 6. Components
-+	// 7. Components
- 	if len(ctx.Components) > 0 {
- 		components, err := g.generateComponents(ctx.Components)
- 		if err != nil {
-@@ -58,7 +64,7 @@ func (g *CSSGenerator) Generate(ctx *GenerationContext) (string, error) {
- 		sb.WriteString(components)
- 	}
- 
--	// 7. Responsive overrides via media queries
-+	// 8. Responsive overrides via media queries
- 	if len(ctx.ResponsiveTokens) > 0 {
- 		responsiveCSS := tokens.GenerateResponsiveCSS(ctx.Breakpoints, ctx.ResponsiveTokens)
- 		if responsiveCSS != "" {
-diff --git a/pkg/generators/css_test.go b/pkg/generators/css_test.go
-index 7bc1057..1586cfc 100644
---- a/pkg/generators/css_test.go
-+++ b/pkg/generators/css_test.go
-@@ -325,3 +325,63 @@ func TestCSSGenerator_DeterministicOutput(t *testing.T) {
- 		t.Error("Variables should be sorted alphabetically")
- 	}
- }
-+
-+func TestCSSGenerator_Generate_WithKeyframes(t *testing.T) {
-+	g := NewCSSGenerator()
-+	ctx := &GenerationContext{
-+		ResolvedTokens: map[string]any{},
-+		Keyframes: []tokens.KeyframeDefinition{
-+			{
-+				Name: "pulse",
-+				Frames: map[string]map[string]string{
-+					"0%, 100%": {"opacity": "1"},
-+					"50%":      {"opacity": "0.5"},
-+				},
-+			},
-+			{
-+				Name: "slide-in",
-+				Frames: map[string]map[string]string{
-+					"from": {"transform": "translateX(-100%)"},
-+					"to":   {"transform": "translateX(0)"},
-+				},
-+			},
-+		},
-+	}
-+
-+	output, err := g.Generate(ctx)
-+	if err != nil {
-+		t.Fatalf("Generate failed: %v", err)
-+	}
-+
-+	// Check @keyframes declarations
-+	if !strings.Contains(output, "@keyframes pulse {") {
-+		t.Error("Missing @keyframes pulse declaration")
-+	}
-+	if !strings.Contains(output, "@keyframes slide-in {") {
-+		t.Error("Missing @keyframes slide-in declaration")
-+	}
-+
-+	// Check frame selectors
-+	if !strings.Contains(output, "0%, 100% {") {
-+		t.Error("Missing 0%, 100% frame selector")
-+	}
-+	if !strings.Contains(output, "50% {") {
-+		t.Error("Missing 50% frame selector")
-+	}
-+
-+	// Check properties
-+	if !strings.Contains(output, "opacity: 1;") {
-+		t.Error("Missing opacity: 1 property")
-+	}
-+	if !strings.Contains(output, "opacity: 0.5;") {
-+		t.Error("Missing opacity: 0.5 property")
-+	}
-+
-+	// Check from/to keywords
-+	if !strings.Contains(output, "from {") {
-+		t.Error("Missing from frame selector")
-+	}
-+	if !strings.Contains(output, "to {") {
-+		t.Error("Missing to frame selector")
-+	}
-+}
-diff --git a/pkg/generators/tailwind.go b/pkg/generators/tailwind.go
-index f64f6a2..fa62262 100644
---- a/pkg/generators/tailwind.go
-+++ b/pkg/generators/tailwind.go
-@@ -44,10 +44,11 @@ func serializeValueForCSS(val any) string {
- // GenerationContext provides all necessary data for generation
- type GenerationContext struct {
- 	BaseDict         *tokens.Dictionary                    // Original base dictionary (unresolved)
--	ResolvedTokens   map[string]any                // Flattened, resolved atomic tokens
-+	ResolvedTokens   map[string]any                        // Flattened, resolved atomic tokens
- 	Components       map[string]tokens.ComponentDefinition // Extracted components
- 	Themes           map[string]ThemeContext               // Theme-specific contexts
- 	PropertyTokens   []tokens.PropertyToken                // Tokens with $property for @property declarations
-+	Keyframes        []tokens.KeyframeDefinition           // CSS @keyframes animations
- 	Breakpoints      map[string]string                     // Breakpoint definitions (name -> min-width)
- 	ResponsiveTokens []tokens.ResponsiveToken              // Tokens with responsive overrides
- }
-@@ -77,14 +78,20 @@ func (g *TailwindGenerator) Generate(ctx *GenerationContext) (string, error) {
- 		sb.WriteString(propertyDecls)
- 	}
- 
--	// 2. Import and base @theme block
-+	// 2. @keyframes declarations (global animations)
-+	if len(ctx.Keyframes) > 0 {
-+		keyframesCSS := tokens.GenerateKeyframesCSS(ctx.Keyframes)
-+		sb.WriteString(keyframesCSS)
-+	}
-+
-+	// 3. Import and base @theme block
- 	baseTheme, err := g.generateBaseTheme(ctx.ResolvedTokens)
- 	if err != nil {
- 		return "", fmt.Errorf("failed to generate base theme: %w", err)
- 	}
- 	sb.WriteString(baseTheme)
- 
--	// 3. Theme variations in @layer base
-+	// 4. Theme variations in @layer base
- 	if len(ctx.Themes) > 0 {
- 		themeVariations, err := g.generateThemeVariations(ctx.Themes)
- 		if err != nil {
-@@ -94,7 +101,7 @@ func (g *TailwindGenerator) Generate(ctx *GenerationContext) (string, error) {
- 		sb.WriteString(themeVariations)
- 	}
- 
--	// 4. Components in @layer components (always output for consistency)
-+	// 5. Components in @layer components (always output for consistency)
- 	components, err := g.generateComponents(ctx.Components)
- 	if err != nil {
- 		return "", fmt.Errorf("failed to generate components: %w", err)
-@@ -102,7 +109,7 @@ func (g *TailwindGenerator) Generate(ctx *GenerationContext) (string, error) {
- 	sb.WriteString("\n")
- 	sb.WriteString(components)
- 
--	// 5. Responsive overrides via media queries
-+	// 6. Responsive overrides via media queries
- 	if len(ctx.ResponsiveTokens) > 0 {
- 		responsiveCSS := tokens.GenerateResponsiveCSS(ctx.Breakpoints, ctx.ResponsiveTokens)
- 		if responsiveCSS != "" {
+ 	// Check if themes directory exists
+ 	if _, err := os.Stat(themesPath); os.IsNotExist(err) {
 

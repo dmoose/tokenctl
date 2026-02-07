@@ -5,6 +5,12 @@ BUILD_DIR=bin
 CMD_DIR=./cmd/tokenctl
 PKG=./...
 
+# Version info for builds
+VERSION ?= $(shell git describe --tags --always --dirty 2>/dev/null || echo dev)
+COMMIT := $(shell git rev-parse --short HEAD 2>/dev/null || echo unknown)
+BUILD_TIME := $(shell date -u '+%Y-%m-%dT%H:%M:%SZ')
+LDFLAGS := -X main.version=$(VERSION) -X main.commit=$(COMMIT) -X main.buildTime=$(BUILD_TIME)
+
 # Pin golangci-lint version (keep in sync with .github/workflows/go.yml)
 GOLANGCI_LINT_VERSION := v2.8.0
 
@@ -17,11 +23,11 @@ all: clean build test
 build: ## Build the tokenctl binary
 	@echo "Building $(BINARY_NAME)..."
 	@mkdir -p $(BUILD_DIR)
-	go build -o $(BUILD_DIR)/$(BINARY_NAME) $(CMD_DIR)
+	go build -ldflags "$(LDFLAGS)" -o $(BUILD_DIR)/$(BINARY_NAME) $(CMD_DIR)
 
-install: build ## Install tokenctl to GOPATH/bin
+install: ## Install tokenctl to GOPATH/bin
 	@echo "Installing $(BINARY_NAME)..."
-	go install $(CMD_DIR)
+	go install -ldflags "$(LDFLAGS)" $(CMD_DIR)
 
 ## Clean
 
