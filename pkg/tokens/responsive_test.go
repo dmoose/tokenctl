@@ -515,7 +515,7 @@ func TestGenerateResponsiveCSS_BreakpointOrdering(t *testing.T) {
 		t.Fatalf("Missing breakpoint in output:\n%s", got)
 	}
 
-	if !(smIdx < mdIdx && mdIdx < lgIdx && lgIdx < xlIdx) {
+	if smIdx >= mdIdx || mdIdx >= lgIdx || lgIdx >= xlIdx {
 		t.Errorf("Breakpoints not in ascending order (sm=%d, md=%d, lg=%d, xl=%d) in output:\n%s",
 			smIdx, mdIdx, lgIdx, xlIdx, got)
 	}
