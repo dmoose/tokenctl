@@ -24,6 +24,8 @@ A W3C Design Tokens CLI that generates CSS from JSON token definitions. Define y
 - **LLM Manifests**: Category-scoped JSON manifests for context-efficient LLM usage
 - **Rich Metadata**: `$description`, `$usage`, `$avoid` fields for documentation
 - **Component Composition**: `$contains`, `$requires` for component relationships
+- **Component States**: `states` for semantic conditions (error, disabled, loading)
+- **Container Queries**: `$container` for responsive component behavior within containers
 - **Constraint Validation**: `$min`/`$max` bounds checking on dimension and number tokens
 - **Type Validation**: Validates colors, dimensions, numbers, fontFamily, effect, duration
 - **Source Tracking**: Validation errors include source file paths
@@ -272,13 +274,13 @@ See [examples/README.md](examples/README.md) for details.
 
 ## Documentation
 
-- [README.md](README.md) - Quick start (this file)
-- [MERGE.md](MERGE.md) - Multi-directory merge guide
-- [HOWTO.md](HOWTO.md) - Comprehensive design system guide
-- [TOKENS.md](TOKENS.md) - Token format, types, expressions, constraints
-- [ADVANCED_USAGE.md](ADVANCED_USAGE.md) - CSS composition patterns
-- [examples/](examples/) - Working examples
-- [testdata/](testdata/) - Test fixtures
+- **Getting started** — You're here. Quick start above, examples below.
+- **[HOWTO.md](HOWTO.md)** — Philosophy, architecture, migration, LLM integration
+- **[TOKENS.md](TOKENS.md)** — Token format reference: types, expressions, components, themes
+- **[MERGE.md](MERGE.md)** — Multi-directory merge for shared/multi-team systems
+- **[CSS_PATTERNS.md](CSS_PATTERNS.md)** — CSS patterns for consuming tokenctl output (accessibility, typography, interaction states)
+- **[examples/](examples/)** — 7 runnable examples
+- **[testdata/](testdata/)** — Test fixtures and golden files
 
 ## Development
 

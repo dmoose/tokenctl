@@ -154,10 +154,12 @@ func buildCSSOutput(formatType string, baseDict *tokens.Dictionary, resolvedBase
 		ResolvedTokens:   resolvedBase,
 		Components:       components,
 		Themes:           themeContexts,
+		DefaultTheme:     tokens.DetectDefaultTheme(themes),
 		PropertyTokens:   tokens.ExtractPropertyTokens(baseDict, resolvedBase),
 		Keyframes:        tokens.ExtractKeyframes(baseDict),
-		Breakpoints:      tokens.ExtractBreakpoints(baseDict),
-		ResponsiveTokens: tokens.ExtractResponsiveTokens(baseDict),
+		Breakpoints:        tokens.ExtractBreakpoints(baseDict),
+		ResponsiveTokens:   tokens.ExtractResponsiveTokens(baseDict),
+		ContainerOverrides: tokens.ExtractContainerOverrides(components),
 	}
 
 	if formatType == "css" {

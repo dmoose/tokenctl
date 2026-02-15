@@ -6,11 +6,11 @@
 
 
 @layer base {
-  [data-theme="dark"] {
-    --color-brand-primary: #1e40af;
-  }
   :root, [data-theme="light"] {
     --color-brand-primary: #60a5fa;
+  }
+  [data-theme="dark"] {
+    --color-brand-primary: #1e40af;
   }
 }
 

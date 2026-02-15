@@ -1,6 +1,6 @@
 # tokenctl: Design System Guide
 
-This guide explains the philosophy, architecture, and best practices for building maintainable design systems with tokenctl.
+This guide explains the philosophy, architecture, and best practices for building maintainable design systems with tokenctl. For the token format reference (types, fields, expressions, components), see [TOKENS.md](TOKENS.md).
 
 ## Table of Contents
 
@@ -15,7 +15,6 @@ This guide explains the philosophy, architecture, and best practices for buildin
 9. [Validation](#validation)
 10. [Extending Design Systems](#extending-design-systems)
 11. [Migration Guide](#migration-guide)
-12. [Future Features](#future-features)
 
 ---
 
@@ -209,7 +208,7 @@ tokens/
 
 ### Rich Metadata
 
-Add context for better documentation and LLM understanding:
+Every token can carry metadata for documentation and LLM comprehension: `$description`, `$usage` (array of intended uses), `$avoid` (anti-patterns), `$deprecated` (migration guidance), and `$customizable` (safe to override). See [Token Structure](TOKENS.md#token-structure) for the full field reference.
 
 ```json
 {
@@ -218,26 +217,10 @@ Add context for better documentation and LLM understanding:
       "$value": "#3b82f6",
       "$type": "color",
       "$description": "Primary brand color for key actions",
-      "$usage": [
-        "Primary button backgrounds",
-        "Link text color",
-        "Focus ring color"
-      ],
-      "$avoid": "Don't use for large background areas"
+      "$usage": ["Primary button backgrounds", "Link text color"],
+      "$avoid": "Don't use for large background areas",
+      "$customizable": true
     }
-  }
-}
-```
-
-### Deprecation
-
-Mark tokens as deprecated to guide migration:
-
-```json
-{
-  "old-primary": {
-    "$value": "{semantic.primary}",
-    "$deprecated": "Use 'semantic.primary' instead"
   }
 }
 ```
@@ -349,37 +332,7 @@ For discrete breakpoint changes, use `$responsive`:
 
 ## Component Patterns
 
-### Component Definition
-
-Components use tokens via CSS custom properties:
-
-```json
-{
-  "components": {
-    "$layer": "component",
-    "btn": {
-      "$type": "component",
-      "$class": "btn",
-      "$description": "Base button component",
-      "padding": "{spacing.sm} {spacing.md}",
-      "border-radius": "{radius.md}",
-      "font-weight": "{font.weight.medium}",
-      "$variants": {
-        "primary": {
-          "$class": "btn-primary",
-          "background": "{component.btn-bg}",
-          "color": "{component.btn-text}",
-          "$states": {
-            "&:hover": {
-              "background": "{component.btn-bg-hover}"
-            }
-          }
-        }
-      }
-    }
-  }
-}
-```
+Components use `$type: "component"` and generate CSS classes with `base`, `variants`, `sizes`, and `states`. See [Components](TOKENS.md#components) for the full schema including states and container queries.
 
 ### Composition Metadata
 
@@ -483,20 +436,7 @@ document.documentElement.setAttribute('data-theme', 'dark');
 
 ### Animated Transitions
 
-Use `$property` for smooth theme transitions:
-
-```json
-{
-  "color": {
-    "primary": {
-      "$value": "oklch(49% 0.3 275)",
-      "$property": true
-    }
-  }
-}
-```
-
-Generates `@property` declarations enabling CSS transitions between themes.
+Add `$property: true` to color tokens to generate CSS `@property` declarations, enabling smooth animated transitions between themes instead of instant snaps. See [CSS @property Declarations](TOKENS.md#css-property-declarations) for the full specification.
 
 ---
 
@@ -632,19 +572,7 @@ Fix by routing through semantic layer:
 
 ### Constraint Validation
 
-```json
-{
-  "size": {
-    "field": {
-      "$value": "2.5rem",
-      "$min": "1rem",
-      "$max": "5rem"
-    }
-  }
-}
-```
-
-Values outside bounds generate errors.
+Dimension and number tokens support `$min`/`$max` bounds checking. See [Constraints](TOKENS.md#constraints) for details.
 
 ---
 
@@ -841,7 +769,7 @@ CSS layer overrides work for 80% of cases. You need token-level merge only when:
 2. **Manifest accuracy matters** - LLMs need final resolved values including your overrides
 3. **Validation of extensions** - Check your overrides against layer rules
 
-For these cases, see [Future Features](#future-features).
+For these cases, use multi-directory merge: `tokenctl build ./base ./overrides`. See [MERGE.md](MERGE.md) for details.
 
 ---
 
@@ -897,75 +825,3 @@ tokenctl transforms design system management from chaotic CSS to structured toke
 6. **Enable LLMs** with searchable, context-efficient token access
 
 The result: consistent styling that humans and LLMs can both understand and use correctly.
-
----
-
-## Future Features
-
-### Token-Level Extension (`--base`)
-
-For cases where CSS layer overrides aren't sufficient, a future `--base` flag will enable full token-level merge:
-
-```bash
-tokenctl build --base=@acme/design-system --extend=./my-tokens.json
-```
-
-**This would enable:**
-
-1. **Computed value recalculation** - Override `primary`, and `primary-hover` recomputes via `darken()`
-2. **Accurate merged manifests** - LLMs see final resolved values
-3. **Extension validation** - Validate your overrides against base system's layer rules
-4. **Diff-only CSS output** - Generate only the `@layer user` block with your changes
-
-**Example workflow:**
-
-```json
-// my-tokens.json
-{
-  "$extends": "@acme/design-system",
-  "semantic": {
-    "color": {
-      "primary": { "$value": "#10b981" }
-    }
-  }
-}
-```
-
-```bash
-tokenctl build --base=./node_modules/@acme/design-system --extend=./my-tokens.json
-```
-
-**Output:**
-```css
-@layer user {
-  :root {
-    --color-primary: #10b981;
-    --color-primary-hover: #0d9668;  /* Recomputed */
-    --color-primary-content: #ffffff; /* Recomputed */
-  }
-}
-```
-
-This feature is planned for a future release when the 80% CSS-layer approach proves insufficient for real-world use cases.
-
-### Package Distribution Patterns
-
-Design systems can be distributed via:
-
-| Method | Best For | Notes |
-|--------|----------|-------|
-| npm package | JS/TS projects | Include built CSS + token JSON |
-| CDN | Quick prototyping | Host CSS on unpkg/jsdelivr |
-| Git submodule | Monorepos | Source token files included |
-
-Recommended package structure:
-
-```
-@your-org/design-system/
-├── dist/
-│   ├── base.css              # Full system
-│   ├── tokens-only.css       # Just variables
-│   └── manifest.json         # For LLM consumption
-├── tokens/                    # Source (optional)
-└── package.json
-```

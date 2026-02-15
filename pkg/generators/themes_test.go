@@ -9,10 +9,11 @@ func TestGenerateThemes(t *testing.T) {
 	t.Parallel()
 
 	tests := []struct {
-		name        string
-		themes      map[string]map[string]any
-		expected    []string
-		notExpected []string
+		name         string
+		themes       map[string]map[string]any
+		defaultTheme string // empty = use DefaultThemeName
+		expected     []string
+		notExpected  []string
 	}{
 		{
 			name: "single theme with tokens",
@@ -117,13 +118,32 @@ func TestGenerateThemes(t *testing.T) {
 				"--z-index-modal: 1000;",
 			},
 		},
+		{
+			name:         "custom default theme",
+			defaultTheme: "dark",
+			themes: map[string]map[string]any{
+				"dark": {
+					"color.background": "#1e1e1e",
+				},
+				"light": {
+					"color.background": "#ffffff",
+				},
+			},
+			expected: []string{
+				`:root, [data-theme="dark"]`,
+				`[data-theme="light"]`,
+			},
+			notExpected: []string{
+				`:root, [data-theme="light"]`,
+			},
+		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
-			output, err := GenerateThemes(tt.themes)
+			output, err := GenerateThemes(tt.themes, tt.defaultTheme)
 			if err != nil {
 				t.Fatalf("GenerateThemes failed: %v", err)
 			}
@@ -157,8 +177,8 @@ func TestGenerateThemes_DeterministicOutput(t *testing.T) {
 		},
 	}
 
-	output1, _ := GenerateThemes(themes)
-	output2, _ := GenerateThemes(themes)
+	output1, _ := GenerateThemes(themes, "")
+	output2, _ := GenerateThemes(themes, "")
 
 	if output1 != output2 {
 		t.Error("output should be deterministic across multiple calls")
@@ -175,7 +195,7 @@ func TestGenerateThemes_DeterministicOutput(t *testing.T) {
 	lightIdx := strings.Index(output1, `:root, [data-theme="light"]`)
 	darkIdx := strings.Index(output1, `[data-theme="dark"]`)
 
-	if darkIdx > lightIdx {
-		t.Error("themes should be sorted alphabetically (dark before light)")
+	if lightIdx > darkIdx {
+		t.Error("default theme (light) should come first so non-default themes override :root via cascade")
 	}
 }

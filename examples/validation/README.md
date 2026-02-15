@@ -169,4 +169,5 @@ Run `tokenctl validate examples/validation` to see the error messages.
 
 ## See Also
 
-- [ADVANCED_USAGE.md](../../ADVANCED_USAGE.md) - Full documentation on `$property` and CSS composition patterns
+- [TOKENS.md](../../TOKENS.md) - Token format reference including `$property` declarations
+- [CSS_PATTERNS.md](../../CSS_PATTERNS.md) - CSS composition patterns

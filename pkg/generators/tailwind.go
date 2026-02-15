@@ -14,10 +14,12 @@ type GenerationContext struct {
 	ResolvedTokens   map[string]any                        // Flattened, resolved atomic tokens
 	Components       map[string]tokens.ComponentDefinition // Extracted components
 	Themes           map[string]ThemeContext               // Theme-specific contexts
+	DefaultTheme     string                                // Theme that maps to :root (detected from $default or "light")
 	PropertyTokens   []tokens.PropertyToken                // Tokens with $property for @property declarations
 	Keyframes        []tokens.KeyframeDefinition           // CSS @keyframes animations
-	Breakpoints      map[string]string                     // Breakpoint definitions (name -> min-width)
-	ResponsiveTokens []tokens.ResponsiveToken              // Tokens with responsive overrides
+	Breakpoints        map[string]string                     // Breakpoint definitions (name -> min-width)
+	ResponsiveTokens   []tokens.ResponsiveToken              // Tokens with responsive overrides
+	ContainerOverrides []tokens.ContainerOverride            // Component container query overrides
 }
 
 // ThemeContext provides theme-specific generation data
@@ -59,7 +61,11 @@ func (g *TailwindGenerator) Generate(ctx *GenerationContext) (string, error) {
 
 	// 4. Theme variations in @layer base
 	if len(ctx.Themes) > 0 {
-		themeVariations, err := g.generateThemeVariations(ctx.Themes)
+		defaultTheme := ctx.DefaultTheme
+		if defaultTheme == "" {
+			defaultTheme = DefaultThemeName
+		}
+		themeVariations, err := g.generateThemeVariations(ctx.Themes, defaultTheme)
 		if err != nil {
 			return "", fmt.Errorf("failed to generate theme variations: %w", err)
 		}
@@ -81,6 +87,15 @@ func (g *TailwindGenerator) Generate(ctx *GenerationContext) (string, error) {
 		if responsiveCSS != "" {
 			sb.WriteString("\n")
 			sb.WriteString(responsiveCSS)
+		}
+	}
+
+	// 7. Container query overrides
+	if len(ctx.ContainerOverrides) > 0 {
+		containerCSS := GenerateContainerCSS(ctx.ContainerOverrides)
+		if containerCSS != "" {
+			sb.WriteString("\n")
+			sb.WriteString(containerCSS)
 		}
 	}
 
@@ -117,27 +132,21 @@ func (g *TailwindGenerator) generateBaseTheme(resolvedTokens map[string]any) (st
 }
 
 // generateThemeVariations creates @layer base with theme-specific overrides
-func (g *TailwindGenerator) generateThemeVariations(themes map[string]ThemeContext) (string, error) {
+func (g *TailwindGenerator) generateThemeVariations(themes map[string]ThemeContext, defaultTheme string) (string, error) {
 	var sb strings.Builder
 	sb.WriteString("@layer base {\n")
 
-	// Sort theme names for deterministic output
+	// Sort: default theme first so non-default themes override :root via cascade
 	themeNames := make([]string, 0, len(themes))
 	for name := range themes {
 		themeNames = append(themeNames, name)
 	}
-	sort.Strings(themeNames)
+	sortThemeNames(themeNames, defaultTheme)
 
 	for _, themeName := range themeNames {
 		themeCtx := themes[themeName]
 
-		// Determine selector
-		selector := fmt.Sprintf(`[data-theme="%s"]`, themeName)
-		if themeName == DefaultThemeName {
-			selector = fmt.Sprintf(`:root, [data-theme="%s"]`, themeName)
-		}
-
-		sb.WriteString(fmt.Sprintf("  %s {\n", selector))
+		sb.WriteString(fmt.Sprintf("  %s {\n", themeSelector(themeName, defaultTheme)))
 
 		// Sort token keys for deterministic output
 		tokenKeys := make([]string, 0, len(themeCtx.DiffTokens))

@@ -229,6 +229,20 @@ func (d *Dictionary) MergeWithPath(other *Dictionary, warnConflicts bool) error 
 	return nil
 }
 
+// DetectDefaultTheme scans theme dictionaries for "$default": true metadata.
+// Returns the name of the first theme that declares itself as default,
+// or "light" as a fallback if no theme declares $default.
+func DetectDefaultTheme(themes map[string]*Dictionary) string {
+	for name, dict := range themes {
+		if def, ok := dict.Root["$default"]; ok {
+			if b, ok := def.(bool); ok && b {
+				return name
+			}
+		}
+	}
+	return "light"
+}
+
 func deepMerge(dst, src map[string]any, currentPath string) error {
 	return deepMergeWithWarnings(dst, src, currentPath, false)
 }

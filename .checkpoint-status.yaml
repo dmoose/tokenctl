@@ -1,16 +1,12 @@
 project_id: "01KF9GDH0ZCA6HSJHEX7VWF3SN"
 path_hash: "7e3588ce5e77a23a"
-last_commit_hash: "54b6e6fbf572e004e61fcdfb044e0c81aff2531b"
-last_commit_timestamp: "2026-01-20T08:37:31-08:00"
-last_commit_message: "Checkpoint: 5 changes - feature(4), docs [pkg/tokens, pkg/generators, cmd/tokenctl, pkg/tokens,pkg/generators, docs]"
+last_commit_hash: "d02da80c7320de00e0a46266653801c775a5f78e"
+last_commit_timestamp: "2026-02-07T12:22:09-08:00"
+last_commit_message: "Checkpoint: 4 changes - feature, fix(2), other [cmd/tokenctl, pkg/generators, pkg/tokens, docs]"
 status: "success"
-changes_count: 5
+changes_count: 4
 next_steps:
   - summary: "Document states section in token format documentation"
     details: "Update TOKENS.md to show states alongside variants and sizes"
     priority: "med"
     scope: "docs"
-  - summary: "Consider adding keyframe validation"
-    details: "Validate frame selectors are valid CSS (percentages, from/to keywords)"
-    priority: "low"
-    scope: "pkg/tokens"

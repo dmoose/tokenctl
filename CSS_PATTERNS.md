@@ -1,122 +1,16 @@
-<!-- tokenctl/ADVANCED_USAGE.md -->
-# Advanced Usage: Extending tokenctl Output
+<!-- tokenctl/CSS_PATTERNS.md -->
+# CSS Patterns: Composing Layers on tokenctl Output
 
-tokenctl generates CSS custom properties from your design tokens. For advanced patterns like accessibility preferences, typography systems, and interaction states, you compose additional CSS layers on top of tokenctl's output.
+tokenctl generates CSS custom properties from your design tokens. This document covers CSS patterns for building on top of that output — accessibility, typography, interaction states, and project structure.
 
-This document covers:
-1. **Built-in features** — `$property` for CSS @property declarations
-2. **Composition patterns** — CSS layers on top of tokenctl output
-
----
+For tokenctl features themselves (token types, expressions, @property, components), see [TOKENS.md](TOKENS.md).
 
 ## Table of Contents
 
-1. [CSS @property Declarations](#css-property-declarations) — Built-in feature
-2. [The Composition Pattern](#the-composition-pattern)
-3. [Accessibility Media Queries](#accessibility-media-queries)
-4. [Typography Systems](#typography-systems)
-5. [Interaction States](#interaction-states)
-
----
-
-## CSS @property Declarations
-
-tokenctl can generate CSS `@property` declarations for type-safe custom properties with animation support. This is an opt-in feature using the `$property` field.
-
-### Why @property?
-
-1. **Animations** — Custom properties can't animate by default. With @property, they can.
-2. **Type checking** — Browser validates values match the syntax
-3. **Initial values** — Fallback if variable is undefined
-
-### Basic Usage
-
-Add `$property: true` to any token:
-
-```json
-{
-  "color": {
-    "$type": "color",
-    "primary": {
-      "$value": "oklch(50% 0.2 250)",
-      "$property": true
-    }
-  }
-}
-```
-
-**Generated output:**
-
-```css
-@property --color-primary {
-  syntax: '<color>';
-  inherits: true;
-  initial-value: oklch(50% 0.2 250);
-}
-
-@import "tailwindcss";
-
-@theme {
-  --color-primary: oklch(50% 0.2 250);
-}
-```
-
-### Custom Inheritance
-
-By default, `@property` declarations use `inherits: true`. To disable inheritance:
-
-```json
-{
-  "timing": {
-    "fast": {
-      "$value": "150ms",
-      "$type": "duration",
-      "$property": { "inherits": false }
-    }
-  }
-}
-```
-
-**Generated output:**
-
-```css
-@property --timing-fast {
-  syntax: '<time>';
-  inherits: false;
-  initial-value: 150ms;
-}
-```
-
-### Supported Types
-
-| Token `$type` | CSS `syntax` |
-|---------------|--------------|
-| `color` | `<color>` |
-| `dimension` | `<length>` |
-| `number` | `<number>` |
-| `duration` | `<time>` |
-| `effect` | `<integer>` |
-
-Types without a CSS syntax mapping (like `fontFamily`) are skipped.
-
-### Animated Theme Transitions
-
-With `@property`, theme switches can animate smoothly:
-
-```css
-/* Theme transition - colors animate instead of snapping */
-:root {
-  transition: 
-    --color-primary 300ms ease,
-    --color-secondary 300ms ease;
-}
-
-[data-theme="dark"] {
-  --color-primary: oklch(70% 0.2 250);
-}
-```
-
-Without `@property`, custom properties change instantly. With `@property`, they transition.
+1. [The Composition Pattern](#the-composition-pattern)
+2. [Accessibility Media Queries](#accessibility-media-queries)
+3. [Typography Systems](#typography-systems)
+4. [Interaction States](#interaction-states)
 
 ---
 
@@ -186,24 +80,11 @@ This separation keeps:
   "color": {
     "$type": "color",
     "primary": { "$value": "oklch(50% 0.2 250)" },
-    "primary-high-contrast": { 
+    "primary-high-contrast": {
       "$value": "oklch(30% 0.3 250)",
       "$description": "Higher contrast variant for prefers-contrast: more"
     }
   }
-}
-```
-
-### Generated Output
-
-```css
-@theme {
-  --motion-scale: 1;
-  --timing-fast: 150ms;
-  --timing-normal: 250ms;
-  --timing-slow: 400ms;
-  --color-primary: oklch(50% 0.2 250);
-  --color-primary-high-contrast: oklch(30% 0.3 250);
 }
 ```
 
@@ -264,7 +145,7 @@ When `--motion-scale` is 0, transitions are instant and transforms are disabled.
 
 ## Typography Systems
 
-Typography tokens work with existing tokenctl types. No new features needed.
+Typography tokens work with existing tokenctl types. Define tokens, then compose text styles in CSS.
 
 ### Define Typography Tokens
 
@@ -274,20 +155,10 @@ Typography tokens work with existing tokenctl types. No new features needed.
   "font": {
     "family": {
       "$type": "fontFamily",
-      "sans": { 
-        "$value": ["Inter", "ui-sans-serif", "system-ui", "sans-serif"],
-        "$description": "Primary sans-serif stack"
-      },
-      "serif": { 
-        "$value": ["Merriweather", "ui-serif", "Georgia", "serif"] 
-      },
-      "mono": { 
-        "$value": ["JetBrains Mono", "ui-monospace", "monospace"] 
-      },
-      "display": {
-        "$value": ["Inter Display", "Inter", "system-ui", "sans-serif"],
-        "$description": "For large headings"
-      }
+      "sans": { "$value": ["Inter", "ui-sans-serif", "system-ui", "sans-serif"] },
+      "serif": { "$value": ["Merriweather", "ui-serif", "Georgia", "serif"] },
+      "mono": { "$value": ["JetBrains Mono", "ui-monospace", "monospace"] },
+      "display": { "$value": ["Inter Display", "Inter", "system-ui", "sans-serif"] }
     },
     "weight": {
       "$type": "number",
@@ -312,44 +183,19 @@ Typography tokens work with existing tokenctl types. No new features needed.
     "leading": {
       "$type": "number",
       "$description": "Line heights as unitless multipliers",
-      "none": { "$value": 1 },
       "tight": { "$value": 1.25 },
       "snug": { "$value": 1.375 },
       "normal": { "$value": 1.5 },
-      "relaxed": { "$value": 1.625 },
-      "loose": { "$value": 2 }
+      "relaxed": { "$value": 1.625 }
     },
     "tracking": {
       "$type": "dimension",
       "$description": "Letter spacing",
-      "tighter": { "$value": "-0.05em" },
       "tight": { "$value": "-0.025em" },
       "normal": { "$value": "0em" },
-      "wide": { "$value": "0.025em" },
-      "wider": { "$value": "0.05em" },
-      "widest": { "$value": "0.1em" }
+      "wide": { "$value": "0.025em" }
     }
   }
-}
-```
-
-### Generated Output
-
-```css
-@theme {
-  --font-family-sans: Inter, ui-sans-serif, system-ui, sans-serif;
-  --font-family-serif: Merriweather, ui-serif, Georgia, serif;
-  --font-family-mono: JetBrains Mono, ui-monospace, monospace;
-  --font-family-display: Inter Display, Inter, system-ui, sans-serif;
-  --font-weight-light: 300;
-  --font-weight-normal: 400;
-  --font-weight-medium: 500;
-  --font-weight-semibold: 600;
-  --font-weight-bold: 700;
-  --font-size-xs: 0.75rem;
-  --font-size-sm: 0.875rem;
-  --font-size-base: 1rem;
-  /* ... etc */
 }
 ```
 
@@ -357,19 +203,9 @@ Typography tokens work with existing tokenctl types. No new features needed.
 
 **layers/typography.css:**
 ```css
-/* Semantic text styles composed from tokens */
-
 .text-body {
   font-family: var(--font-family-sans);
   font-size: var(--font-size-base);
-  font-weight: var(--font-weight-normal);
-  line-height: var(--font-leading-normal);
-  letter-spacing: var(--font-tracking-normal);
-}
-
-.text-body-sm {
-  font-family: var(--font-family-sans);
-  font-size: var(--font-size-sm);
   font-weight: var(--font-weight-normal);
   line-height: var(--font-leading-normal);
 }
@@ -387,7 +223,6 @@ Typography tokens work with existing tokenctl types. No new features needed.
   font-size: var(--font-size-4xl);
   font-weight: var(--font-weight-bold);
   line-height: var(--font-leading-tight);
-  letter-spacing: var(--font-tracking-tight);
 }
 
 .heading-3 {
@@ -412,7 +247,7 @@ Typography tokens work with existing tokenctl types. No new features needed.
 }
 ```
 
-### Fluid Typography (Advanced)
+### Fluid Typography
 
 For responsive type that scales with viewport:
 
@@ -421,13 +256,12 @@ For responsive type that scales with viewport:
 :root {
   /* Fluid base size: 16px at 320px viewport, 20px at 1280px */
   --font-size-fluid-base: clamp(1rem, 0.875rem + 0.5vw, 1.25rem);
-  
+
   /* Scale other sizes relative to fluid base */
   --font-size-fluid-sm: calc(var(--font-size-fluid-base) * 0.875);
   --font-size-fluid-lg: calc(var(--font-size-fluid-base) * 1.125);
   --font-size-fluid-xl: calc(var(--font-size-fluid-base) * 1.25);
   --font-size-fluid-2xl: calc(var(--font-size-fluid-base) * 1.5);
-  --font-size-fluid-3xl: calc(var(--font-size-fluid-base) * 1.875);
 }
 ```
 
@@ -462,7 +296,7 @@ Define base tokens, compose state variants in CSS.
 
 **layers/states.css:**
 ```css
-/* 
+/*
  * State variant generation using relative color syntax (oklch)
  * Browser support: Chrome 111+, Safari 16.4+, Firefox 128+
  */
@@ -471,11 +305,10 @@ Define base tokens, compose state variants in CSS.
   /* Hover: slightly darker */
   --color-primary-hover: oklch(from var(--color-primary) calc(l * 0.9) c h);
   --color-secondary-hover: oklch(from var(--color-secondary) calc(l * 0.9) c h);
-  
+
   /* Active: more darker */
   --color-primary-active: oklch(from var(--color-primary) calc(l * 0.8) c h);
-  --color-secondary-active: oklch(from var(--color-secondary) calc(l * 0.8) c h);
-  
+
   /* Disabled: reduced opacity */
   --color-primary-disabled: oklch(from var(--color-primary) l c h / var(--state-disabled-opacity));
 }
@@ -493,7 +326,7 @@ Define base tokens, compose state variants in CSS.
 
 /* Interactive element base */
 .interactive {
-  transition: 
+  transition:
     background-color var(--timing-hover),
     transform var(--timing-active),
     opacity var(--timing-hover);
@@ -519,7 +352,7 @@ Define base tokens, compose state variants in CSS.
 .btn {
   background-color: var(--color-primary);
   color: var(--color-primary-content);
-  transition: 
+  transition:
     background-color var(--timing-hover),
     transform var(--timing-active);
 }
@@ -542,44 +375,6 @@ Define base tokens, compose state variants in CSS.
   outline: var(--state-focus-ring-width) solid var(--color-primary);
   outline-offset: 2px;
 }
-```
-
----
-
----
-
-## Complete Example Structure
-
-```
-my-design-system/
-├── tokens/
-│   ├── brand.json          # Brand colors
-│   ├── semantic.json       # Semantic colors (success, error, etc.)
-│   ├── spacing.json        # Spacing scale
-│   ├── typography.json     # Font families, sizes, weights
-│   ├── motion.json         # Timing and motion tokens
-│   └── themes/
-│       ├── light.json      # Light theme
-│       └── dark.json       # Dark theme (extends light)
-├── layers/
-│   ├── accessibility.css   # prefers-reduced-motion, prefers-contrast
-│   ├── typography.css      # Composed text styles
-│   ├── states.css          # Hover, active, disabled states
-│   └── properties.css      # @property declarations (optional)
-├── dist/
-│   └── tokens.css          # Generated by: tokenctl build . -o dist
-└── app.css                 # Final import composition
-```
-
-**app.css:**
-```css
-/* Tailwind and tokenctl output (includes @property if tokens use $property) */
-@import "./dist/tokens.css";
-
-/* Custom layers */
-@import "./layers/accessibility.css";
-@import "./layers/typography.css";
-@import "./layers/states.css";
 ```
 
 ---

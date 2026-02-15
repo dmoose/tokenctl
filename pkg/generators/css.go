@@ -47,7 +47,11 @@ func (g *CSSGenerator) Generate(ctx *GenerationContext) (string, error) {
 
 	// 6. Theme variations
 	if len(ctx.Themes) > 0 {
-		themeVariations, err := g.generateThemeVariations(ctx.Themes)
+		defaultTheme := ctx.DefaultTheme
+		if defaultTheme == "" {
+			defaultTheme = DefaultThemeName
+		}
+		themeVariations, err := g.generateThemeVariations(ctx.Themes, defaultTheme)
 		if err != nil {
 			return "", fmt.Errorf("failed to generate theme variations: %w", err)
 		}
@@ -69,6 +73,15 @@ func (g *CSSGenerator) Generate(ctx *GenerationContext) (string, error) {
 		if responsiveCSS != "" {
 			sb.WriteString("\n")
 			sb.WriteString(responsiveCSS)
+		}
+	}
+
+	// 9. Container query overrides
+	if len(ctx.ContainerOverrides) > 0 {
+		containerCSS := GenerateContainerCSS(ctx.ContainerOverrides)
+		if containerCSS != "" {
+			sb.WriteString("\n")
+			sb.WriteString(containerCSS)
 		}
 	}
 
@@ -106,16 +119,16 @@ func (g *CSSGenerator) generateRootVariables(resolvedTokens map[string]any) (str
 }
 
 // generateThemeVariations creates theme-specific CSS with data-theme selectors
-func (g *CSSGenerator) generateThemeVariations(themes map[string]ThemeContext) (string, error) {
+func (g *CSSGenerator) generateThemeVariations(themes map[string]ThemeContext, defaultTheme string) (string, error) {
 	var sb strings.Builder
 	sb.WriteString("@layer themes {\n")
 
-	// Sort theme names for deterministic output
+	// Sort: default theme first so non-default themes override :root via cascade
 	themeNames := make([]string, 0, len(themes))
 	for name := range themes {
 		themeNames = append(themeNames, name)
 	}
-	sort.Strings(themeNames)
+	sortThemeNames(themeNames, defaultTheme)
 
 	for _, themeName := range themeNames {
 		themeCtx := themes[themeName]
@@ -125,13 +138,7 @@ func (g *CSSGenerator) generateThemeVariations(themes map[string]ThemeContext) (
 			continue
 		}
 
-		// Determine selector
-		selector := fmt.Sprintf(`[data-theme="%s"]`, themeName)
-		if themeName == DefaultThemeName {
-			selector = fmt.Sprintf(`:root, [data-theme="%s"]`, themeName)
-		}
-
-		sb.WriteString(fmt.Sprintf("  %s {\n", selector))
+		sb.WriteString(fmt.Sprintf("  %s {\n", themeSelector(themeName, defaultTheme)))
 
 		// Sort token keys for deterministic output
 		tokenKeys := make([]string, 0, len(themeCtx.DiffTokens))
@@ -294,11 +301,16 @@ func generateReset() string {
 	return `@layer reset {
   *, *::before, *::after { box-sizing: border-box; }
   * { margin: 0; }
-  html { line-height: 1.5; -webkit-text-size-adjust: 100%; }
+  html { line-height: var(--leading-normal, 1.5); -webkit-text-size-adjust: 100%; }
   body { font-family: var(--font-family-sans, system-ui, sans-serif); background-color: var(--color-background); color: var(--color-foreground); }
+  a { color: var(--color-link, inherit); }
+  a:visited { color: var(--color-link-visited, var(--color-link, inherit)); }
   img, picture, video, canvas, svg { display: block; max-width: 100%; }
   input, button, textarea, select { font: inherit; }
   p, h1, h2, h3, h4, h5, h6 { overflow-wrap: break-word; }
+  code, kbd, pre { font-family: var(--font-family-mono, ui-monospace, monospace); }
+  hr { border-color: var(--color-border, currentColor); }
+  table { border-collapse: collapse; }
 }
 
 `
