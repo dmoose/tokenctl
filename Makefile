@@ -1,5 +1,11 @@
 # tokenctl/Makefile
 
+# tokenctl is a self-contained module. When this checkout sits inside a
+# parent go.work that doesn't list it (e.g. the fastatic monorepo),
+# `go install` refuses with a workspace-membership error. Force the
+# module path regardless of where the directory lives on disk.
+export GOWORK := off
+
 BINARY_NAME=tokenctl
 BUILD_DIR=bin
 CMD_DIR=./cmd/tokenctl
