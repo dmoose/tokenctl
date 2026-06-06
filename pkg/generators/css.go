@@ -60,7 +60,7 @@ func (g *CSSGenerator) Generate(ctx *GenerationContext) (string, error) {
 
 	// 7. Components
 	if len(ctx.Components) > 0 {
-		components, err := g.generateComponents(ctx.Components)
+		components, err := g.generateComponents(ctx.Components, ctx.Breakpoints)
 		if err != nil {
 			return "", fmt.Errorf("failed to generate components: %w", err)
 		}
@@ -161,8 +161,10 @@ func (g *CSSGenerator) generateThemeVariations(themes map[string]ThemeContext, d
 	return sb.String(), nil
 }
 
-// generateComponents creates @layer components with component styles
-func (g *CSSGenerator) generateComponents(components map[string]tokens.ComponentDefinition) (string, error) {
+// generateComponents creates @layer components with component styles.
+// breakpoints are used to emit per-component @media rules for any
+// component property declared with {"$value": ..., "$responsive": {bp: value}}.
+func (g *CSSGenerator) generateComponents(components map[string]tokens.ComponentDefinition, breakpoints map[string]string) (string, error) {
 	var sb strings.Builder
 	sb.WriteString("@layer components {\n")
 
@@ -172,6 +174,12 @@ func (g *CSSGenerator) generateComponents(components map[string]tokens.Component
 		compNames = append(compNames, name)
 	}
 	sort.Strings(compNames)
+
+	// Collected across all components: per-component responsive overrides
+	// emitted as @media (min-width: <bp>) { .<class> { <prop>: <val>; } }
+	// after the main components block. Outer key: breakpoint name (sorted
+	// for emission). Inner: class name → property map.
+	componentResponsive := map[string]map[string]map[string]any{}
 
 	for _, name := range compNames {
 		comp := components[name]
@@ -191,6 +199,17 @@ func (g *CSSGenerator) generateComponents(components map[string]tokens.Component
 				} else {
 					baseProps[k] = v
 				}
+			}
+
+			// Collect $responsive overrides for this class. Walks
+			// baseProps for values shaped {"$value": ..., "$responsive": {bp: val}},
+			// hoists each breakpoint's val into componentResponsive.
+			// $value continues to flow through writeProperties via
+			// SerializeValueForProperty so the base property renders normally.
+			collectComponentResponsive(comp.Class, baseProps, componentResponsive)
+			for selKey, nested := range nestedSelectors {
+				stateClass := buildStateSelector(comp.Class, selKey)
+				collectComponentResponsive(stateClass, nested, componentResponsive)
 			}
 
 			sb.WriteString(fmt.Sprintf("  .%s {\n", comp.Class))
@@ -227,6 +246,8 @@ func (g *CSSGenerator) generateComponents(components map[string]tokens.Component
 				writeProperties(&sb, variant.Properties, 4)
 				sb.WriteString("  }\n\n")
 
+				collectComponentResponsive(variant.Class, variant.Properties, componentResponsive)
+
 				// States
 				stateKeys := make([]string, 0, len(variant.States))
 				for skey := range variant.States {
@@ -240,6 +261,8 @@ func (g *CSSGenerator) generateComponents(components map[string]tokens.Component
 					sb.WriteString(fmt.Sprintf("  %s {\n", selector))
 					writeProperties(&sb, state.Properties, 4)
 					sb.WriteString("  }\n\n")
+
+					collectComponentResponsive(selector, state.Properties, componentResponsive)
 				}
 			}
 		}
@@ -257,6 +280,8 @@ func (g *CSSGenerator) generateComponents(components map[string]tokens.Component
 				sb.WriteString(fmt.Sprintf("  .%s {\n", size.Class))
 				writeProperties(&sb, size.Properties, 4)
 				sb.WriteString("  }\n\n")
+
+				collectComponentResponsive(size.Class, size.Properties, componentResponsive)
 			}
 		}
 
@@ -293,7 +318,127 @@ func (g *CSSGenerator) generateComponents(components map[string]tokens.Component
 	}
 
 	sb.WriteString("}\n")
+
+	// Per-component responsive overrides. For any property declared as
+	// {"$value": ..., "$responsive": {bp: val}}, emit one @media block
+	// per breakpoint with the matching class+property rules. The base
+	// $value is already rendered via writeProperties; these blocks
+	// override it at the breakpoint. Wrapped in @layer components so
+	// the cascade order matches the base rules.
+	if len(componentResponsive) > 0 && len(breakpoints) > 0 {
+		mediaCSS := generateComponentResponsiveCSS(breakpoints, componentResponsive)
+		if mediaCSS != "" {
+			sb.WriteString("\n")
+			sb.WriteString(mediaCSS)
+		}
+	}
+
 	return sb.String(), nil
+}
+
+// collectComponentResponsive walks `props` for token-shaped values
+// ({"$value": ..., "$responsive": {bp: val}}) and records each
+// breakpoint's override into `out[bp][class][prop] = val`. The base
+// $value continues to render in the main class rule via
+// SerializeValueForProperty; this only collects the breakpoint
+// overrides for hoisting into per-component @media blocks.
+func collectComponentResponsive(class string, props map[string]any, out map[string]map[string]map[string]any) {
+	for k, v := range props {
+		if strings.HasPrefix(k, "$") {
+			continue
+		}
+		m, ok := v.(map[string]any)
+		if !ok {
+			continue
+		}
+		respRaw, ok := m["$responsive"]
+		if !ok {
+			continue
+		}
+		resp, ok := respRaw.(map[string]any)
+		if !ok {
+			continue
+		}
+		for bp, val := range resp {
+			if out[bp] == nil {
+				out[bp] = make(map[string]map[string]any)
+			}
+			if out[bp][class] == nil {
+				out[bp][class] = make(map[string]any)
+			}
+			out[bp][class][k] = val
+		}
+	}
+}
+
+// generateComponentResponsiveCSS emits @layer components { @media (...) { .class { ... } } }
+// blocks for each breakpoint's collected overrides. Wrapping in
+// @layer components keeps cascade order intact relative to the base
+// rules — site-local overrides in @layer site still win.
+func generateComponentResponsiveCSS(breakpoints map[string]string, overrides map[string]map[string]map[string]any) string {
+	// Sort breakpoints by pixel size for deterministic mobile-first order.
+	bpNames := sortBreakpointsBySize(breakpoints)
+
+	var sb strings.Builder
+	sb.WriteString("@layer components {\n")
+	for _, bp := range bpNames {
+		classes, ok := overrides[bp]
+		if !ok {
+			continue
+		}
+		minWidth, ok := breakpoints[bp]
+		if !ok {
+			continue
+		}
+		fmt.Fprintf(&sb, "  @media (min-width: %s) {\n", minWidth)
+
+		// Sort class names for deterministic output.
+		classNames := make([]string, 0, len(classes))
+		for c := range classes {
+			classNames = append(classNames, c)
+		}
+		sort.Strings(classNames)
+
+		for _, class := range classNames {
+			props := classes[class]
+			// Selector: bare classes already start with "."? collectComponentResponsive
+			// records "selector" form: state-selectors include the leading "."
+			// already (via buildStateSelector); base classes are the bare class
+			// name without ".", so prepend.
+			selector := class
+			if !strings.HasPrefix(selector, ".") {
+				selector = "." + selector
+			}
+			fmt.Fprintf(&sb, "    %s {\n", selector)
+			writeProperties(&sb, props, 6)
+			sb.WriteString("    }\n")
+		}
+		sb.WriteString("  }\n")
+	}
+	sb.WriteString("}\n")
+	return sb.String()
+}
+
+// sortBreakpointsBySize returns breakpoint names sorted ascending by px.
+// Local helper to avoid coupling generators/css.go to the tokens package
+// for a sort helper; mirrors tokens.sortBreakpointsBySize.
+func sortBreakpointsBySize(breakpoints map[string]string) []string {
+	type entry struct {
+		name string
+		px   int
+	}
+	entries := make([]entry, 0, len(breakpoints))
+	for name, val := range breakpoints {
+		px := 0
+		fmt.Sscanf(val, "%dpx", &px)
+		entries = append(entries, entry{name: name, px: px})
+	}
+	sort.Slice(entries, func(i, j int) bool { return entries[i].px < entries[j].px })
+	out := make([]string, len(entries))
+	for i, e := range entries {
+		out[i] = e.name
+	}
+	return out
 }
 
 // generateReset creates a minimal modern CSS reset in @layer reset

@@ -80,6 +80,11 @@ func writeProperties(sb *strings.Builder, props map[string]any, indent int) {
 		}
 
 		valStr := SerializeValueForProperty(k, v)
+		if valStr == "" {
+			// Empty serialization (e.g. malformed token-shaped value
+			// with no $value). Skip rather than emit `prop: ;`.
+			continue
+		}
 		val := resolveTokenReferences(valStr)
 
 		fmt.Fprintf(sb, "%s%s: %s;\n", padding, k, val)

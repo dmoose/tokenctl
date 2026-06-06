@@ -62,6 +62,22 @@ func SerializeValueForProperty(property string, val any) string {
 			parts[i] = fmt.Sprintf("%v", item)
 		}
 		return strings.Join(parts, separator)
+	case map[string]any:
+		// Token-shaped property value: {"$value": ..., "$responsive": {...}}
+		// Pull $value for the base property; responsive overrides are
+		// hoisted to per-component @media rules by the component CSS
+		// generator. Without this case the default branch produced
+		// literal "map[...]" CSS strings — silent, browser-invisible
+		// breakage caught 2026-06-06 in the stellar-app split-hero
+		// session.
+		if base, ok := v["$value"]; ok {
+			return SerializeValueForProperty(property, base)
+		}
+		// Plain object value with no $value (e.g. an unrelated nested
+		// map — shouldn't reach here, but be defensive rather than
+		// emit map[...] junk). Empty string means "skip this property"
+		// at writeProperties level via the empty-check below.
+		return ""
 	default:
 		return fmt.Sprintf("%v", v)
 	}
