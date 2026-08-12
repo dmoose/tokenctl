@@ -110,7 +110,7 @@ func (g *CSSGenerator) generateRootVariables(resolvedTokens map[string]any) (str
 
 		cssVar := strings.ReplaceAll(path, ".", "-")
 		cssValue := serializeValueForCSS(value)
-		sb.WriteString(fmt.Sprintf("    --%s: %s;\n", cssVar, cssValue))
+		fmt.Fprintf(&sb, "    --%s: %s;\n", cssVar, cssValue)
 	}
 
 	sb.WriteString("  }\n")
@@ -138,7 +138,7 @@ func (g *CSSGenerator) generateThemeVariations(themes map[string]ThemeContext, d
 			continue
 		}
 
-		sb.WriteString(fmt.Sprintf("  %s {\n", themeSelector(themeName, defaultTheme)))
+		fmt.Fprintf(&sb, "  %s {\n", themeSelector(themeName, defaultTheme))
 
 		// Sort token keys for deterministic output
 		tokenKeys := make([]string, 0, len(themeCtx.DiffTokens))
@@ -151,7 +151,7 @@ func (g *CSSGenerator) generateThemeVariations(themes map[string]ThemeContext, d
 			val := themeCtx.DiffTokens[key]
 			cssVar := strings.ReplaceAll(key, ".", "-")
 			cssValue := serializeValueForCSS(val)
-			sb.WriteString(fmt.Sprintf("    --%s: %s;\n", cssVar, cssValue))
+			fmt.Fprintf(&sb, "    --%s: %s;\n", cssVar, cssValue)
 		}
 
 		sb.WriteString("  }\n")
@@ -212,7 +212,7 @@ func (g *CSSGenerator) generateComponents(components map[string]tokens.Component
 				collectComponentResponsive(stateClass, nested, componentResponsive)
 			}
 
-			sb.WriteString(fmt.Sprintf("  .%s {\n", comp.Class))
+			fmt.Fprintf(&sb, "  .%s {\n", comp.Class)
 			writeProperties(&sb, baseProps, 4)
 			sb.WriteString("  }\n\n")
 
@@ -226,7 +226,7 @@ func (g *CSSGenerator) generateComponents(components map[string]tokens.Component
 			for _, selectorKey := range nestedKeys {
 				props := nestedSelectors[selectorKey]
 				selector := buildStateSelector(comp.Class, selectorKey)
-				sb.WriteString(fmt.Sprintf("  %s {\n", selector))
+				fmt.Fprintf(&sb, "  %s {\n", selector)
 				writeProperties(&sb, props, 4)
 				sb.WriteString("  }\n\n")
 			}
@@ -242,7 +242,7 @@ func (g *CSSGenerator) generateComponents(components map[string]tokens.Component
 		for _, vname := range variantNames {
 			variant := comp.Variants[vname]
 			if variant.Class != "" {
-				sb.WriteString(fmt.Sprintf("  .%s {\n", variant.Class))
+				fmt.Fprintf(&sb, "  .%s {\n", variant.Class)
 				writeProperties(&sb, variant.Properties, 4)
 				sb.WriteString("  }\n\n")
 
@@ -258,7 +258,7 @@ func (g *CSSGenerator) generateComponents(components map[string]tokens.Component
 				for _, stateKey := range stateKeys {
 					state := variant.States[stateKey]
 					selector := buildStateSelector(variant.Class, stateKey)
-					sb.WriteString(fmt.Sprintf("  %s {\n", selector))
+					fmt.Fprintf(&sb, "  %s {\n", selector)
 					writeProperties(&sb, state.Properties, 4)
 					sb.WriteString("  }\n\n")
 
@@ -277,7 +277,7 @@ func (g *CSSGenerator) generateComponents(components map[string]tokens.Component
 		for _, sname := range sizeNames {
 			size := comp.Sizes[sname]
 			if size.Class != "" {
-				sb.WriteString(fmt.Sprintf("  .%s {\n", size.Class))
+				fmt.Fprintf(&sb, "  .%s {\n", size.Class)
 				writeProperties(&sb, size.Properties, 4)
 				sb.WriteString("  }\n\n")
 
@@ -295,7 +295,7 @@ func (g *CSSGenerator) generateComponents(components map[string]tokens.Component
 		for _, sname := range stateNames {
 			state := comp.States[sname]
 			if state.Class != "" {
-				sb.WriteString(fmt.Sprintf("  .%s {\n", state.Class))
+				fmt.Fprintf(&sb, "  .%s {\n", state.Class)
 				writeProperties(&sb, state.Properties, 4)
 				sb.WriteString("  }\n\n")
 
@@ -309,7 +309,7 @@ func (g *CSSGenerator) generateComponents(components map[string]tokens.Component
 				for _, stateKey := range stateKeys {
 					pseudoState := state.States[stateKey]
 					selector := buildStateSelector(state.Class, stateKey)
-					sb.WriteString(fmt.Sprintf("  %s {\n", selector))
+					fmt.Fprintf(&sb, "  %s {\n", selector)
 					writeProperties(&sb, pseudoState.Properties, 4)
 					sb.WriteString("  }\n\n")
 				}
@@ -430,7 +430,7 @@ func sortBreakpointsBySize(breakpoints map[string]string) []string {
 	entries := make([]entry, 0, len(breakpoints))
 	for name, val := range breakpoints {
 		px := 0
-		fmt.Sscanf(val, "%dpx", &px)
+		_, _ = fmt.Sscanf(val, "%dpx", &px)
 		entries = append(entries, entry{name: name, px: px})
 	}
 	sort.Slice(entries, func(i, j int) bool { return entries[i].px < entries[j].px })
@@ -460,4 +460,3 @@ func generateReset() string {
 
 `
 }
-

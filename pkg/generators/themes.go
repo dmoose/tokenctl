@@ -55,7 +55,7 @@ func GenerateThemes(themes map[string]map[string]any, defaultTheme string) (stri
 	for _, themeName := range themeNames {
 		tokens := themes[themeName]
 
-		sb.WriteString(fmt.Sprintf("  %s {\n", themeSelector(themeName, defaultTheme)))
+		fmt.Fprintf(&sb, "  %s {\n", themeSelector(themeName, defaultTheme))
 
 		// Sort token keys for deterministic output
 		tokenKeys := make([]string, 0, len(tokens))
@@ -67,7 +67,7 @@ func GenerateThemes(themes map[string]map[string]any, defaultTheme string) (stri
 		for _, key := range tokenKeys {
 			val := tokens[key]
 			cssVar := strings.ReplaceAll(key, ".", "-")
-			sb.WriteString(fmt.Sprintf("    --%s: %v;\n", cssVar, val))
+			fmt.Fprintf(&sb, "    --%s: %v;\n", cssVar, val)
 		}
 
 		sb.WriteString("  }\n")

@@ -23,7 +23,7 @@ func reportUnknownKeys(w io.Writer, strict bool, findings []tokens.Finding) erro
 		label = "Error"
 	}
 	for _, f := range findings {
-		fmt.Fprintf(w, "%s: dropped input — %s\n", label, f)
+		_, _ = fmt.Fprintf(w, "%s: dropped input — %s\n", label, f)
 	}
 	if strict {
 		return fmt.Errorf("%d unconsumed key(s) in token input (--strict-unknown-keys)", len(findings))

@@ -142,7 +142,7 @@ func GenerateResponsiveCSS(breakpoints map[string]string, responsiveTokens []Res
 			continue
 		}
 
-		sb.WriteString(fmt.Sprintf("@media (min-width: %s) {\n", minWidth))
+		fmt.Fprintf(&sb, "@media (min-width: %s) {\n", minWidth)
 		sb.WriteString("  :root {\n")
 
 		// Sort tokens by path for deterministic output
@@ -153,7 +153,7 @@ func GenerateResponsiveCSS(breakpoints map[string]string, responsiveTokens []Res
 		for _, rt := range tokens {
 			if value, ok := rt.Overrides[bp]; ok {
 				cssVar := strings.ReplaceAll(rt.Path, ".", "-")
-				sb.WriteString(fmt.Sprintf("    --%s: %v;\n", cssVar, value))
+				fmt.Fprintf(&sb, "    --%s: %v;\n", cssVar, value)
 			}
 		}
 

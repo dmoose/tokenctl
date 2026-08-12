@@ -34,14 +34,14 @@ func generatePropertyDeclarations(properties []tokens.PropertyToken) string {
 	})
 
 	for _, prop := range sorted {
-		sb.WriteString(fmt.Sprintf("@property %s {\n", prop.CSSName))
-		sb.WriteString(fmt.Sprintf("  syntax: '%s';\n", prop.CSSSyntax))
+		fmt.Fprintf(&sb, "@property %s {\n", prop.CSSName)
+		fmt.Fprintf(&sb, "  syntax: '%s';\n", prop.CSSSyntax)
 		if prop.Inherits {
 			sb.WriteString("  inherits: true;\n")
 		} else {
 			sb.WriteString("  inherits: false;\n")
 		}
-		sb.WriteString(fmt.Sprintf("  initial-value: %s;\n", prop.InitialValue))
+		fmt.Fprintf(&sb, "  initial-value: %s;\n", prop.InitialValue)
 		sb.WriteString("}\n\n")
 	}
 

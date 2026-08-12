@@ -10,13 +10,13 @@ import (
 
 // GenerationContext provides all necessary data for generation
 type GenerationContext struct {
-	BaseDict         *tokens.Dictionary                    // Original base dictionary (unresolved)
-	ResolvedTokens   map[string]any                        // Flattened, resolved atomic tokens
-	Components       map[string]tokens.ComponentDefinition // Extracted components
-	Themes           map[string]ThemeContext               // Theme-specific contexts
-	DefaultTheme     string                                // Theme that maps to :root (detected from $default or "light")
-	PropertyTokens   []tokens.PropertyToken                // Tokens with $property for @property declarations
-	Keyframes        []tokens.KeyframeDefinition           // CSS @keyframes animations
+	BaseDict           *tokens.Dictionary                    // Original base dictionary (unresolved)
+	ResolvedTokens     map[string]any                        // Flattened, resolved atomic tokens
+	Components         map[string]tokens.ComponentDefinition // Extracted components
+	Themes             map[string]ThemeContext               // Theme-specific contexts
+	DefaultTheme       string                                // Theme that maps to :root (detected from $default or "light")
+	PropertyTokens     []tokens.PropertyToken                // Tokens with $property for @property declarations
+	Keyframes          []tokens.KeyframeDefinition           // CSS @keyframes animations
 	Breakpoints        map[string]string                     // Breakpoint definitions (name -> min-width)
 	ResponsiveTokens   []tokens.ResponsiveToken              // Tokens with responsive overrides
 	ContainerOverrides []tokens.ContainerOverride            // Component container query overrides
@@ -24,9 +24,9 @@ type GenerationContext struct {
 
 // ThemeContext provides theme-specific generation data
 type ThemeContext struct {
-	Dict           *tokens.Dictionary     // Full theme dictionary
-	ResolvedTokens map[string]any // Resolved tokens for this theme
-	DiffTokens     map[string]any // Only tokens that differ from base
+	Dict           *tokens.Dictionary // Full theme dictionary
+	ResolvedTokens map[string]any     // Resolved tokens for this theme
+	DiffTokens     map[string]any     // Only tokens that differ from base
 }
 
 // TailwindGenerator generates Tailwind 4 CSS
@@ -124,7 +124,7 @@ func (g *TailwindGenerator) generateBaseTheme(resolvedTokens map[string]any) (st
 
 		cssVar := strings.ReplaceAll(path, ".", "-")
 		cssValue := serializeValueForCSS(value)
-		sb.WriteString(fmt.Sprintf("  --%s: %s;\n", cssVar, cssValue))
+		fmt.Fprintf(&sb, "  --%s: %s;\n", cssVar, cssValue)
 	}
 
 	sb.WriteString("}\n\n")
@@ -146,7 +146,7 @@ func (g *TailwindGenerator) generateThemeVariations(themes map[string]ThemeConte
 	for _, themeName := range themeNames {
 		themeCtx := themes[themeName]
 
-		sb.WriteString(fmt.Sprintf("  %s {\n", themeSelector(themeName, defaultTheme)))
+		fmt.Fprintf(&sb, "  %s {\n", themeSelector(themeName, defaultTheme))
 
 		// Sort token keys for deterministic output
 		tokenKeys := make([]string, 0, len(themeCtx.DiffTokens))
@@ -159,7 +159,7 @@ func (g *TailwindGenerator) generateThemeVariations(themes map[string]ThemeConte
 			val := themeCtx.DiffTokens[key]
 			cssVar := strings.ReplaceAll(key, ".", "-")
 			cssValue := serializeValueForCSS(val)
-			sb.WriteString(fmt.Sprintf("    --%s: %s;\n", cssVar, cssValue))
+			fmt.Fprintf(&sb, "    --%s: %s;\n", cssVar, cssValue)
 		}
 
 		sb.WriteString("  }\n")
@@ -201,7 +201,7 @@ func (g *TailwindGenerator) generateComponents(components map[string]tokens.Comp
 				}
 			}
 
-			sb.WriteString(fmt.Sprintf("  .%s {\n", comp.Class))
+			fmt.Fprintf(&sb, "  .%s {\n", comp.Class)
 			writeProperties(&sb, baseProps, 4)
 			sb.WriteString("  }\n")
 
@@ -215,7 +215,7 @@ func (g *TailwindGenerator) generateComponents(components map[string]tokens.Comp
 			for _, selectorKey := range nestedKeys {
 				props := nestedSelectors[selectorKey]
 				selector := buildStateSelector(comp.Class, selectorKey)
-				sb.WriteString(fmt.Sprintf("  %s {\n", selector))
+				fmt.Fprintf(&sb, "  %s {\n", selector)
 				writeProperties(&sb, props, 4)
 				sb.WriteString("  }\n")
 			}
@@ -231,7 +231,7 @@ func (g *TailwindGenerator) generateComponents(components map[string]tokens.Comp
 		for _, vname := range variantNames {
 			variant := comp.Variants[vname]
 			if variant.Class != "" {
-				sb.WriteString(fmt.Sprintf("  .%s {\n", variant.Class))
+				fmt.Fprintf(&sb, "  .%s {\n", variant.Class)
 				writeProperties(&sb, variant.Properties, 4)
 				sb.WriteString("  }\n")
 
@@ -245,7 +245,7 @@ func (g *TailwindGenerator) generateComponents(components map[string]tokens.Comp
 				for _, stateKey := range stateKeys {
 					state := variant.States[stateKey]
 					selector := buildStateSelector(variant.Class, stateKey)
-					sb.WriteString(fmt.Sprintf("  %s {\n", selector))
+					fmt.Fprintf(&sb, "  %s {\n", selector)
 					writeProperties(&sb, state.Properties, 4)
 					sb.WriteString("  }\n")
 				}
@@ -262,7 +262,7 @@ func (g *TailwindGenerator) generateComponents(components map[string]tokens.Comp
 		for _, sname := range sizeNames {
 			size := comp.Sizes[sname]
 			if size.Class != "" {
-				sb.WriteString(fmt.Sprintf("  .%s {\n", size.Class))
+				fmt.Fprintf(&sb, "  .%s {\n", size.Class)
 				writeProperties(&sb, size.Properties, 4)
 				sb.WriteString("  }\n")
 			}
@@ -286,4 +286,3 @@ func (g *TailwindGenerator) GenerateFromResolved(tokens map[string]any) (string,
 func (g *TailwindGenerator) GenerateComponents(components map[string]tokens.ComponentDefinition) (string, error) {
 	return g.generateComponents(components)
 }
-

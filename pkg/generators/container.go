@@ -40,10 +40,10 @@ func GenerateContainerCSS(overrides []tokens.ContainerOverride) string {
 			return group[i].ComponentClass < group[j].ComponentClass
 		})
 
-		sb.WriteString(fmt.Sprintf("@container %s {\n", query))
+		fmt.Fprintf(&sb, "@container %s {\n", query)
 
 		for _, o := range group {
-			sb.WriteString(fmt.Sprintf("  .%s {\n", o.ComponentClass))
+			fmt.Fprintf(&sb, "  .%s {\n", o.ComponentClass)
 			writeProperties(&sb, o.Properties, 4)
 			sb.WriteString("  }\n")
 		}

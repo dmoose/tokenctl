@@ -80,7 +80,7 @@ func GenerateKeyframesCSS(keyframes []KeyframeDefinition) string {
 	var sb strings.Builder
 
 	for _, kf := range keyframes {
-		sb.WriteString(fmt.Sprintf("@keyframes %s {\n", kf.Name))
+		fmt.Fprintf(&sb, "@keyframes %s {\n", kf.Name)
 
 		// Sort frame selectors for deterministic output
 		selectors := make([]string, 0, len(kf.Frames))
@@ -95,7 +95,7 @@ func GenerateKeyframesCSS(keyframes []KeyframeDefinition) string {
 
 		for _, selector := range selectors {
 			props := kf.Frames[selector]
-			sb.WriteString(fmt.Sprintf("  %s {\n", selector))
+			fmt.Fprintf(&sb, "  %s {\n", selector)
 
 			// Sort properties for deterministic output
 			propNames := make([]string, 0, len(props))
@@ -105,7 +105,7 @@ func GenerateKeyframesCSS(keyframes []KeyframeDefinition) string {
 			sort.Strings(propNames)
 
 			for _, propName := range propNames {
-				sb.WriteString(fmt.Sprintf("    %s: %s;\n", propName, props[propName]))
+				fmt.Fprintf(&sb, "    %s: %s;\n", propName, props[propName])
 			}
 
 			sb.WriteString("  }\n")

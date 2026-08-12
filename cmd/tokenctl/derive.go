@@ -131,7 +131,7 @@ func runDerive(cmd *cobra.Command, _ []string) error {
 	if err := os.WriteFile(deriveOutput, content, 0o644); err != nil {
 		return fmt.Errorf("writing output: %w", err)
 	}
-	fmt.Fprintf(cmd.ErrOrStderr(), "Derived %d tokens into %s\n", theme.Len(), deriveOutput)
+	_, _ = fmt.Fprintf(cmd.ErrOrStderr(), "Derived %d tokens into %s\n", theme.Len(), deriveOutput)
 	return nil
 }
 
@@ -175,17 +175,17 @@ func resolveDeriveParams(cmd *cobra.Command) (derive.Params, error) {
 }
 
 func printDeriveCatalog(w interface{ Write([]byte) (int, error) }) {
-	fmt.Fprintln(w, "Presets:")
+	_, _ = fmt.Fprintln(w, "Presets:")
 	for _, p := range derive.Presets {
-		fmt.Fprintf(w, "  %-8s hue %-5g chroma %-5g %s\n",
+		_, _ = fmt.Fprintf(w, "  %-8s hue %-5g chroma %-5g %s\n",
 			strings.ToLower(p.Name), p.Hue, p.Chroma, p.Swatch)
 	}
-	fmt.Fprintln(w, "\nTypography systems:")
+	_, _ = fmt.Fprintln(w, "\nTypography systems:")
 	for _, s := range derive.TypographySystems {
-		fmt.Fprintf(w, "  %-14s %-18s %s\n", s.Key, s.Label, s.Description)
+		_, _ = fmt.Fprintf(w, "  %-14s %-18s %s\n", s.Key, s.Label, s.Description)
 	}
-	fmt.Fprintln(w, "\nRanges:")
-	fmt.Fprintf(w, "  tint        %g-%g\n", derive.TintMin, derive.TintMax)
-	fmt.Fprintf(w, "  saturation  %g-%g\n", derive.SaturationMin, derive.SaturationMax)
-	fmt.Fprintf(w, "  density     %g-%g\n", derive.DensityMin, derive.DensityMax)
+	_, _ = fmt.Fprintln(w, "\nRanges:")
+	_, _ = fmt.Fprintf(w, "  tint        %g-%g\n", derive.TintMin, derive.TintMax)
+	_, _ = fmt.Fprintf(w, "  saturation  %g-%g\n", derive.SaturationMin, derive.SaturationMax)
+	_, _ = fmt.Fprintf(w, "  density     %g-%g\n", derive.DensityMin, derive.DensityMax)
 }

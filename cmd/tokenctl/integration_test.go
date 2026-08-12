@@ -810,7 +810,7 @@ func TestIntegration_Derive_JSONBuildsBackToTheSameVariables(t *testing.T) {
 // declarations pulls "--name: value" pairs out of a stylesheet.
 func declarations(css string) map[string]string {
 	out := map[string]string{}
-	for _, line := range strings.Split(css, "\n") {
+	for line := range strings.SplitSeq(css, "\n") {
 		line = strings.TrimSpace(line)
 		if !strings.HasPrefix(line, "--") {
 			continue
