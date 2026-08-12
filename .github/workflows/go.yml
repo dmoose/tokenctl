@@ -33,5 +33,5 @@ jobs:
           go-version-file: go.mod
       - uses: golangci/golangci-lint-action@v7
         with:
-          version: v2.8.0  # Pin to specific version
+          version: v2.12.2  # Pin to specific version (must be built with a Go >= go.mod's directive)
           args: --timeout=5m
