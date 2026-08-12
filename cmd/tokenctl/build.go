@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 	"sort"
 	"strings"
+	"time"
 
 	"github.com/dmoose/tokenctl/pkg/generators"
 	"github.com/dmoose/tokenctl/pkg/tokens"
@@ -32,6 +33,10 @@ Output formats:
 Flags:
   --customizable-only   Only include tokens marked with $customizable: true
                         Useful for generating LLM manifests of override points
+  --strict-unknown-keys Fail instead of warning when the input contains keys
+                        tokenctl does not consume (misnamed component
+                        sub-blocks, unread $metadata, variants/sizes/states
+                        entries with no $class). These warn by default.
 
 Examples:
   tokenctl build ./my-tokens --format=tailwind
@@ -42,15 +47,19 @@ Examples:
 }
 
 var (
-	format           string
-	outputDir        string
-	customizableOnly bool
+	format            string
+	outputDir         string
+	customizableOnly  bool
+	strictUnknownKeys bool
+	generatedAt       string
 )
 
 func init() {
 	buildCmd.Flags().StringVarP(&format, "format", "f", "tailwind", "Output format (tailwind, css, catalog, manifest:CATEGORY)")
 	buildCmd.Flags().StringVarP(&outputDir, "output", "o", "dist", "Output directory")
 	buildCmd.Flags().BoolVar(&customizableOnly, "customizable-only", false, "Only include tokens marked $customizable: true (manifest/catalog only)")
+	buildCmd.Flags().BoolVar(&strictUnknownKeys, "strict-unknown-keys", false, "Fail the build on input tokenctl does not consume (default: warn)")
+	buildCmd.Flags().StringVar(&generatedAt, "generated-at", "", "Stamp meta.generated_at in catalog/manifest output: `now` for the current UTC time, or a literal string. Off by default so the same tokens produce the same bytes.")
 	rootCmd.AddCommand(buildCmd)
 }
 
@@ -80,8 +89,15 @@ func runBuild(cmd *cobra.Command, args []string) error {
 
 	fmt.Printf("Building tokens from %s...\n", strings.Join(dirs, ", "))
 
-	baseDict, themes, err := loadTokens(dirs...)
+	baseDict, themes, findings, err := loadTokens(dirs...)
 	if err != nil {
+		return err
+	}
+
+	// Name anything the generators will not read before generating, so a
+	// misnamed block is visible in the build log rather than as missing
+	// styling on a shipped page.
+	if err := auditLoaded(strictUnknownKeys, findings); err != nil {
 		return err
 	}
 
@@ -150,13 +166,13 @@ func buildCSSOutput(formatType string, baseDict *tokens.Dictionary, resolvedBase
 	}
 
 	ctx := &generators.GenerationContext{
-		BaseDict:         baseDict,
-		ResolvedTokens:   resolvedBase,
-		Components:       components,
-		Themes:           themeContexts,
-		DefaultTheme:     tokens.DetectDefaultTheme(themes),
-		PropertyTokens:   tokens.ExtractPropertyTokens(baseDict, resolvedBase),
-		Keyframes:        tokens.ExtractKeyframes(baseDict),
+		BaseDict:           baseDict,
+		ResolvedTokens:     resolvedBase,
+		Components:         components,
+		Themes:             themeContexts,
+		DefaultTheme:       tokens.DetectDefaultTheme(themes),
+		PropertyTokens:     tokens.ExtractPropertyTokens(baseDict, resolvedBase),
+		Keyframes:          tokens.ExtractKeyframes(baseDict),
 		Breakpoints:        tokens.ExtractBreakpoints(baseDict),
 		ResponsiveTokens:   tokens.ExtractResponsiveTokens(baseDict),
 		ContainerOverrides: tokens.ExtractContainerOverrides(components),
@@ -172,9 +188,14 @@ func buildCSSOutput(formatType string, baseDict *tokens.Dictionary, resolvedBase
 
 // buildCatalogOutput generates a JSON catalog or category-scoped manifest.
 func buildCatalogOutput(category string, baseDict *tokens.Dictionary, resolvedBase map[string]any, themes map[string]*tokens.Dictionary) (string, error) {
+	stamp := generatedAt
+	if stamp == "now" {
+		stamp = time.Now().UTC().Format(time.RFC3339)
+	}
 	gen := generators.NewCatalogGeneratorWithOptions(generators.CatalogOptions{
 		Category:         category,
 		CustomizableOnly: customizableOnly,
+		GeneratedAt:      stamp,
 	})
 
 	components, err := baseDict.ExtractComponents()

@@ -4,16 +4,8 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/dmoose/tokenctl/pkg/version"
 	"github.com/spf13/cobra"
-)
-
-// Build-time version info, injected via ldflags:
-//
-//	go build -ldflags "-X main.version=... -X main.commit=... -X main.buildTime=..."
-var (
-	version   = "dev"
-	commit    = "unknown"
-	buildTime = "unknown"
 )
 
 var rootCmd = &cobra.Command{
@@ -27,11 +19,11 @@ var versionCmd = &cobra.Command{
 	Use:   "version",
 	Short: "Print version information",
 	Run: func(cmd *cobra.Command, args []string) {
-		c := commit
+		c := version.Commit
 		if len(c) > 7 {
 			c = c[:7]
 		}
-		fmt.Printf("tokenctl version %s (%s) built %s\n", version, c, buildTime)
+		fmt.Printf("tokenctl version %s (%s) built %s\n", version.String(), c, version.BuildTime)
 	},
 }
 

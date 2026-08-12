@@ -35,6 +35,14 @@ func (d *Dictionary) WriteJSON(w io.Writer) error {
 type Loader struct {
 	Extensions    []string
 	WarnConflicts bool // Emit warnings when merge conflicts occur
+
+	// Findings accumulates keys the build will not consume, one entry per
+	// offending key, in load order. Collected per file rather than after
+	// the merge so each finding can name the file it came from — the
+	// merged dictionary has no source record for component nodes, and a
+	// warning without a filename is not actionable across 170-odd token
+	// files.
+	Findings []Finding
 }
 
 // NewLoader creates a default loader with conflict warnings enabled
@@ -170,6 +178,13 @@ func (l *Loader) loadFile(path string) (*Dictionary, error) {
 	dict, err := ParseJSON(f)
 	if err != nil {
 		return nil, err
+	}
+
+	// Audit before merging: after the merge, paths from different files
+	// are indistinguishable and component nodes carry no source record.
+	for _, finding := range AuditUnknownKeys(dict) {
+		finding.SourceFile = path
+		l.Findings = append(l.Findings, finding)
 	}
 
 	// Annotate all tokens with source file

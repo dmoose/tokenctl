@@ -38,10 +38,14 @@ Example token structure with layers:
 	RunE: runValidate,
 }
 
-var strictLayers bool
+var (
+	strictLayers      bool
+	validateStrictKey bool
+)
 
 func init() {
 	validateCmd.Flags().BoolVar(&strictLayers, "strict-layers", false, "Enforce layer reference rules (brand -> semantic -> component)")
+	validateCmd.Flags().BoolVar(&validateStrictKey, "strict-unknown-keys", false, "Treat unconsumed input keys as validation errors (default: warn)")
 	rootCmd.AddCommand(validateCmd)
 }
 
@@ -54,12 +58,22 @@ func runValidate(cmd *cobra.Command, args []string) error {
 	fmt.Printf("Validating token system in %s...\n", strings.Join(dirs, ", "))
 
 	// 1. Load Dictionary (Base + Themes)
-	baseDict, themes, err := loadTokens(dirs...)
+	baseDict, themes, findings, err := loadTokens(dirs...)
 	if err != nil {
 		return err
 	}
 
 	hasErrors := false
+
+	// 1b. Report input the build will not consume. A key outside the
+	// vocabulary parses fine and validates fine, then contributes nothing
+	// to the CSS — so validation has to say so out loud or the first
+	// signal is unstyled markup in production.
+	fmt.Println("Checking for unconsumed input keys...")
+	if err := auditLoaded(validateStrictKey, findings); err != nil {
+		hasErrors = true
+		fmt.Printf("  [Error] %v\n", err)
+	}
 
 	// 2. Validate Base
 	fmt.Println("Checking Base Dictionary...")

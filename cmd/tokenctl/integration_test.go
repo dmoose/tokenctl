@@ -298,13 +298,12 @@ func TestIntegration_Build_Catalog(t *testing.T) {
 
 	contentStr := string(content)
 
-	// Should have catalog structure (v2.1)
+	// Should have catalog structure (v3.0)
 	// Note: components is omitted when empty (correct behavior)
 	expectedStrings := []string{
 		"\"meta\":",
 		"\"tokens\":",
-		"\"version\": \"2.1\"",
-		"\"generated_at\":",
+		"\"version\": \"3.0\"",
 		"\"tokenctl_version\":",
 	}
 
@@ -312,6 +311,60 @@ func TestIntegration_Build_Catalog(t *testing.T) {
 		if !strings.Contains(contentStr, expected) {
 			t.Errorf("Expected catalog to contain '%s', but it didn't.\nOutput:\n%s", expected, contentStr)
 		}
+	}
+
+	// generated_at is opt-in. A default export carries no timestamp so
+	// the same tokens produce the same bytes.
+	if strings.Contains(contentStr, "\"generated_at\"") {
+		t.Errorf("catalog carries generated_at without --generated-at:\n%s", contentStr)
+	}
+}
+
+// TestIntegration_Build_CatalogDeterministic runs the real binary twice
+// over the same tokens and compares bytes. Determinism is a property of
+// the whole path, not just the generator: a flag default or a stray
+// timestamp anywhere in the command would break it.
+func TestIntegration_Build_CatalogDeterministic(t *testing.T) {
+	t.Parallel()
+	fixtureDir := "../../examples/baseline"
+
+	read := func() string {
+		outputDir := t.TempDir()
+		cmd := exec.Command(getTokenctlPath(), "build", fixtureDir, "--format", "catalog", "--output", outputDir)
+		if out, err := cmd.CombinedOutput(); err != nil {
+			t.Fatalf("build catalog failed: %v\nOutput: %s", err, out)
+		}
+		data, err := os.ReadFile(filepath.Join(outputDir, "catalog.json"))
+		if err != nil {
+			t.Fatalf("reading catalog: %v", err)
+		}
+		return string(data)
+	}
+
+	first := read()
+	for i := range 3 {
+		if again := read(); again != first {
+			t.Fatalf("run %d produced different bytes than run 0", i+1)
+		}
+	}
+}
+
+// TestIntegration_Build_CatalogGeneratedAt: the stamp is available to a
+// caller that wants one, and is exactly what they asked for.
+func TestIntegration_Build_CatalogGeneratedAt(t *testing.T) {
+	t.Parallel()
+	outputDir := t.TempDir()
+	cmd := exec.Command(getTokenctlPath(), "build", "../../testdata/fixtures/valid",
+		"--format", "catalog", "--output", outputDir, "--generated-at", "2026-08-10T00:00:00Z")
+	if out, err := cmd.CombinedOutput(); err != nil {
+		t.Fatalf("build catalog failed: %v\nOutput: %s", err, out)
+	}
+	data, err := os.ReadFile(filepath.Join(outputDir, "catalog.json"))
+	if err != nil {
+		t.Fatalf("reading catalog: %v", err)
+	}
+	if !strings.Contains(string(data), `"generated_at": "2026-08-10T00:00:00Z"`) {
+		t.Errorf("injected generated_at missing:\n%s", data)
 	}
 }
 
@@ -612,5 +665,195 @@ func TestIntegration_Build_SingleDir_BackwardCompat(t *testing.T) {
 	}
 	if !strings.Contains(css, "--color-brand-primary:") {
 		t.Error("Expected tokens in single-dir output")
+	}
+}
+
+// A misnamed component sub-block used to build clean and ship classes
+// with no declarations. The build must now say so, and --strict-unknown-keys
+// must turn that into a failure.
+func TestIntegration_Build_UnknownKeysAreLoud(t *testing.T) {
+	t.Parallel()
+	tokensDir := t.TempDir()
+
+	// "ratios" where the schema says "variants" — the production incident.
+	tokenFile := filepath.Join(tokensDir, "aspectratio.json")
+	if err := os.WriteFile(tokenFile, []byte(`{
+      "$layer": "component",
+      "components": {
+        "aspect-ratio": {
+          "$type": "component",
+          "$class": "aspect-ratio",
+          "base": { "position": "relative" },
+          "ratios": {
+            "square": { "$class": "aspect-ratio-square", "aspect-ratio": "1 / 1" }
+          }
+        }
+      }
+    }`), 0o644); err != nil {
+		t.Fatalf("write fixture: %v", err)
+	}
+
+	t.Run("warns by default and still builds", func(t *testing.T) {
+		t.Parallel()
+		outputDir := t.TempDir()
+		cmd := exec.Command(getTokenctlPath(), "build", tokensDir, "--output", outputDir)
+		output, err := cmd.CombinedOutput()
+		if err != nil {
+			t.Fatalf("build should still succeed: %v\nOutput: %s", err, output)
+		}
+		out := string(output)
+		if !strings.Contains(out, "ratios") {
+			t.Errorf("expected the dropped key to be named in output:\n%s", out)
+		}
+		if !strings.Contains(out, "aspectratio.json") {
+			t.Errorf("expected the source file to be named in output:\n%s", out)
+		}
+		if !strings.Contains(out, "Warning") {
+			t.Errorf("expected a warning label in output:\n%s", out)
+		}
+	})
+
+	t.Run("fails under --strict-unknown-keys", func(t *testing.T) {
+		t.Parallel()
+		outputDir := t.TempDir()
+		cmd := exec.Command(getTokenctlPath(), "build", tokensDir,
+			"--output", outputDir, "--strict-unknown-keys")
+		output, err := cmd.CombinedOutput()
+		if err == nil {
+			t.Fatalf("strict build should fail, got success:\n%s", output)
+		}
+		if !strings.Contains(string(output), "ratios") {
+			t.Errorf("expected the dropped key to be named:\n%s", output)
+		}
+	})
+
+	t.Run("clean input stays silent", func(t *testing.T) {
+		t.Parallel()
+		cleanDir := t.TempDir()
+		if err := os.WriteFile(filepath.Join(cleanDir, "aspectratio.json"), []byte(`{
+          "$layer": "component",
+          "components": {
+            "aspect-ratio": {
+              "$type": "component",
+              "$class": "aspect-ratio",
+              "// why": "fixed ratio box",
+              "base": { "position": "relative" },
+              "variants": {
+                "square": { "$class": "aspect-ratio-square", "aspect-ratio": "1 / 1" }
+              }
+            }
+          }
+        }`), 0o644); err != nil {
+			t.Fatalf("write fixture: %v", err)
+		}
+
+		cmd := exec.Command(getTokenctlPath(), "build", cleanDir,
+			"--output", t.TempDir(), "--strict-unknown-keys")
+		output, err := cmd.CombinedOutput()
+		if err != nil {
+			t.Fatalf("clean input must pass strict mode: %v\nOutput: %s", err, output)
+		}
+		if strings.Contains(string(output), "dropped input") {
+			t.Errorf("clean input must not produce findings:\n%s", output)
+		}
+	})
+}
+
+func TestIntegration_Derive_JSONBuildsBackToTheSameVariables(t *testing.T) {
+	t.Parallel()
+	tokensDir := t.TempDir()
+	outputDir := t.TempDir()
+
+	// derive writes a token document...
+	derived := filepath.Join(tokensDir, "derived.json")
+	cmd := exec.Command(getTokenctlPath(), "derive", "--preset=teal", "-o", derived)
+	if out, err := cmd.CombinedOutput(); err != nil {
+		t.Fatalf("derive failed: %v\n%s", err, out)
+	}
+
+	// ...which tokenctl build must turn back into exactly the custom
+	// properties derive itself emits. If the CSS-variable-to-token-path
+	// mapping were lossy, tokens would vanish here rather than at the
+	// point they were written.
+	cmd = exec.Command(getTokenctlPath(), "build", tokensDir, "--format=css", "--output", outputDir)
+	if out, err := cmd.CombinedOutput(); err != nil {
+		t.Fatalf("build failed: %v\n%s", err, out)
+	}
+	built, err := os.ReadFile(filepath.Join(outputDir, "tokens.css"))
+	if err != nil {
+		t.Fatalf("read built css: %v", err)
+	}
+
+	cmd = exec.Command(getTokenctlPath(), "derive", "--preset=teal", "--format=css")
+	directCSS, err := cmd.Output()
+	if err != nil {
+		t.Fatalf("derive --format=css failed: %v", err)
+	}
+
+	want := declarations(string(directCSS))
+	got := declarations(string(built))
+	if len(want) == 0 {
+		t.Fatal("derive produced no declarations")
+	}
+	for name, value := range want {
+		builtValue, ok := got[name]
+		if !ok {
+			t.Errorf("%s survived derive but not the build round trip", name)
+			continue
+		}
+		if builtValue != value {
+			t.Errorf("%s = %q after build, want %q", name, builtValue, value)
+		}
+	}
+}
+
+// declarations pulls "--name: value" pairs out of a stylesheet.
+func declarations(css string) map[string]string {
+	out := map[string]string{}
+	for _, line := range strings.Split(css, "\n") {
+		line = strings.TrimSpace(line)
+		if !strings.HasPrefix(line, "--") {
+			continue
+		}
+		name, value, ok := strings.Cut(strings.TrimSuffix(line, ";"), ":")
+		if !ok {
+			continue
+		}
+		out[strings.TrimSpace(name)] = strings.TrimSpace(value)
+	}
+	return out
+}
+
+func TestIntegration_Derive_RejectsOutOfRangeControls(t *testing.T) {
+	t.Parallel()
+
+	for _, args := range [][]string{
+		{"derive", "--saturation=200"},
+		{"derive", "--density=50"},
+		{"derive", "--tint=-5"},
+		{"derive", "--preset=chartreuse"},
+		{"derive", "--type=comic-sans"},
+		{"derive", "--from-hex=#nothex"},
+		{"derive", "--format=xml"},
+	} {
+		cmd := exec.Command(getTokenctlPath(), args...)
+		if out, err := cmd.CombinedOutput(); err == nil {
+			t.Errorf("%v should fail, got success:\n%s", args, out)
+		}
+	}
+}
+
+func TestIntegration_Derive_DarkModeUsesThemeSelector(t *testing.T) {
+	t.Parallel()
+
+	cmd := exec.Command(getTokenctlPath(), "derive", "--preset=blue", "--dark", "--format=css")
+	out, err := cmd.Output()
+	if err != nil {
+		t.Fatalf("derive failed: %v", err)
+	}
+	// A dark theme written to :root would override the light theme it is
+	// meant to sit beside.
+	if !strings.Contains(string(out), `[data-theme="dark"] {`) {
+		t.Errorf("dark mode should default to the theme attribute selector:\n%s", out)
 	}
 }

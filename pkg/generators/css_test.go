@@ -292,6 +292,108 @@ func TestBuildStateSelector(t *testing.T) {
 	}
 }
 
+// Regression: a state key holding a selector *list* must expand every
+// comma segment. Expanding only the first left a bare "&" in the output
+// ("`.prose ul, & ol`" shipped on guild-dev), so the trailing selectors
+// matched nothing and their declarations silently did not apply.
+func TestBuildStateSelector_CommaSeparatedList(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name      string
+		className string
+		stateKey  string
+		expected  string
+	}{
+		{
+			name:      "two ampersand descendants",
+			className: "prose",
+			stateKey:  "& ul, & ol",
+			expected:  ".prose ul, .prose ol",
+		},
+		{
+			name:      "pseudo plus attribute",
+			className: "search-item",
+			stateKey:  "&:hover, &[data-tui-search-active='true']",
+			expected:  ".search-item:hover, .search-item[data-tui-search-active='true']",
+		},
+		{
+			name:      "three segments with combinators",
+			className: "card",
+			stateKey:  "& > h1, & > h2, &::before",
+			expected:  ".card > h1, .card > h2, .card::before",
+		},
+		{
+			name:      "bare pseudo segments get no descendant space",
+			className: "btn",
+			stateKey:  ":hover, :focus-visible",
+			expected:  ".btn:hover, .btn:focus-visible",
+		},
+		{
+			name:      "mixed ampersand and bare descendant",
+			className: "list",
+			stateKey:  "& li, span",
+			expected:  ".list li, .list span",
+		},
+		{
+			name:      "loose whitespace around separators",
+			className: "prose",
+			stateKey:  "&  ul ,   & ol",
+			expected:  ".prose  ul, .prose ol",
+		},
+		{
+			name:      "comma inside :is() is not a separator",
+			className: "nav",
+			stateKey:  "&:is(:hover, :focus)",
+			expected:  ".nav:is(:hover, :focus)",
+		},
+		{
+			name:      "comma inside attribute value is not a separator",
+			className: "tag",
+			stateKey:  `&[data-list="a,b"], &:hover`,
+			expected:  `.tag[data-list="a,b"], .tag:hover`,
+		},
+		{
+			name:      "ampersand inside a quoted attribute value is literal",
+			className: "tag",
+			stateKey:  `&[data-q="a&b"]`,
+			expected:  `.tag[data-q="a&b"]`,
+		},
+		{
+			name:      "comma inside :nth-child of-clause is not a separator",
+			className: "row",
+			stateKey:  "&:nth-child(2n of .a, .b)",
+			expected:  ".row:nth-child(2n of .a, .b)",
+		},
+		{
+			name:      "trailing comma produces no empty selector",
+			className: "btn",
+			stateKey:  "&:hover,",
+			expected:  ".btn:hover",
+		},
+		{
+			name:      "interior ampersand is replaced too",
+			className: "item",
+			stateKey:  "& + &",
+			expected:  ".item + .item",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			got := buildStateSelector(tt.className, tt.stateKey)
+			if got != tt.expected {
+				t.Errorf("buildStateSelector(%q, %q) = %q, want %q",
+					tt.className, tt.stateKey, got, tt.expected)
+			}
+			if strings.Contains(got, "&") && !strings.Contains(tt.expected, "&") {
+				t.Errorf("expansion left an unresolved '&' in %q", got)
+			}
+		})
+	}
+}
+
 func TestCSSGenerator_SkipsMapValues(t *testing.T) {
 	t.Parallel()
 

@@ -7,28 +7,88 @@ import (
 
 // ComponentDefinition represents a semantic component
 type ComponentDefinition struct {
-	Name               string                        `json:"-"`
-	Class              string                        `json:"$class"`
-	Description        string                        `json:"$description,omitempty"`
-	Contains           []string                      `json:"$contains,omitempty"` // Child components this can contain
-	Requires           string                        `json:"$requires,omitempty"` // Parent component this must be inside
-	Base               map[string]any                `json:"base"`
-	Variants           map[string]VariantDef         `json:"variants"`
-	Sizes              map[string]VariantDef         `json:"sizes"`
-	States             map[string]VariantDef         `json:"states"`             // Component states (error, active, etc.)
-	ContainerOverrides map[string]map[string]any     `json:"-"`                  // $container: query → properties
+	Name               string                    `json:"-"`
+	Class              string                    `json:"$class"`
+	Description        string                    `json:"$description,omitempty"`
+	Contains           []string                  `json:"$contains,omitempty"` // Child components this can contain
+	Requires           string                    `json:"$requires,omitempty"` // Parent component this must be inside
+	Base               map[string]any            `json:"base"`
+	Variants           map[string]VariantDef     `json:"variants"`
+	Sizes              map[string]VariantDef     `json:"sizes"`
+	States             map[string]VariantDef     `json:"states"` // Component states (error, active, etc.)
+	ContainerOverrides map[string]map[string]any `json:"-"`      // $container: query → properties
 }
 
 // VariantDef represents a specific variant (primary, outline) or size (sm, lg)
 type VariantDef struct {
-	Class      string                 `json:"$class"`
-	Properties map[string]any `json:"-"` // CSS properties
-	States     map[string]State       `json:"-"` // :hover, :focus, etc
+	Class      string           `json:"$class"`
+	Properties map[string]any   `json:"-"` // CSS properties — see MarshalJSON
+	States     map[string]State `json:"-"` // :hover, :focus, etc — see MarshalJSON
 }
 
 // State represents a CSS pseudo-class state
 type State struct {
 	Properties map[string]any
+}
+
+// MarshalJSON writes a variant in the catalog's explicit shape:
+//
+//	{"$class": "btn-primary",
+//	 "properties": {"background": "…"},
+//	 "states": {"&:hover": {"background": "…"}}}
+//
+// Deliberately not the inverse of UnmarshalJSON, which reads the authored
+// shape — properties inline alongside $class, states keyed by a leading
+// & or :. Round-tripping that shape out would hand every consumer the
+// same sniffing problem tokenctl solved on the way in, and would collide
+// with any property literally named "$class". The catalog is an export
+// for external tools, never re-read by tokenctl, so it gets the shape
+// that is cheapest to consume correctly.
+//
+// Empty properties and states are omitted rather than written as {}: a
+// size class with no states should not claim an empty set of them.
+func (v VariantDef) MarshalJSON() ([]byte, error) {
+	out := map[string]any{"$class": v.Class}
+	if len(v.Properties) > 0 {
+		out["properties"] = v.Properties
+	}
+	if len(v.States) > 0 {
+		states := make(map[string]map[string]any, len(v.States))
+		for key, st := range v.States {
+			props := st.Properties
+			if props == nil {
+				props = map[string]any{}
+			}
+			states[key] = props
+		}
+		out["states"] = states
+	}
+	return json.Marshal(out)
+}
+
+// SplitProperties separates authored properties from nested pseudo-selector
+// blocks, the way the CSS generator does when it walks a component's base.
+//
+// A component's `base` map is authored flat: real CSS properties sit
+// beside keys like "&:hover" whose values are property maps of their own.
+// Anything consuming base has to make that split, and making it twice in
+// two files is how the catalog came to describe a base class as having a
+// property called "&:hover".
+func SplitProperties(base map[string]any) (props map[string]any, states map[string]State) {
+	props = make(map[string]any, len(base))
+	states = map[string]State{}
+	for k, v := range base {
+		if len(k) > 0 && (k[0] == '&' || k[0] == ':') {
+			nested := map[string]any{}
+			if m, ok := v.(map[string]any); ok {
+				maps.Copy(nested, m)
+			}
+			states[k] = State{Properties: nested}
+			continue
+		}
+		props[k] = v
+	}
+	return props, states
 }
 
 // Helper to unmarshal VariantDef handling generic map properties

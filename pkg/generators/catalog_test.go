@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/dmoose/tokenctl/pkg/tokens"
+	"github.com/dmoose/tokenctl/pkg/version"
 )
 
 func TestCatalogGenerator_Generate_BasicTokens(t *testing.T) {
@@ -35,11 +36,13 @@ func TestCatalogGenerator_Generate_BasicTokens(t *testing.T) {
 	if catalog.Meta.Version != CatalogSchemaVersion {
 		t.Errorf("Expected version %s, got %s", CatalogSchemaVersion, catalog.Meta.Version)
 	}
-	if catalog.Meta.TokenctlVersion != TokenctlVersion {
-		t.Errorf("Expected tokenctl_version %s, got %s", TokenctlVersion, catalog.Meta.TokenctlVersion)
+	if catalog.Meta.TokenctlVersion != version.String() {
+		t.Errorf("Expected tokenctl_version %s, got %s", version.String(), catalog.Meta.TokenctlVersion)
 	}
-	if catalog.Meta.GeneratedAt == "" {
-		t.Error("Expected generated_at to be set")
+	// generated_at is opt-in: a default export carries no timestamp, so
+	// the same tokens produce the same bytes.
+	if catalog.Meta.GeneratedAt != "" {
+		t.Errorf("Expected no generated_at by default, got %q", catalog.Meta.GeneratedAt)
 	}
 
 	// Verify tokens

@@ -454,9 +454,9 @@ Manifests include rich metadata for LLM comprehension:
 ```json
 {
   "meta": {
-    "version": "2.1",
+    "version": "3.0",
     "category": "color",
-    "tokenctl_version": "1.2.0"
+    "tokenctl_version": "v1.3.0"
   },
   "tokens": {
     "color.primary": {

@@ -49,13 +49,123 @@ func generatePropertyDeclarations(properties []tokens.PropertyToken) string {
 }
 
 // buildStateSelector converts a state key to a CSS selector.
+//
+// A state key may be a selector *list*: "& a, & b" is two selectors, and
+// each segment gets its own expansion. Expanding only the first segment
+// left a bare "&" in the emitted CSS ("`.prose ul, & ol`") — legal to the
+// parser but matching nothing, so the second half of the rule silently
+// did not apply. Split on top-level commas first, expand each segment,
+// then rejoin.
 func buildStateSelector(className, stateKey string) string {
-	if strings.HasPrefix(stateKey, "&") {
-		return fmt.Sprintf(".%s%s", className, stateKey[1:])
-	} else if strings.HasPrefix(stateKey, ":") {
-		return fmt.Sprintf(".%s%s", className, stateKey)
+	segments := splitSelectorList(stateKey)
+	expanded := make([]string, 0, len(segments))
+	for _, seg := range segments {
+		if seg == "" {
+			continue
+		}
+		expanded = append(expanded, expandSelectorSegment(className, seg))
 	}
-	return fmt.Sprintf(".%s %s", className, stateKey)
+	if len(expanded) == 0 {
+		return fmt.Sprintf(".%s", className)
+	}
+	return strings.Join(expanded, ", ")
+}
+
+// expandSelectorSegment expands one comma-free selector segment against
+// the owning class. Every "&" in the segment is replaced by the parent
+// class (CSS nesting semantics); a segment with no "&" is attached as a
+// pseudo/attribute suffix when it starts with ":", and as a descendant
+// otherwise.
+func expandSelectorSegment(className, segment string) string {
+	parent := "." + className
+	if strings.Contains(segment, "&") {
+		return replaceNestingSelector(segment, parent)
+	}
+	if strings.HasPrefix(segment, ":") {
+		return parent + segment
+	}
+	return parent + " " + segment
+}
+
+// replaceNestingSelector replaces every "&" in sel with parent, skipping
+// occurrences inside quoted strings so attribute values such as
+// [data-x="a&b"] survive intact.
+func replaceNestingSelector(sel, parent string) string {
+	var sb strings.Builder
+	var quote byte
+	for i := 0; i < len(sel); i++ {
+		c := sel[i]
+		switch {
+		case quote != 0:
+			if c == '\\' && i+1 < len(sel) {
+				sb.WriteByte(c)
+				i++
+				sb.WriteByte(sel[i])
+				continue
+			}
+			if c == quote {
+				quote = 0
+			}
+			sb.WriteByte(c)
+		case c == '\'' || c == '"':
+			quote = c
+			sb.WriteByte(c)
+		case c == '&':
+			sb.WriteString(parent)
+		default:
+			sb.WriteByte(c)
+		}
+	}
+	return sb.String()
+}
+
+// splitSelectorList splits a CSS selector list on top-level commas.
+// Commas nested inside (), [], or quotes — :is(a, b), [x="a,b"],
+// :nth-child(2n + 1 of .a, .b) — are not separators.
+func splitSelectorList(sel string) []string {
+	var (
+		out   []string
+		sb    strings.Builder
+		depth int
+		quote byte
+	)
+	flush := func() {
+		out = append(out, strings.TrimSpace(sb.String()))
+		sb.Reset()
+	}
+	for i := 0; i < len(sel); i++ {
+		c := sel[i]
+		switch {
+		case quote != 0:
+			if c == '\\' && i+1 < len(sel) {
+				sb.WriteByte(c)
+				i++
+				sb.WriteByte(sel[i])
+				continue
+			}
+			if c == quote {
+				quote = 0
+			}
+			sb.WriteByte(c)
+		case c == '\'' || c == '"':
+			quote = c
+			sb.WriteByte(c)
+		case c == '(' || c == '[':
+			depth++
+			sb.WriteByte(c)
+		case c == ')' || c == ']':
+			if depth > 0 {
+				depth--
+			}
+			sb.WriteByte(c)
+		case c == ',' && depth == 0:
+			flush()
+		default:
+			sb.WriteByte(c)
+		}
+	}
+	flush()
+	return out
 }
 
 // writeProperties writes CSS properties with proper indentation and serialization.
