@@ -16,7 +16,7 @@ func TestExtractBreakpoints(t *testing.T) {
 			name: "custom breakpoints",
 			root: map[string]any{
 				"$breakpoints": map[string]any{
-					"tablet": "600px",
+					"tablet":  "600px",
 					"desktop": "900px",
 				},
 			},

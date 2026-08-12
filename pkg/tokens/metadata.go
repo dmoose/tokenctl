@@ -7,15 +7,15 @@ import (
 
 // TokenMetadata holds rich metadata for a token
 type TokenMetadata struct {
-	Path         string      `json:"path"`
-	Value        any `json:"value"`
-	Type         string      `json:"type,omitempty"`
-	Description  string      `json:"description,omitempty"`
-	Usage        []string    `json:"usage,omitempty"`
-	Avoid        string      `json:"avoid,omitempty"`
-	Deprecated   any `json:"deprecated,omitempty"`
-	Customizable bool        `json:"customizable,omitempty"`
-	SourceFile   string      `json:"source_file,omitempty"`
+	Path         string   `json:"path"`
+	Value        any      `json:"value"`
+	Type         string   `json:"type,omitempty"`
+	Description  string   `json:"description,omitempty"`
+	Usage        []string `json:"usage,omitempty"`
+	Avoid        string   `json:"avoid,omitempty"`
+	Deprecated   any      `json:"deprecated,omitempty"`
+	Customizable bool     `json:"customizable,omitempty"`
+	SourceFile   string   `json:"source_file,omitempty"`
 }
 
 // ExtractMetadata walks the dictionary and extracts rich metadata for all tokens

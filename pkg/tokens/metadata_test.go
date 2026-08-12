@@ -349,8 +349,8 @@ func TestExtractMetadata_NestedGroups(t *testing.T) {
 		tokenType  string
 		sourceFile string
 	}{
-		"brand.primary":        {value: "#0066ff", tokenType: "color", sourceFile: "color.json"},
-		"brand.secondary":      {value: "#8b5cf6", tokenType: "color", sourceFile: ""},
+		"brand.primary":         {value: "#0066ff", tokenType: "color", sourceFile: "color.json"},
+		"brand.secondary":       {value: "#8b5cf6", tokenType: "color", sourceFile: ""},
 		"spacing.layout.gutter": {value: "24px", tokenType: "dimension", sourceFile: "spacing.json"},
 		"spacing.layout.margin": {value: "16px", tokenType: "dimension", sourceFile: ""},
 	}

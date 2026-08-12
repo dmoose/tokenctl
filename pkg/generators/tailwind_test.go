@@ -509,4 +509,3 @@ func TestTailwindGenerator_EffectTokens(t *testing.T) {
 		})
 	}
 }
-

@@ -9,13 +9,13 @@ import (
 
 // PropertyToken represents a token that should generate a CSS @property declaration
 type PropertyToken struct {
-	Path         string      // Token path (e.g., "color.primary")
-	Value        any // Resolved value
-	Type         string      // Token type (color, dimension, number, etc.)
-	Inherits     bool        // CSS @property inherits value
-	CSSName      string      // CSS variable name (e.g., "--color-primary")
-	CSSSyntax    string      // CSS @property syntax (e.g., "<color>")
-	InitialValue string      // CSS @property initial-value
+	Path         string // Token path (e.g., "color.primary")
+	Value        any    // Resolved value
+	Type         string // Token type (color, dimension, number, etc.)
+	Inherits     bool   // CSS @property inherits value
+	CSSName      string // CSS variable name (e.g., "--color-primary")
+	CSSSyntax    string // CSS @property syntax (e.g., "<color>")
+	InitialValue string // CSS @property initial-value
 }
 
 // CSSPropertySyntax maps token $type to CSS @property syntax

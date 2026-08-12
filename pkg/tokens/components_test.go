@@ -8,12 +8,12 @@ import (
 func TestVariantDef_UnmarshalJSON(t *testing.T) {
 	t.Parallel()
 	tests := []struct {
-		name           string
-		input          string
-		wantClass      string
-		wantProps      map[string]any
-		wantStateKeys  []string
-		wantErr        bool
+		name          string
+		input         string
+		wantClass     string
+		wantProps     map[string]any
+		wantStateKeys []string
+		wantErr       bool
 	}{
 		{
 			name:      "class and properties",
@@ -42,8 +42,8 @@ func TestVariantDef_UnmarshalJSON(t *testing.T) {
 			wantStateKeys: []string{":focus", ":active"},
 		},
 		{
-			name:  "mixed class properties and states",
-			input: `{"$class":"btn","padding":"8px","&:hover":{"opacity":"0.8"},":focus":{"outline":"none"}}`,
+			name:      "mixed class properties and states",
+			input:     `{"$class":"btn","padding":"8px","&:hover":{"opacity":"0.8"},":focus":{"outline":"none"}}`,
 			wantClass: "btn",
 			wantProps: map[string]any{
 				"padding": "8px",
@@ -70,9 +70,9 @@ func TestVariantDef_UnmarshalJSON(t *testing.T) {
 			wantErr: true,
 		},
 		{
-			name:  "state with non-map value",
-			input: `{"&:hover":"not-a-map"}`,
-			wantProps: map[string]any{},
+			name:          "state with non-map value",
+			input:         `{"&:hover":"not-a-map"}`,
+			wantProps:     map[string]any{},
 			wantStateKeys: []string{"&:hover"},
 		},
 	}

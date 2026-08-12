@@ -415,4 +415,3 @@ func (e *ExpressionEvaluator) evaluateShade(tokenPath string, level float64) (st
 	}
 	return result.Hex(), nil
 }
-

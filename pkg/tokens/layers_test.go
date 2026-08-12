@@ -239,7 +239,7 @@ func TestNewLayerValidator_GetLayer(t *testing.T) {
 				},
 			},
 			expected: map[string]Layer{
-				"primitives.red":  LayerBrand,
+				"primitives.red":   LayerBrand,
 				"semantic.primary": LayerSemantic,
 			},
 		},
@@ -283,8 +283,8 @@ func TestNewLayerValidator_GetLayer(t *testing.T) {
 			expected: map[string]Layer{},
 		},
 		{
-			name: "Empty Dictionary",
-			root: map[string]any{},
+			name:     "Empty Dictionary",
+			root:     map[string]any{},
 			expected: map[string]Layer{},
 		},
 		{
@@ -359,13 +359,13 @@ func TestGetLayer_UnknownPath(t *testing.T) {
 func TestValidateReferences(t *testing.T) {
 	t.Parallel()
 	tests := []struct {
-		name            string
-		root            map[string]any
-		sourceFiles     map[string]string
-		wantViolations  int
-		wantTokenPath   string
-		wantRefPath     string
-		wantSourceFile  string
+		name           string
+		root           map[string]any
+		sourceFiles    map[string]string
+		wantViolations int
+		wantTokenPath  string
+		wantRefPath    string
+		wantSourceFile string
 	}{
 		{
 			name: "Valid Semantic References Brand",
