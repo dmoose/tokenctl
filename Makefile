@@ -18,8 +18,9 @@ BUILD_TIME := $(shell date -u '+%Y-%m-%dT%H:%M:%SZ')
 VERSION_PKG := github.com/dmoose/tokenctl/pkg/version
 LDFLAGS := -X $(VERSION_PKG).Value=$(VERSION) -X $(VERSION_PKG).Commit=$(COMMIT) -X $(VERSION_PKG).BuildTime=$(BUILD_TIME)
 
-# Pin golangci-lint version (keep in sync with .github/workflows/go.yml)
-GOLANGCI_LINT_VERSION := v2.8.0
+# Single source of truth: the exact version CI pins in the workflow file.
+# Never hand-sync a copy here — that drift is how CI broke on 2026-08-12.
+GOLANGCI_LINT_VERSION := $(shell sed -n 's/.*version: \(v[0-9][0-9.]*\).*/\1/p' .github/workflows/go.yml | head -1)
 
 .PHONY: all build clean test test-unit test-integration coverage lint install dev-deps help
 
@@ -72,18 +73,8 @@ coverage-html: coverage ## Generate and open HTML coverage report
 
 ## Quality
 
-lint: ## Run linters (auto-installs golangci-lint v2 if needed)
-	@echo "Linting..."
-	@if ! which golangci-lint > /dev/null 2>&1; then \
-		echo "Installing golangci-lint $(GOLANGCI_LINT_VERSION)..."; \
-		go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@$(GOLANGCI_LINT_VERSION); \
-	fi
-	@installed=$$(golangci-lint version 2>/dev/null | grep -oE 'v[0-9]+' | head -1); \
-	if [ "$$installed" != "v2" ]; then \
-		echo "Upgrading golangci-lint to v2..."; \
-		go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@$(GOLANGCI_LINT_VERSION); \
-	fi
-	golangci-lint run ./...
+lint: ## Lint at the exact version CI runs (read from the workflow file)
+	go run github.com/golangci/golangci-lint/v2/cmd/golangci-lint@$(GOLANGCI_LINT_VERSION) run --timeout=5m
 
 fmt: ## Format code
 	@echo "Formatting code..."
@@ -155,7 +146,10 @@ examples: example-baseline example-basic example-themes example-components examp
 
 ## CI/CD
 
-ci: lint test coverage ## Run CI pipeline (lint, test, coverage)
+ci: ## Exactly what GitHub CI runs — the pre-push gate (also wired as .git/hooks/pre-push)
+	go build -v ./...
+	go test -race ./...
+	$(MAKE) lint
 
 check: fmt vet ## Quick quality check (format + vet)
 
