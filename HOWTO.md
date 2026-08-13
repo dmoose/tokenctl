@@ -343,6 +343,11 @@ Document component relationships for LLMs:
 
 ## Theming
 
+> Full theme *generation* (derive a complete semantic color set + typography
+> from a primary colour or preset, OKLCH math, golden-tested) lives in
+> `tokenctl derive` — see README "Theme Derivation". This section covers
+> authoring themes by hand.
+
 ### Theme Inheritance
 
 Themes can extend other themes:
