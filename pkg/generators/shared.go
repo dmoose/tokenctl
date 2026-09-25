@@ -200,3 +200,75 @@ func writeProperties(sb *strings.Builder, props map[string]any, indent int) {
 		fmt.Fprintf(sb, "%s%s: %s;\n", padding, k, val)
 	}
 }
+
+// validateComponentValues rejects a component property whose value is an
+// object tokenctl cannot write as CSS.
+//
+// writeProperties skips a value that serializes empty, so such a key used
+// to vanish from the output without a word. The one that shipped was an
+// "@media (...)" block inside a component's base: not a selector (no
+// leading & or :), so it was read as a property named "@media ..." and
+// dropped, taking a two-column docs layout and a mobile grid with it.
+func validateComponentValues(components map[string]tokens.ComponentDefinition) error {
+	var problems []string
+	check := func(where string, props map[string]any) {
+		keys := make([]string, 0, len(props))
+		for k := range props {
+			keys = append(keys, k)
+		}
+		sort.Strings(keys)
+		for _, k := range keys {
+			if strings.HasPrefix(k, "$") {
+				continue
+			}
+			obj, ok := props[k].(map[string]any)
+			if !ok {
+				continue
+			}
+			if _, ok := obj["$value"]; ok {
+				continue
+			}
+			hint := ""
+			if strings.HasPrefix(k, "@") {
+				hint = `; write a breakpoint as {"$value": ..., "$responsive": {"<bp>": ...}} on each property`
+			}
+			problems = append(problems, fmt.Sprintf("%s: %q is an object with no $value, which cannot be written as CSS%s", where, k, hint))
+		}
+	}
+
+	names := make([]string, 0, len(components))
+	for name := range components {
+		names = append(names, name)
+	}
+	sort.Strings(names)
+	for _, name := range names {
+		comp := components[name]
+		base := make(map[string]any, len(comp.Base))
+		for k, v := range comp.Base {
+			if strings.HasPrefix(k, "&") || strings.HasPrefix(k, ":") {
+				nested, ok := v.(map[string]any)
+				if !ok {
+					problems = append(problems, fmt.Sprintf("component %s base: selector %q must hold an object of properties", name, k))
+					continue
+				}
+				check(fmt.Sprintf("component %s base %s", name, k), nested)
+				continue
+			}
+			base[k] = v
+		}
+		check(fmt.Sprintf("component %s base", name), base)
+		for kind, defs := range map[string]map[string]tokens.VariantDef{"variants": comp.Variants, "sizes": comp.Sizes, "states": comp.States} {
+			for vname, def := range defs {
+				check(fmt.Sprintf("component %s %s.%s", name, kind, vname), def.Properties)
+				for sname, st := range def.States {
+					check(fmt.Sprintf("component %s %s.%s %s", name, kind, vname, sname), st.Properties)
+				}
+			}
+		}
+	}
+	if len(problems) == 0 {
+		return nil
+	}
+	sort.Strings(problems)
+	return fmt.Errorf("%s", strings.Join(problems, "\n"))
+}

@@ -28,6 +28,22 @@ func IsToken(node map[string]any) bool {
 	return ok
 }
 
+// IsClassComponent reports whether a node is a component that renders
+// as a class ($type component with a $class). Its properties are CSS for
+// the component generator, not design tokens: a {"$value", "$responsive"}
+// property inside one must not become a custom property on :root.
+//
+// A component group without $class is different: its $value children
+// are tokens, published as custom properties, and still flatten.
+func IsClassComponent(node map[string]any) bool {
+	t, ok := node["$type"]
+	if !ok || t != "component" {
+		return false
+	}
+	_, hasClass := node["$class"]
+	return hasClass
+}
+
 // DeepCopy creates a deep copy of a Dictionary
 func (d *Dictionary) DeepCopy() *Dictionary {
 	copiedSourceFiles := make(map[string]string, len(d.SourceFiles))

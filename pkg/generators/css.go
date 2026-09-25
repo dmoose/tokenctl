@@ -165,6 +165,9 @@ func (g *CSSGenerator) generateThemeVariations(themes map[string]ThemeContext, d
 // breakpoints are used to emit per-component @media rules for any
 // component property declared with {"$value": ..., "$responsive": {bp: value}}.
 func (g *CSSGenerator) generateComponents(components map[string]tokens.ComponentDefinition, breakpoints map[string]string) (string, error) {
+	if err := validateComponentValues(components); err != nil {
+		return "", err
+	}
 	var sb strings.Builder
 	sb.WriteString("@layer components {\n")
 

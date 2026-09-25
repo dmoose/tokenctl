@@ -57,6 +57,12 @@ func ExtractResponsiveTokens(d *Dictionary) []ResponsiveToken {
 // extractResponsiveRecursive walks the tree looking for $responsive fields
 func extractResponsiveRecursive(d *Dictionary, node map[string]any, currentPath string, inheritedType string, results *[]ResponsiveToken) {
 	// Check for $type at this level
+	// A component's $responsive properties are emitted by the component
+	// generator as rules on its class.
+	if IsClassComponent(node) {
+		return
+	}
+
 	currentType := inheritedType
 	if t, ok := node["$type"].(string); ok {
 		currentType = t

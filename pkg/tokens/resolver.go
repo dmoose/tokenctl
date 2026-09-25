@@ -155,6 +155,9 @@ func (r *Resolver) resolveReference(path string) (any, error) {
 
 // flatten walks the dictionary and flattens it into dot-notation paths mapping to $value
 func flatten(node map[string]any, currentPath string, result map[string]any) error {
+	if IsClassComponent(node) {
+		return nil
+	}
 	if IsToken(node) {
 		result[currentPath] = node["$value"]
 		return nil

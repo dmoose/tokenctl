@@ -171,6 +171,9 @@ func (g *TailwindGenerator) generateThemeVariations(themes map[string]ThemeConte
 
 // generateComponents creates @layer components with component styles
 func (g *TailwindGenerator) generateComponents(components map[string]tokens.ComponentDefinition) (string, error) {
+	if err := validateComponentValues(components); err != nil {
+		return "", err
+	}
 	var sb strings.Builder
 	sb.WriteString("@layer components {\n")
 
