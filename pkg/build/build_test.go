@@ -36,11 +36,6 @@ func TestBuildCSS_FSMatchesDirs(t *testing.T) {
 		if info, err := os.Stat(dir); err != nil || !info.IsDir() {
 			continue
 		}
-		// LoadBase skips any path containing /themes/, so a tree under a
-		// directory named themes loses its base tokens on disk but not in an FS.
-		if filepath.Base(dir) == "themes" {
-			continue
-		}
 		for _, f := range []Format{FormatCSS, FormatTailwind} {
 			want, wantErr := BuildCSSDirs([]string{dir}, Options{Format: f})
 			got, gotErr := BuildCSS(dirFS(t, dir), Options{Format: f})

@@ -82,12 +82,11 @@ func (l *Loader) loadBase(fsys fs.FS, root, prefix string) (*Dictionary, error) 
 			return nil
 		}
 
-		// Skip themes directory
-		filePath := displayPath(prefix, p)
-		if strings.Contains(filePath, "/themes/") || strings.Contains(filePath, "\\themes\\") ||
-			strings.Contains("/"+p, "/themes/") {
+		// Skip themes directory, judged by the path inside the tree only
+		if strings.Contains("/"+p, "/themes/") {
 			return nil
 		}
+		filePath := displayPath(prefix, p)
 
 		if l.isTokenFile(p) {
 			dict, err := l.loadFile(fsys, p, filePath)
