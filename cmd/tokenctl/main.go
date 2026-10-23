@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/dmoose/tokenctl/pkg/version"
+	"github.com/dmoose/tokenctl/v2/pkg/version"
 	"github.com/spf13/cobra"
 )
 

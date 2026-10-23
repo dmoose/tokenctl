@@ -12,7 +12,7 @@ import "runtime/debug"
 
 // Value is the build-time version, injected via ldflags:
 //
-//	go build -ldflags "-X github.com/dmoose/tokenctl/pkg/version.Value=v1.2.0"
+//	go build -ldflags "-X github.com/dmoose/tokenctl/v2/pkg/version.Value=v1.2.0"
 //
 // Left at "dev" it is not used; String falls back to what the binary
 // itself knows.

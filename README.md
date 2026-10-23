@@ -1,7 +1,7 @@
 # tokenctl
 
 [![Go](https://github.com/dmoose/tokenctl/actions/workflows/go.yml/badge.svg)](https://github.com/dmoose/tokenctl/actions/workflows/go.yml)
-[![Go Reference](https://pkg.go.dev/badge/github.com/dmoose/tokenctl.svg)](https://pkg.go.dev/github.com/dmoose/tokenctl)
+[![Go Reference](https://pkg.go.dev/badge/github.com/dmoose/tokenctl/v2.svg)](https://pkg.go.dev/github.com/dmoose/tokenctl/v2)
 [![Go Report Card](https://goreportcard.com/badge/github.com/dmoose/tokenctl)](https://goreportcard.com/report/github.com/dmoose/tokenctl)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
 
@@ -33,7 +33,7 @@ A W3C Design Tokens CLI that generates CSS from JSON token definitions. Define y
 ## Installation
 
 ```bash
-go install github.com/dmoose/tokenctl/cmd/tokenctl@latest
+go install github.com/dmoose/tokenctl/v2/cmd/tokenctl@latest
 ```
 
 ## Quick Start

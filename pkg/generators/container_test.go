@@ -4,7 +4,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/dmoose/tokenctl/pkg/tokens"
+	"github.com/dmoose/tokenctl/v2/pkg/tokens"
 )
 
 func TestGenerateContainerCSS(t *testing.T) {

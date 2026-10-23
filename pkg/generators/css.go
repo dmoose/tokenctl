@@ -6,7 +6,7 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/dmoose/tokenctl/pkg/tokens"
+	"github.com/dmoose/tokenctl/v2/pkg/tokens"
 )
 
 // CSSGenerator generates pure CSS without Tailwind dependencies

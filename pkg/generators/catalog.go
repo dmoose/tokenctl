@@ -7,8 +7,8 @@ import (
 	"slices"
 	"strings"
 
-	"github.com/dmoose/tokenctl/pkg/tokens"
-	"github.com/dmoose/tokenctl/pkg/version"
+	"github.com/dmoose/tokenctl/v2/pkg/tokens"
+	"github.com/dmoose/tokenctl/v2/pkg/version"
 )
 
 // CatalogSchemaVersion is the current catalog schema version.

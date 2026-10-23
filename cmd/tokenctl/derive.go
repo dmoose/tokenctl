@@ -7,7 +7,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/dmoose/tokenctl/pkg/derive"
+	"github.com/dmoose/tokenctl/v2/pkg/derive"
 	"github.com/spf13/cobra"
 )
 

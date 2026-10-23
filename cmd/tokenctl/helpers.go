@@ -5,7 +5,7 @@ import (
 	"io"
 	"os"
 
-	"github.com/dmoose/tokenctl/pkg/tokens"
+	"github.com/dmoose/tokenctl/v2/pkg/tokens"
 )
 
 // reportUnknownKeys writes one line per piece of input the build will not

@@ -9,8 +9,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/dmoose/tokenctl/pkg/generators"
-	"github.com/dmoose/tokenctl/pkg/tokens"
+	"github.com/dmoose/tokenctl/v2/pkg/generators"
+	"github.com/dmoose/tokenctl/v2/pkg/tokens"
 	"github.com/spf13/cobra"
 )
 

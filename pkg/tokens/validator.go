@@ -7,7 +7,7 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/dmoose/tokenctl/pkg/colors"
+	"github.com/dmoose/tokenctl/v2/pkg/colors"
 )
 
 // ValidationError represents a validation issue

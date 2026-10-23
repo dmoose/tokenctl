@@ -8,7 +8,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/dmoose/tokenctl/pkg/colors"
+	"github.com/dmoose/tokenctl/v2/pkg/colors"
 )
 
 // ExpressionEvaluator evaluates expressions in token values

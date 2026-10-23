@@ -5,8 +5,8 @@ import (
 	"encoding/json"
 	"testing"
 
-	"github.com/dmoose/tokenctl/pkg/tokens"
-	"github.com/dmoose/tokenctl/pkg/version"
+	"github.com/dmoose/tokenctl/v2/pkg/tokens"
+	"github.com/dmoose/tokenctl/v2/pkg/version"
 )
 
 func TestCatalogGenerator_Generate_BasicTokens(t *testing.T) {

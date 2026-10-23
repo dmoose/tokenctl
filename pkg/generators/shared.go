@@ -6,7 +6,7 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/dmoose/tokenctl/pkg/tokens"
+	"github.com/dmoose/tokenctl/v2/pkg/tokens"
 )
 
 // tokenRefPattern matches {token.path.here} references in CSS values.

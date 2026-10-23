@@ -5,7 +5,7 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/dmoose/tokenctl/pkg/tokens"
+	"github.com/dmoose/tokenctl/v2/pkg/tokens"
 )
 
 // GenerateContainerCSS creates @container query blocks from container overrides.

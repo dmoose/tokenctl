@@ -15,7 +15,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/dmoose/tokenctl/pkg/tokens"
+	"github.com/dmoose/tokenctl/v2/pkg/tokens"
 )
 
 // fixture mirrors the shapes a real component file produces: a base with

@@ -15,7 +15,7 @@ PKG=./...
 VERSION ?= $(shell git describe --tags --always --dirty 2>/dev/null || echo dev)
 COMMIT := $(shell git rev-parse --short HEAD 2>/dev/null || echo unknown)
 BUILD_TIME := $(shell date -u '+%Y-%m-%dT%H:%M:%SZ')
-VERSION_PKG := github.com/dmoose/tokenctl/pkg/version
+VERSION_PKG := github.com/dmoose/tokenctl/v2/pkg/version
 LDFLAGS := -X $(VERSION_PKG).Value=$(VERSION) -X $(VERSION_PKG).Commit=$(COMMIT) -X $(VERSION_PKG).BuildTime=$(BUILD_TIME)
 
 # Single source of truth: the exact version CI pins in the workflow file.
