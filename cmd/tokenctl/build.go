@@ -9,6 +9,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/dmoose/tokenctl/v2/pkg/build"
 	"github.com/dmoose/tokenctl/v2/pkg/generators"
 	"github.com/dmoose/tokenctl/v2/pkg/tokens"
 	"github.com/spf13/cobra"
@@ -87,36 +88,19 @@ func runBuild(cmd *cobra.Command, args []string) error {
 		dirs = []string{"."}
 	}
 
-	fmt.Printf("Building tokens from %s...\n", strings.Join(dirs, ", "))
-
-	baseDict, themes, findings, err := loadTokens(dirs...)
-	if err != nil {
-		return err
-	}
-
-	// Name anything the generators will not read before generating, so a
-	// misnamed block is visible in the build log rather than as missing
-	// styling on a shipped page.
-	if err := auditLoaded(strictUnknownKeys, findings); err != nil {
-		return err
-	}
-
-	resolvedBase, err := resolveTokens(baseDict)
-	if err != nil {
-		return err
-	}
-
 	formatType, category, err := parseFormat(format)
 	if err != nil {
 		return err
 	}
 
+	fmt.Printf("Building tokens from %s...\n", strings.Join(dirs, ", "))
+
 	var content string
 	switch formatType {
 	case "tailwind", "css":
-		content, err = buildCSSOutput(formatType, baseDict, resolvedBase, themes)
+		content, err = buildCSS(dirs, formatType)
 	case "catalog", "manifest":
-		content, err = buildCatalogOutput(category, baseDict, resolvedBase, themes)
+		content, err = buildCatalog(dirs, category)
 	default:
 		return fmt.Errorf("unknown format: %s (valid: tailwind, css, catalog, manifest:CATEGORY)", format)
 	}
@@ -127,63 +111,39 @@ func runBuild(cmd *cobra.Command, args []string) error {
 	return writeOutput(formatType, category, content)
 }
 
-// buildCSSOutput generates Tailwind or pure CSS from resolved tokens and themes.
-func buildCSSOutput(formatType string, baseDict *tokens.Dictionary, resolvedBase map[string]any, themes map[string]*tokens.Dictionary) (string, error) {
-	inheritedThemes, err := tokens.ResolveThemeInheritance(baseDict, themes)
+func buildCSS(dirs []string, formatType string) (string, error) {
+	opts := build.Options{Format: build.FormatCSS, StrictUnknownKeys: strictUnknownKeys}
+	if formatType == "tailwind" {
+		opts.Format = build.FormatTailwind
+	}
+
+	res, err := build.BuildCSSDirs(dirs, opts)
+	for _, c := range res.Conflicts {
+		fmt.Fprintf(os.Stderr, "Warning: %s\n", c)
+	}
+	// Name anything the generators will not read, so a misnamed block is
+	// visible in the build log rather than as missing styling on a shipped page.
+	if auditErr := auditLoaded(strictUnknownKeys, res.Findings); auditErr != nil {
+		return "", auditErr
+	}
+	return res.CSS, err
+}
+
+func buildCatalog(dirs []string, category string) (string, error) {
+	baseDict, themes, findings, err := loadTokens(dirs...)
 	if err != nil {
-		return "", fmt.Errorf("failed to resolve theme inheritance: %w", err)
+		return "", err
+	}
+	if err := auditLoaded(strictUnknownKeys, findings); err != nil {
+		return "", err
 	}
 
-	// Build theme contexts (sorted for deterministic error reporting)
-	themeContexts := make(map[string]generators.ThemeContext)
-	sortedNames := make([]string, 0, len(inheritedThemes))
-	for name := range inheritedThemes {
-		sortedNames = append(sortedNames, name)
-	}
-	sort.Strings(sortedNames)
-
-	for _, name := range sortedNames {
-		mergedDict := inheritedThemes[name]
-		themeResolver, err := tokens.NewResolver(mergedDict)
-		if err != nil {
-			return "", fmt.Errorf("failed to resolve theme %s: %w", name, err)
-		}
-		resolvedTheme, err := themeResolver.ResolveAll()
-		if err != nil {
-			return "", fmt.Errorf("resolution failed for theme %s: %w", name, err)
-		}
-
-		themeContexts[name] = generators.ThemeContext{
-			Dict:           mergedDict,
-			ResolvedTokens: resolvedTheme,
-			DiffTokens:     tokens.Diff(resolvedTheme, resolvedBase),
-		}
-	}
-
-	components, err := baseDict.ExtractComponents()
+	resolvedBase, err := resolveTokens(baseDict)
 	if err != nil {
-		return "", fmt.Errorf("failed to extract components: %w", err)
+		return "", err
 	}
 
-	ctx := &generators.GenerationContext{
-		BaseDict:           baseDict,
-		ResolvedTokens:     resolvedBase,
-		Components:         components,
-		Themes:             themeContexts,
-		DefaultTheme:       tokens.DetectDefaultTheme(themes),
-		PropertyTokens:     tokens.ExtractPropertyTokens(baseDict, resolvedBase),
-		Keyframes:          tokens.ExtractKeyframes(baseDict),
-		Breakpoints:        tokens.ExtractBreakpoints(baseDict),
-		ResponsiveTokens:   tokens.ExtractResponsiveTokens(baseDict),
-		ContainerOverrides: tokens.ExtractContainerOverrides(components),
-	}
-
-	if formatType == "css" {
-		gen := generators.NewCSSGenerator()
-		return gen.Generate(ctx)
-	}
-	gen := generators.NewTailwindGenerator()
-	return gen.Generate(ctx)
+	return buildCatalogOutput(category, baseDict, resolvedBase, themes)
 }
 
 // buildCatalogOutput generates a JSON catalog or category-scoped manifest.

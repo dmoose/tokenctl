@@ -2,7 +2,7 @@
 bin/
 dist/
 out/
-build/
+/build/
 *.exe
 *.test
 /tokenctl

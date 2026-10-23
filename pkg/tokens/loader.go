@@ -2,11 +2,13 @@ package tokens
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"io/fs"
 	"maps"
 	"os"
+	"path"
 	"path/filepath"
 	"strings"
 )
@@ -36,6 +38,9 @@ type Loader struct {
 	Extensions    []string
 	WarnConflicts bool // Emit warnings when merge conflicts occur
 
+	// OnConflict receives conflict warnings when set; otherwise they go to stderr.
+	OnConflict func(msg string)
+
 	// Findings accumulates keys the build will not consume, one entry per
 	// offending key, in load order. Collected per file rather than after
 	// the merge so each finding can name the file it came from — the
@@ -55,8 +60,21 @@ func NewLoader() *Loader {
 
 // LoadBase loads all token files EXCEPT those in the themes directory
 func (l *Loader) LoadBase(path string) (*Dictionary, error) {
+	if _, err := os.Lstat(path); err != nil {
+		return nil, err
+	}
+	fsys, root, prefix := dirFS(path)
+	return l.loadBase(fsys, root, prefix)
+}
+
+// LoadBaseFS is LoadBase over fsys, walking from root.
+func (l *Loader) LoadBaseFS(fsys fs.FS, root string) (*Dictionary, error) {
+	return l.loadBase(fsys, root, "")
+}
+
+func (l *Loader) loadBase(fsys fs.FS, root, prefix string) (*Dictionary, error) {
 	master := NewDictionary()
-	err := filepath.WalkDir(path, func(filePath string, d fs.DirEntry, err error) error {
+	err := fs.WalkDir(fsys, root, func(p string, d fs.DirEntry, err error) error {
 		if err != nil {
 			return err
 		}
@@ -65,16 +83,18 @@ func (l *Loader) LoadBase(path string) (*Dictionary, error) {
 		}
 
 		// Skip themes directory
-		if strings.Contains(filePath, "/themes/") || strings.Contains(filePath, "\\themes\\") {
+		filePath := displayPath(prefix, p)
+		if strings.Contains(filePath, "/themes/") || strings.Contains(filePath, "\\themes\\") ||
+			strings.Contains("/"+p, "/themes/") {
 			return nil
 		}
 
-		if l.isTokenFile(filePath) {
-			dict, err := l.loadFile(filePath)
+		if l.isTokenFile(p) {
+			dict, err := l.loadFile(fsys, p, filePath)
 			if err != nil {
 				return fmt.Errorf("failed to load %s: %w", filePath, err)
 			}
-			if err := master.MergeWithPath(dict, l.WarnConflicts); err != nil {
+			if err := l.Merge(master, dict); err != nil {
 				return fmt.Errorf("failed to merge %s: %w", filePath, err)
 			}
 		}
@@ -94,39 +114,49 @@ func (l *Loader) LoadBase(path string) (*Dictionary, error) {
 
 // LoadThemes scans the themes directory and returns a map of ThemeName -> Dictionary
 func (l *Loader) LoadThemes(rootPath string) (map[string]*Dictionary, error) {
+	return l.loadThemes(os.DirFS(rootPath), ".", rootPath)
+}
+
+// LoadThemesFS is LoadThemes over fsys, looking for themes under root.
+func (l *Loader) LoadThemesFS(fsys fs.FS, root string) (map[string]*Dictionary, error) {
+	return l.loadThemes(fsys, root, "")
+}
+
+func (l *Loader) loadThemes(fsys fs.FS, root, prefix string) (map[string]*Dictionary, error) {
 	themes := make(map[string]*Dictionary)
 
 	// Support both layouts:
-	// 1. rootPath/themes/ - when user passes tokens directory directly (tokenctl build tokens)
-	// 2. rootPath/tokens/themes/ - when user passes project root (tokenctl build .)
-	themesPath := filepath.Join(rootPath, "themes")
-	if _, err := os.Stat(themesPath); os.IsNotExist(err) {
-		themesPath = filepath.Join(rootPath, "tokens", "themes")
+	// 1. root/themes/ - when user passes tokens directory directly (tokenctl build tokens)
+	// 2. root/tokens/themes/ - when user passes project root (tokenctl build .)
+	themesPath := path.Join(root, "themes")
+	if _, err := fs.Stat(fsys, themesPath); errors.Is(err, fs.ErrNotExist) {
+		themesPath = path.Join(root, "tokens", "themes")
 	}
 
 	// Check if themes directory exists
-	if _, err := os.Stat(themesPath); os.IsNotExist(err) {
+	if _, err := fs.Stat(fsys, themesPath); errors.Is(err, fs.ErrNotExist) {
 		return themes, nil // Return empty map if no themes dir
 	}
 
-	err := filepath.WalkDir(themesPath, func(filePath string, d fs.DirEntry, err error) error {
+	err := fs.WalkDir(fsys, themesPath, func(p string, d fs.DirEntry, err error) error {
 		if err != nil {
 			return err
 		}
-		if d.IsDir() || !l.isTokenFile(filePath) {
+		if d.IsDir() || !l.isTokenFile(p) {
 			return nil
 		}
+		filePath := displayPath(prefix, p)
 
 		// Theme name is the filename without extension
-		filename := filepath.Base(filePath)
-		ext := filepath.Ext(filename)
+		filename := path.Base(p)
+		ext := path.Ext(filename)
 		// Handle .tokens.json double extension
 		if strings.HasSuffix(filename, ".tokens.json") {
 			ext = ".tokens.json"
 		}
 		themeName := strings.TrimSuffix(filename, ext)
 
-		dict, err := l.loadFile(filePath)
+		dict, err := l.loadFile(fsys, p, filePath)
 		if err != nil {
 			return fmt.Errorf("failed to load theme %s: %w", filePath, err)
 		}
@@ -160,6 +190,40 @@ func (l *Loader) LoadThemes(rootPath string) (map[string]*Dictionary, error) {
 	return themes, nil
 }
 
+// Merge merges src into dst, reporting conflicts as the loader is configured to.
+func (l *Loader) Merge(dst, src *Dictionary) error {
+	return dst.merge(src, l.warn())
+}
+
+func (l *Loader) warn() func(string) {
+	if !l.WarnConflicts {
+		return nil
+	}
+	if l.OnConflict != nil {
+		return l.OnConflict
+	}
+	return warnStderr
+}
+
+func warnStderr(msg string) {
+	fmt.Fprintf(os.Stderr, "Warning: %s\n", msg)
+}
+
+// dirFS returns an fs.FS, walk root and display prefix for a directory or file path.
+func dirFS(p string) (fs.FS, string, string) {
+	if info, err := os.Stat(p); err == nil && !info.IsDir() {
+		return os.DirFS(filepath.Dir(p)), filepath.Base(p), filepath.Dir(p)
+	}
+	return os.DirFS(p), ".", p
+}
+
+func displayPath(prefix, p string) string {
+	if prefix == "" {
+		return p
+	}
+	return filepath.Join(prefix, filepath.FromSlash(p))
+}
+
 func (l *Loader) isTokenFile(path string) bool {
 	for _, ext := range l.Extensions {
 		if strings.HasSuffix(path, ext) {
@@ -169,8 +233,8 @@ func (l *Loader) isTokenFile(path string) bool {
 	return false
 }
 
-func (l *Loader) loadFile(path string) (*Dictionary, error) {
-	f, err := os.Open(path)
+func (l *Loader) loadFile(fsys fs.FS, name, path string) (*Dictionary, error) {
+	f, err := fsys.Open(name)
 	if err != nil {
 		return nil, err
 	}
@@ -236,7 +300,15 @@ func (d *Dictionary) Merge(other *Dictionary) error {
 
 // MergeWithPath is like Merge but allows controlling conflict warnings
 func (d *Dictionary) MergeWithPath(other *Dictionary, warnConflicts bool) error {
-	if err := deepMergeWithWarnings(d.Root, other.Root, "", warnConflicts); err != nil {
+	var warn func(string)
+	if warnConflicts {
+		warn = warnStderr
+	}
+	return d.merge(other, warn)
+}
+
+func (d *Dictionary) merge(other *Dictionary, warn func(string)) error {
+	if err := deepMergeWithWarnings(d.Root, other.Root, "", warn); err != nil {
 		return err
 	}
 	// Merge source file mappings, preferring the new source file for conflicts
@@ -259,10 +331,10 @@ func DetectDefaultTheme(themes map[string]*Dictionary) string {
 }
 
 func deepMerge(dst, src map[string]any, currentPath string) error {
-	return deepMergeWithWarnings(dst, src, currentPath, false)
+	return deepMergeWithWarnings(dst, src, currentPath, nil)
 }
 
-func deepMergeWithWarnings(dst, src map[string]any, currentPath string, warnConflicts bool) error {
+func deepMergeWithWarnings(dst, src map[string]any, currentPath string, warn func(string)) error {
 	for key, srcVal := range src {
 		// Build path for error messages
 		path := key
@@ -285,20 +357,20 @@ func deepMergeWithWarnings(dst, src map[string]any, currentPath string, warnConf
 
 				if isDstToken || isSrcToken {
 					// One or both are tokens - this is an overwrite
-					if warnConflicts && !isMetadataKey {
-						fmt.Fprintf(os.Stderr, "Warning: Token '%s' redefined (overwriting)\n", path)
+					if warn != nil && !isMetadataKey {
+						warn(fmt.Sprintf("Token '%s' redefined (overwriting)", path))
 					}
 					dst[key] = srcVal
 				} else {
 					// Both are groups, recursive merge
-					if err := deepMergeWithWarnings(dstMap, srcMap, path, warnConflicts); err != nil {
+					if err := deepMergeWithWarnings(dstMap, srcMap, path, warn); err != nil {
 						return err
 					}
 				}
 			} else {
 				// Type mismatch or value overwrite
-				if warnConflicts && !isMetadataKey {
-					fmt.Fprintf(os.Stderr, "Warning: Token '%s' redefined (overwriting %T with %T)\n", path, dstVal, srcVal)
+				if warn != nil && !isMetadataKey {
+					warn(fmt.Sprintf("Token '%s' redefined (overwriting %T with %T)", path, dstVal, srcVal))
 				}
 				dst[key] = srcVal
 			}

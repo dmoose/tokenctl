@@ -5,6 +5,7 @@ import (
 	"io"
 	"os"
 
+	"github.com/dmoose/tokenctl/v2/internal/load"
 	"github.com/dmoose/tokenctl/v2/pkg/tokens"
 )
 
@@ -47,44 +48,16 @@ func loadTokens(dirs ...string) (*tokens.Dictionary, map[string]*tokens.Dictiona
 		dirs = []string{"."}
 	}
 
+	srcs := make([]load.Source, len(dirs))
+	for i, d := range dirs {
+		srcs[i] = load.Dir(d)
+	}
+
 	loader := tokens.NewLoader()
-
-	// Load first directory as the master base + themes
-	baseDict, err := loader.LoadBase(dirs[0])
+	baseDict, themes, err := load.Merge(loader, srcs)
 	if err != nil {
-		return nil, nil, nil, fmt.Errorf("failed to load base tokens from %s: %w", dirs[0], err)
+		return nil, nil, nil, err
 	}
-
-	themes, err := loader.LoadThemes(dirs[0])
-	if err != nil {
-		return nil, nil, nil, fmt.Errorf("failed to load themes from %s: %w", dirs[0], err)
-	}
-
-	// Merge subsequent directories
-	for _, dir := range dirs[1:] {
-		extBase, err := loader.LoadBase(dir)
-		if err != nil {
-			return nil, nil, nil, fmt.Errorf("failed to load base tokens from %s: %w", dir, err)
-		}
-		if err := baseDict.MergeWithPath(extBase, loader.WarnConflicts); err != nil {
-			return nil, nil, nil, fmt.Errorf("failed to merge base tokens from %s: %w", dir, err)
-		}
-
-		extThemes, err := loader.LoadThemes(dir)
-		if err != nil {
-			return nil, nil, nil, fmt.Errorf("failed to load themes from %s: %w", dir, err)
-		}
-		for name, extTheme := range extThemes {
-			if existing, ok := themes[name]; ok {
-				if err := existing.MergeWithPath(extTheme, loader.WarnConflicts); err != nil {
-					return nil, nil, nil, fmt.Errorf("failed to merge theme %s from %s: %w", name, dir, err)
-				}
-			} else {
-				themes[name] = extTheme
-			}
-		}
-	}
-
 	return baseDict, themes, loader.Findings, nil
 }
 
