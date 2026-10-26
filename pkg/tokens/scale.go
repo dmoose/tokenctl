@@ -125,6 +125,9 @@ func expandScaleToken(d *Dictionary, parent map[string]any, baseKey, basePath st
 		if sourceFile, ok := d.SourceFiles[basePath]; ok {
 			d.SourceFiles[newPath] = sourceFile
 		}
+		if layer, ok := d.Layers[basePath]; ok {
+			d.Layers[newPath] = layer
+		}
 	}
 
 	// Remove $scale from the base token (it's been processed)

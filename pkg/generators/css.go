@@ -39,7 +39,11 @@ func (g *CSSGenerator) Generate(ctx *GenerationContext) (string, error) {
 	sb.WriteString(generateReset())
 
 	// 5. Root variables (in tokens layer)
-	rootVars, err := g.generateRootVariables(ctx.ResolvedTokens)
+	rootTokens := ctx.ResolvedTokens
+	if ctx.EmitTokens != nil {
+		rootTokens = ctx.EmitTokens
+	}
+	rootVars, err := g.generateRootVariables(rootTokens)
 	if err != nil {
 		return "", fmt.Errorf("failed to generate root variables: %w", err)
 	}
@@ -149,6 +153,9 @@ func (g *CSSGenerator) generateThemeVariations(themes map[string]ThemeContext, d
 
 		for _, key := range tokenKeys {
 			val := themeCtx.DiffTokens[key]
+			if emitted, ok := themeCtx.EmitTokens[key]; ok {
+				val = emitted
+			}
 			cssVar := strings.ReplaceAll(key, ".", "-")
 			cssValue := serializeValueForCSS(val)
 			fmt.Fprintf(&sb, "    --%s: %s;\n", cssVar, cssValue)

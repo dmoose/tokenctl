@@ -87,11 +87,13 @@ func buildCSS(srcs []load.Source, opts Options) (Result, error) {
 		return res, fmt.Errorf("resolution failed: %w", err)
 	}
 
-	res.CSS, err = generate(opts.Format, baseDict, resolvedBase, themes)
+	emittedBase := resolver.EmitAll(baseDict.Layers, resolvedBase)
+
+	res.CSS, err = generate(opts.Format, baseDict, resolvedBase, emittedBase, themes)
 	return res, err
 }
 
-func generate(format Format, baseDict *tokens.Dictionary, resolvedBase map[string]any, themes map[string]*tokens.Dictionary) (string, error) {
+func generate(format Format, baseDict *tokens.Dictionary, resolvedBase, emittedBase map[string]any, themes map[string]*tokens.Dictionary) (string, error) {
 	inheritedThemes, err := tokens.ResolveThemeInheritance(baseDict, themes)
 	if err != nil {
 		return "", fmt.Errorf("failed to resolve theme inheritance: %w", err)
@@ -116,10 +118,12 @@ func generate(format Format, baseDict *tokens.Dictionary, resolvedBase map[strin
 			return "", fmt.Errorf("resolution failed for theme %s: %w", name, err)
 		}
 
+		emittedTheme := themeResolver.EmitAll(mergedDict.Layers, resolvedTheme)
 		themeContexts[name] = generators.ThemeContext{
 			Dict:           mergedDict,
 			ResolvedTokens: resolvedTheme,
-			DiffTokens:     tokens.Diff(resolvedTheme, resolvedBase),
+			DiffTokens:     tokens.DiffEmitted(resolvedTheme, resolvedBase, emittedTheme, emittedBase),
+			EmitTokens:     emittedTheme,
 		}
 	}
 
@@ -131,6 +135,7 @@ func generate(format Format, baseDict *tokens.Dictionary, resolvedBase map[strin
 	ctx := &generators.GenerationContext{
 		BaseDict:           baseDict,
 		ResolvedTokens:     resolvedBase,
+		EmitTokens:         emittedBase,
 		Components:         components,
 		Themes:             themeContexts,
 		DefaultTheme:       tokens.DetectDefaultTheme(themes),

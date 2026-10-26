@@ -12,6 +12,7 @@ import (
 type GenerationContext struct {
 	BaseDict           *tokens.Dictionary                    // Original base dictionary (unresolved)
 	ResolvedTokens     map[string]any                        // Flattened, resolved atomic tokens
+	EmitTokens         map[string]any                        // ResolvedTokens with semantic references kept as var(); CSS format only, nil = emit resolved
 	Components         map[string]tokens.ComponentDefinition // Extracted components
 	Themes             map[string]ThemeContext               // Theme-specific contexts
 	DefaultTheme       string                                // Theme that maps to :root (detected from $default or "light")
@@ -27,6 +28,7 @@ type ThemeContext struct {
 	Dict           *tokens.Dictionary // Full theme dictionary
 	ResolvedTokens map[string]any     // Resolved tokens for this theme
 	DiffTokens     map[string]any     // Only tokens that differ from base
+	EmitTokens     map[string]any     // Emitted form of this theme's tokens (see GenerationContext.EmitTokens)
 }
 
 // TailwindGenerator generates Tailwind 4 CSS

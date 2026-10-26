@@ -23,6 +23,7 @@ func ParseJSON(r io.Reader) (*Dictionary, error) {
 	return &Dictionary{
 		Root:        root,
 		SourceFiles: make(map[string]string),
+		Layers:      make(map[string]Layer),
 	}, nil
 }
 
@@ -250,8 +251,9 @@ func (l *Loader) loadFile(fsys fs.FS, name, path string) (*Dictionary, error) {
 		l.Findings = append(l.Findings, finding)
 	}
 
-	// Annotate all tokens with source file
+	// Annotate all tokens with source file and layer
 	l.annotateSourceFile(dict, "", path)
+	annotateLayers(dict, dict.Root, "", "")
 	return dict, nil
 }
 
@@ -294,6 +296,7 @@ func (d *Dictionary) Merge(other *Dictionary) error {
 	}
 	// Merge source file mappings
 	maps.Copy(d.SourceFiles, other.SourceFiles)
+	d.mergeLayers(other)
 	return nil
 }
 
@@ -312,6 +315,7 @@ func (d *Dictionary) merge(other *Dictionary, warn func(string)) error {
 	}
 	// Merge source file mappings, preferring the new source file for conflicts
 	maps.Copy(d.SourceFiles, other.SourceFiles)
+	d.mergeLayers(other)
 	return nil
 }
 
@@ -379,4 +383,47 @@ func deepMergeWithWarnings(dst, src map[string]any, currentPath string, warn fun
 		}
 	}
 	return nil
+}
+
+// mergeLayers takes other's layer record, the later definition winning
+// like the value it describes.
+func (d *Dictionary) mergeLayers(other *Dictionary) {
+	if len(other.Layers) == 0 {
+		return
+	}
+	if d.Layers == nil {
+		d.Layers = make(map[string]Layer, len(other.Layers))
+	}
+	maps.Copy(d.Layers, other.Layers)
+}
+
+// annotateLayers records each token's $layer, inherited from the
+// nearest enclosing node that declares one.
+func annotateLayers(dict *Dictionary, node map[string]any, currentPath, layer string) {
+	if l, ok := node["$layer"].(string); ok {
+		layer = l
+	}
+	if IsToken(node) {
+		if currentPath != "" && layer != "" {
+			if dict.Layers == nil {
+				dict.Layers = make(map[string]Layer)
+			}
+			dict.Layers[currentPath] = Layer(layer)
+		}
+		return
+	}
+	for key, val := range node {
+		if strings.HasPrefix(key, "$") {
+			continue
+		}
+		childMap, ok := val.(map[string]any)
+		if !ok {
+			continue
+		}
+		childPath := key
+		if currentPath != "" {
+			childPath = currentPath + "." + key
+		}
+		annotateLayers(dict, childMap, childPath, layer)
+	}
 }

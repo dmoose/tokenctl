@@ -12,6 +12,12 @@ import "maps"
 type Dictionary struct {
 	Root        map[string]any
 	SourceFiles map[string]string // Maps token path to source file
+
+	// Layers maps token path to the $layer of the file that defined it.
+	// Recorded per file at load, because the merged Root keeps only the
+	// last file's top-level $layer. Nil-safe: a dictionary built by hand
+	// carries no layers, and every token then emits resolved.
+	Layers map[string]Layer
 }
 
 // NewDictionary creates an empty dictionary
@@ -19,6 +25,7 @@ func NewDictionary() *Dictionary {
 	return &Dictionary{
 		Root:        make(map[string]any),
 		SourceFiles: make(map[string]string),
+		Layers:      make(map[string]Layer),
 	}
 }
 
@@ -48,9 +55,12 @@ func IsClassComponent(node map[string]any) bool {
 func (d *Dictionary) DeepCopy() *Dictionary {
 	copiedSourceFiles := make(map[string]string, len(d.SourceFiles))
 	maps.Copy(copiedSourceFiles, d.SourceFiles)
+	copiedLayers := make(map[string]Layer, len(d.Layers))
+	maps.Copy(copiedLayers, d.Layers)
 	return &Dictionary{
 		Root:        deepCopyMap(d.Root),
 		SourceFiles: copiedSourceFiles,
+		Layers:      copiedLayers,
 	}
 }
 
